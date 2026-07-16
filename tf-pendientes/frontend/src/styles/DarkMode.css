@@ -1,0 +1,343 @@
+/* =========================================
+   DARK MODE GLOBAL STYLES
+   ========================================= */
+
+body.dark-mode {
+    background-color: #0f172a !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode div.swal2-container.swal2-backdrop-show {
+    background: rgba(11, 17, 32, 0.8) !important;
+}
+
+body.dark-mode .navbar-premium {
+    background-color: #0B1120;
+    border-bottom-color: #1e293b;
+}
+
+body.dark-mode .navbar-brand-custom {
+    color: #f8fafc;
+}
+
+body.dark-mode .nav-link-custom {
+    color: #64748b;
+}
+
+body.dark-mode .nav-link-custom:hover {
+    color: #cbd5e1;
+    background-color: transparent;
+}
+
+body.dark-mode .nav-link-custom.active {
+    color: #f8fafc;
+    background-color: transparent;
+    border-bottom: 2px solid #3b82f6;
+    border-radius: 0;
+}
+
+/* Global Bootstrap Overrides for Dark Mode */
+body.dark-mode .card {
+    background-color: #171f32 !important;
+    border: 1px solid #283552 !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5 {
+    color: #f8fafc !important;
+}
+
+body.dark-mode .form-label {
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background-color: #0f172a !important;
+    border: 1px solid #334155 !important;
+    color: #f8fafc !important;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    background-color: #0f172a !important;
+    border-color: #3b82f6 !important;
+    color: #f8fafc !important;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+}
+
+body.dark-mode .text-dark {
+    color: #f8fafc !important;
+}
+
+/* =========================================
+   DARK MODE COMPONENT OVERRIDES
+   ========================================= */
+
+/* GestionTareas */
+body.dark-mode .card-custom {
+    background-color: #171f32 !important;
+    border: 1px solid #283552 !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.dark-mode .page-header-title {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .btn-primary {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
+    color: white !important;
+}
+
+body.dark-mode .table-custom {
+    background-color: transparent !important;
+}
+
+body.dark-mode .table-custom thead th {
+    background-color: #4a5c7b !important;
+    color: #e2e8f0 !important;
+    border-bottom: none !important;
+    font-weight: 600 !important;
+}
+
+body.dark-mode .table-custom tbody td {
+    border-bottom: 1px solid #283552 !important;
+    color: #94a3b8 !important;
+    background-color: transparent !important;
+}
+
+body.dark-mode .table-custom tbody tr {
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+body.dark-mode .table-custom tbody tr:hover {
+    background-color: #1e293f;
+}
+
+
+
+body.dark-mode .fw-bold.text-dark {
+    color: #f8fafc !important;
+}
+
+body.dark-mode .text-muted {
+    color: #64748b !important;
+}
+
+/* Advanced Status Dropdown styling for dark mode */
+body.dark-mode .status-dropdown-toggle {
+    border: none !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .status-dropdown-toggle.finalizado {
+    background-color: rgba(34, 197, 94, 0.15) !important;
+    color: #4ade80 !important;
+}
+
+body.dark-mode .status-dropdown-toggle.finalizado .status-dot {
+    background-color: #4ade80;
+}
+
+body.dark-mode .status-dropdown-toggle.pendiente {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    color: #60a5fa !important;
+}
+
+body.dark-mode .status-dropdown-toggle.pendiente .status-dot {
+    background-color: #60a5fa;
+}
+
+body.dark-mode .status-dropdown-toggle.en-curso {
+    background-color: rgba(234, 179, 8, 0.15) !important;
+    color: #facc15 !important;
+}
+
+body.dark-mode .status-dropdown-toggle.en-curso .status-dot {
+    background-color: #facc15;
+}
+
+body.dark-mode .status-dropdown-toggle.en-revision {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+}
+
+body.dark-mode .status-dropdown-toggle.en-revision .status-dot {
+    background-color: #f87171;
+}
+
+body.dark-mode .status-dropdown-menu {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+body.dark-mode .status-dropdown-item {
+    color: #cbd5e1;
+}
+
+body.dark-mode .status-dropdown-item:hover {
+    background-color: #334155;
+    color: #f8fafc;
+}
+
+/* Priority Badges in Dark Mode */
+body.dark-mode .badge-low {
+    background-color: #6ee7b7 !important;
+    color: #064e3b !important;
+}
+
+body.dark-mode .badge-medium {
+    background-color: #93c5fd !important;
+    color: #1e3a8a !important;
+}
+
+body.dark-mode .badge-high {
+    background-color: #fde047 !important;
+    color: #713f12 !important;
+}
+
+body.dark-mode .badge-critical {
+    background-color: #fca5a5 !important;
+    color: #7f1d1d !important;
+}
+
+body.dark-mode .badge-default {
+    background-color: #475569 !important;
+    color: #f8fafc !important;
+}
+
+/* Timeline */
+body.dark-mode .timeline {
+    border-left-color: #3b82f6;
+}
+
+body.dark-mode .timeline-item {
+    color: #94a3b8;
+}
+
+body.dark-mode .timeline-dot {
+    background-color: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+}
+
+/* Action Icons */
+body.dark-mode .action-icon {
+    background-color: transparent;
+    border: none;
+    color: #94a3b8;
+    border-radius: 8px;
+    padding: 6px;
+    transition: all 0.2s ease;
+}
+
+body.dark-mode .action-icon:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #3b82f6;
+}
+
+/* Modals */
+body.dark-mode .modal-content-custom {
+    background-color: #171f32 !important;
+    color: #f8fafc !important;
+    border: 1px solid #283552 !important;
+}
+
+body.dark-mode .modal-header-custom {
+    background-color: transparent !important;
+    border-bottom-color: #283552 !important;
+}
+
+body.dark-mode .modal-header-custom .modal-title {
+    color: #f8fafc !important;
+}
+
+body.dark-mode .modal-header-custom .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%) !important;
+}
+
+body.dark-mode .modal-footer-custom {
+    border-top-color: #283552 !important;
+}
+
+body.dark-mode .form-label-custom {
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .form-control-custom,
+body.dark-mode .form-select-custom,
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+/* Placeholders in Dark Mode */
+body.dark-mode .form-control::placeholder,
+body.dark-mode .form-control-custom::placeholder {
+    color: #475569 !important;
+    opacity: 1 !important;
+}
+
+body.dark-mode .modal-footer-custom {
+    border-top-color: #283552 !important;
+}
+
+body.dark-mode .form-label-custom {
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .form-control-custom,
+body.dark-mode .form-select-custom {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+body.dark-mode .form-control-custom:focus,
+body.dark-mode .form-select-custom:focus {
+    background-color: #0f172a !important;
+    border-color: #3b82f6 !important;
+    color: #f8fafc !important;
+}
+
+body.dark-mode .btn-secondary-custom {
+    background-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+body.dark-mode .btn-secondary-custom:hover {
+    background-color: #475569 !important;
+}
+
+/* SweetAlert2 Alerts */
+body.dark-mode .swal2-popup {
+    background-color: #171f32 !important;
+    color: #f8fafc !important;
+    border: 1px solid #283552 !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.dark-mode .swal2-title,
+body.dark-mode .swal2-html-container {
+    color: #f8fafc !important;
+}
+
+body.dark-mode .swal2-confirm.btn-primary {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
+    color: white !important;
+}
+
+body.dark-mode .swal2-cancel.btn-secondary {
+    background-color: #334155 !important;
+    color: #f8fafc !important;
+}
