@@ -1,40 +1,68 @@
 import { useState, useEffect, useRef } from 'react';
-import Navbar from '../../components/Navbar';
+import Navbar from '../../components/Navbar/Navbar';
 import { Container, Row, Col, Form, Button, Table, Card, Badge, Modal, Dropdown } from 'react-bootstrap';
 import Swal from 'sweetalert2';
+import api from '../../lib/axios';
+import { useAuth } from '../../context/AuthContext';
 import './GestionTareas.css';
 
 function GestionTareas() {
-    const [items, setItems] = useState(() => {
-        const saved = localStorage.getItem('crudItems');
-        return saved ? JSON.parse(saved) : [];
-    });
+    const { user } = useAuth();
+    const [items, setItems] = useState([]);
+    const [estados, setEstados] = useState([]);
+    const [prioridades, setPrioridades] = useState([]);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [priority, setPriority] = useState('');
+    const [priorityId, setPriorityId] = useState('');
     const [editId, setEditId] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [filtroEstado, setFiltroEstado] = useState('');
+    const [filtroPrioridad, setFiltroPrioridad] = useState('');
     const descRef = useRef(null);
 
-    useEffect(() => {
-        localStorage.setItem('crudItems', JSON.stringify(items));
-    }, [items]);
+    const fetchTareas = async () => {
+        try {
+            // Dos llamadas paralelas: tareas y catálogos
+            const [resTareas, resCatalogos] = await Promise.all([
+                api.get('/tareas'),
+                api.get('/catalogos'),
+            ]);
+            setItems(resTareas.data.data || []);
+            setEstados(resCatalogos.data.data?.estados || []);
+            setPrioridades(resCatalogos.data.data?.prioridades || []);
+        } catch (error) {
+            console.error("Error fetching tareas", error);
+            Swal.fire('Error', 'No se pudieron cargar las tareas', 'error');
+        }
+    };
 
-    const getFormattedDate = () => {
-        const now = new Date();
-        return now.toLocaleString('es-ES', {
+    useEffect(() => {
+        fetchTareas();
+    }, []);
+
+    const getFormattedDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleString('es-ES', {
             day: '2-digit', month: '2-digit', year: 'numeric',
             hour: '2-digit', minute: '2-digit'
         });
     };
 
     // Crear o Actualizar
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!title.trim() || !priority) {
+        if (!title.trim() || !priorityId) {
             Swal.fire('Error', 'El título y la prioridad son obligatorios', 'error');
             return;
         }
+
+        const payload = {
+            titulo: title,
+            descripcion: description,
+            estado_id: 1, // Por defecto Pendiente (asumiendo ID 1)
+            prioridad_id: priorityId
+        };
 
         if (editId) {
             Swal.fire({
@@ -44,32 +72,32 @@ function GestionTareas() {
                 showCancelButton: true,
                 confirmButtonColor: '#198754',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, actualizar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
+                confirmButtonText: 'Sí, actualizar'
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    setItems(items.map(item => {
-                        if (item.id === editId) {
-                            return { ...item, title, description, priority };
-                        }
-                        return item;
-                    }));
-                    resetForm();
-                    Swal.fire({ icon: 'success', title: 'Actualizado', timer: 1500, showConfirmButton: false });
+                    try {
+                        // Mantenemos el estado actual al editar título/desc/prioridad
+                        const tareaActual = items.find(i => i.id === editId);
+                        payload.estado_id = tareaActual.estado_id;
+
+                        await api.put(`/tareas/${editId}`, payload);
+                        fetchTareas();
+                        resetForm();
+                        Swal.fire({ icon: 'success', title: 'Actualizado', timer: 1500, showConfirmButton: false });
+                    } catch (error) {
+                        Swal.fire('Error', 'No se pudo actualizar la tarea', 'error');
+                    }
                 }
             });
         } else {
-            const newTask = {
-                id: Date.now(),
-                title,
-                description,
-                priority,
-                status: 'Pendiente',
-                history: [`Registrado: ${getFormattedDate()}`]
-            };
-            setItems([...items, newTask]);
-            resetForm();
-            Swal.fire({ icon: 'success', title: 'Agregado', timer: 1500, showConfirmButton: false });
+            try {
+                await api.post('/tareas', payload);
+                fetchTareas();
+                resetForm();
+                Swal.fire({ icon: 'success', title: 'Agregado', timer: 1500, showConfirmButton: false });
+            } catch (error) {
+                Swal.fire('Error', 'No se pudo crear la tarea', 'error');
+            }
         }
     };
 
@@ -77,7 +105,7 @@ function GestionTareas() {
         setEditId(null);
         setTitle('');
         setDescription('');
-        setPriority('');
+        setPriorityId('');
         if (descRef.current) {
             descRef.current.style.height = 'auto';
         }
@@ -85,48 +113,52 @@ function GestionTareas() {
     };
 
     // Cambiar estado desde la tabla
-    const handleChangeStatus = (id, newStatus, currentStatus) => {
-        if (newStatus === currentStatus) return;
+    const handleChangeStatus = async (id, newStatusId, currentStatusId) => {
+        if (newStatusId === currentStatusId) return;
+
+        const newStatusName = estados.find(e => e.id === newStatusId)?.nombre || '';
 
         Swal.fire({
             title: '¿Cambiar estado?',
-            text: `El estado de la tarea cambiará a "${newStatus}"`,
+            text: `El estado de la tarea cambiará a "${newStatusName}"`,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#0d6efd',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, cambiar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
+            confirmButtonText: 'Sí, cambiar'
+        }).then(async (result) => {
             if (result.isConfirmed) {
-                setItems(items.map(item => {
-                    if (item.id === id) {
-                        const updatedHistory = item.history ? [...item.history] : [`Registrado (antiguo)`];
-                        updatedHistory.push(`${newStatus}: ${getFormattedDate()}`);
-                        return { ...item, status: newStatus, history: updatedHistory };
-                    }
-                    return item;
-                }));
-                Swal.fire({ icon: 'success', title: 'Estado actualizado', timer: 1500, showConfirmButton: false });
+                try {
+                    const tareaActual = items.find(i => i.id === id);
+                    await api.put(`/tareas/${id}`, {
+                        titulo: tareaActual.titulo,
+                        descripcion: tareaActual.descripcion,
+                        prioridad_id: tareaActual.prioridad_id,
+                        estado_id: newStatusId
+                    });
+                    fetchTareas();
+                    Swal.fire({ icon: 'success', title: 'Estado actualizado', timer: 1500, showConfirmButton: false });
+                } catch (error) {
+                    Swal.fire('Error', 'No se pudo cambiar el estado', 'error');
+                }
             }
         });
     };
 
     // Ver detalles de la tarea
     const handleView = (item) => {
-        const displayTitle = item.title || item.text;
-        const displayDesc = item.description ? item.description.replace(/\n/g, '<br/>') : '<em>Sin descripción</em>';
-        const displayHistory = (item.history || []).map(h => `<li>${h}</li>`).join('');
+        const displayTitle = item.titulo;
+        const displayDesc = item.descripcion ? item.descripcion.replace(/\n/g, '<br/>') : '<em>Sin descripción</em>';
 
         Swal.fire({
             title: `<strong>${displayTitle}</strong>`,
             html: `
-                <div style="text-align: left; margin-top: 15px; font-size: 1rem; color: #555;">
+                <div style="text-align: left; margin-top: 15px; font-size: 1rem; color: inherit;">
                     <p><strong>Descripción:</strong><br/> ${displayDesc}</p>
-                    <p><strong>Estado:</strong> ${item.status || 'Pendiente'}</p>
-                    <p><strong>Prioridad:</strong> ${item.priority || 'No asignada'}</p>
-                    <p><strong>Historial de fechas:</strong></p>
-                    <ul>${displayHistory || '<li>Sin historial</li>'}</ul>
+                    <p><strong>Estado:</strong> ${item.estado || 'Desconocido'}</p>
+                    <p><strong>Prioridad:</strong> ${item.prioridad || 'Desconocida'}</p>
+                    <p><strong>Creada:</strong> ${getFormattedDate(item.created_at)}</p>
+                    <p><strong>Última actualización:</strong> ${getFormattedDate(item.updated_at)}</p>
                 </div>
             `,
             icon: 'info',
@@ -139,9 +171,9 @@ function GestionTareas() {
     // Editar (cargar valor al input)
     const handleEdit = (item) => {
         setEditId(item.id);
-        setTitle(item.title || item.text || '');
-        setDescription(item.description || '');
-        setPriority(item.priority || '');
+        setTitle(item.titulo || '');
+        setDescription(item.descripcion || '');
+        setPriorityId(item.prioridad_id || '');
         setShowModal(true);
     };
 
@@ -154,49 +186,38 @@ function GestionTareas() {
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
+            confirmButtonText: 'Sí, eliminar'
+        }).then(async (result) => {
             if (result.isConfirmed) {
-                setItems(items.filter(item => item.id !== id));
-                Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1500, showConfirmButton: false });
+                try {
+                    await api.delete(`/tareas/${id}`);
+                    fetchTareas();
+                    Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1500, showConfirmButton: false });
+                } catch (error) {
+                    Swal.fire('Error', 'No se pudo eliminar la tarea', 'error');
+                }
             }
         });
     };
 
-    const getPriorityBadgeClass = (prio) => {
-        switch (prio) {
-            case 'Bajo': return 'badge-low';
-            case 'Medio': return 'badge-medium';
-            case 'Alto': return 'badge-high';
-            case 'Crítico': return 'badge-critical';
+    const getPriorityBadgeClass = (prioName) => {
+        switch (prioName) {
+            case 'Baja': return 'badge-low';
+            case 'Media': return 'badge-medium';
+            case 'Alta': return 'badge-high';
+            case 'Crítica': return 'badge-critical';
             default: return 'badge-default';
         }
     };
 
-    const getStatusDotClass = (status) => {
-        switch (status) {
+    const getStatusDotClass = (statusName) => {
+        switch (statusName) {
             case 'Pendiente': return 'pendiente';
-            case 'En curso': return 'en-curso';
+            case 'En Progreso': return 'en-curso';
             case 'En revisión': return 'en-revision';
-            case 'Finalizado': return 'finalizado';
+            case 'Completada': return 'finalizado';
             default: return 'pendiente';
         }
-    };
-
-    const getUniqueHistory = (historyArr) => {
-        if (!historyArr) return [];
-        const seenStates = new Set();
-        const uniqueHistory = [];
-
-        for (const h of historyArr) {
-            const stateName = h.split(':')[0].trim();
-            if (!seenStates.has(stateName)) {
-                seenStates.add(stateName);
-                uniqueHistory.push(h);
-            }
-        }
-        return uniqueHistory;
     };
 
     return (
@@ -256,16 +277,15 @@ function GestionTareas() {
                                                     <Form.Group className="mb-2">
                                                         <Form.Label className="form-label-custom">Prioridad <span className="text-danger">*</span></Form.Label>
                                                         <Form.Select
-                                                            value={priority}
-                                                            onChange={(e) => setPriority(e.target.value)}
+                                                            value={priorityId}
+                                                            onChange={(e) => setPriorityId(e.target.value)}
                                                             className="form-select-custom"
                                                             required
                                                         >
                                                             <option value="">Seleccione prioridad...</option>
-                                                            <option value="Bajo">Bajo</option>
-                                                            <option value="Medio">Medio</option>
-                                                            <option value="Alto">Alto</option>
-                                                            <option value="Crítico">Crítico</option>
+                                                            {prioridades.map(p => (
+                                                                <option key={p.id} value={p.id}>{p.nombre}</option>
+                                                            ))}
                                                         </Form.Select>
                                                     </Form.Group>
                                                 </Col>
@@ -289,64 +309,108 @@ function GestionTareas() {
                                         </Form>
                                     </Modal.Body>
                                 </Modal>
-                                <h5 className="mt-4 mb-3 text-dark fw-bold border-bottom pb-2">Lista de tareas</h5>
-                                {items.length === 0 ? (
-                                    <p className="text-muted text-center my-4">No hay tareas registradas.</p>
-                                ) : (
+                                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mt-4 mb-3 border-bottom pb-2 gap-3">
+                                    <h5 className="text-dark fw-bold m-0">Lista de tareas</h5>
+                                    <div className="d-flex flex-wrap gap-3">
+                                        <div className="d-flex align-items-center gap-2 bg-light px-3 py-1 rounded-pill shadow-sm" style={{cursor: 'pointer'}} onClick={(e) => e.currentTarget.querySelector('select').focus()}>
+                                            <i className="bi bi-funnel-fill text-primary"></i>
+                                            <Form.Select 
+                                                className="form-select-custom form-select-transparent px-0" 
+                                                value={filtroEstado} 
+                                                onChange={e => setFiltroEstado(e.target.value)}
+                                                style={{cursor: 'pointer', outline: 'none', backgroundImage: 'none', width: 'auto', minWidth: '140px'}}
+                                            >
+                                                <option value="">Todos los estados</option>
+                                                {estados.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
+                                            </Form.Select>
+                                            <i className="bi bi-chevron-down text-muted ms-1 small"></i>
+                                        </div>
+                                        <div className="d-flex align-items-center gap-2 bg-light px-3 py-1 rounded-pill shadow-sm" style={{cursor: 'pointer'}} onClick={(e) => e.currentTarget.querySelector('select').focus()}>
+                                            <i className="bi bi-flag-fill text-danger"></i>
+                                            <Form.Select 
+                                                className="form-select-custom form-select-transparent px-0" 
+                                                value={filtroPrioridad} 
+                                                onChange={e => setFiltroPrioridad(e.target.value)}
+                                                style={{cursor: 'pointer', outline: 'none', backgroundImage: 'none', width: 'auto', minWidth: '150px'}}
+                                            >
+                                                <option value="">Todas las prioridades</option>
+                                                {prioridades.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                                            </Form.Select>
+                                            <i className="bi bi-chevron-down text-muted ms-1 small"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                {(() => {
+                                    const filteredItems = items.filter(item => {
+                                        const matchEstado = filtroEstado ? item.estado_id === parseInt(filtroEstado) : true;
+                                        const matchPrioridad = filtroPrioridad ? item.prioridad_id === parseInt(filtroPrioridad) : true;
+                                        return matchEstado && matchPrioridad;
+                                    });
+
+                                    if (filteredItems.length === 0) {
+                                        return <p className="text-muted text-center my-4">No hay tareas que coincidan con los filtros.</p>;
+                                    }
+
+                                    return (
                                     <Table hover className="table-custom align-middle">
                                         <thead>
                                             <tr>
                                                 <th style={{ width: '28%' }}>Tarea</th>
                                                 <th style={{ width: '15%' }}>Estado</th>
                                                 <th style={{ width: '10%' }}>Prioridad</th>
-                                                <th style={{ width: '32%' }}>Historial de Fechas</th>
+                                                <th style={{ width: '32%' }}>Fechas</th>
                                                 <th style={{ width: '15%' }}>Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {items.map(item => {
-                                                const itemTitle = item.title || item.text;
+                                            {filteredItems.map(item => {
+                                                const itemTitle = item.titulo;
+                                                // El backend devuelve 'estado' y 'prioridad' como strings directos
+                                                const estadoNombre = item.estado || 'Desconocido';
+                                                const prioridadNombre = item.prioridad || 'Desconocida';
                                                 return (
                                                     <tr key={item.id}>
                                                         <td>
                                                             <div className="fw-bold text-dark">{itemTitle}</div>
-                                                            <div className="text-muted small text-truncate desc-truncate" title={item.description}>
-                                                                {item.description || 'Sin descripción'}
+                                                            <div className="text-muted small text-truncate desc-truncate" title={item.descripcion}>
+                                                                {item.descripcion || 'Sin descripción'}
                                                             </div>
                                                         </td>
                                                         <td>
                                                             <Dropdown>
-                                                                <Dropdown.Toggle variant="light" className={`status-dropdown-toggle ${getStatusDotClass(item.status || 'Pendiente')}`}>
-                                                                    <span className={`status-dot ${getStatusDotClass(item.status || 'Pendiente')}`}></span>
-                                                                    {item.status || 'Pendiente'}
+                                                                <Dropdown.Toggle variant="light" className={`status-dropdown-toggle ${getStatusDotClass(estadoNombre)}`}>
+                                                                    <span className={`status-dot ${getStatusDotClass(estadoNombre)}`}></span>
+                                                                    {estadoNombre}
                                                                 </Dropdown.Toggle>
                                                                 <Dropdown.Menu className="status-dropdown-menu">
-                                                                    {['Pendiente', 'En curso', 'En revisión', 'Finalizado'].map(status => (
+                                                                    {estados.map(estado => (
                                                                         <Dropdown.Item
-                                                                            key={status}
+                                                                            key={estado.id}
                                                                             className="status-dropdown-item"
-                                                                            onClick={() => handleChangeStatus(item.id, status, item.status || 'Pendiente')}
+                                                                            onClick={() => handleChangeStatus(item.id, estado.id, item.estado_id)}
                                                                         >
-                                                                            <span className={`status-dot ${getStatusDotClass(status)}`}></span>
-                                                                            {status}
+                                                                            <span className={`status-dot ${getStatusDotClass(estado.nombre)}`}></span>
+                                                                            {estado.nombre}
                                                                         </Dropdown.Item>
                                                                     ))}
                                                                 </Dropdown.Menu>
                                                             </Dropdown>
                                                         </td>
                                                         <td>
-                                                            <Badge className={`badge-custom ${getPriorityBadgeClass(item.priority)}`}>
-                                                                {item.priority || 'No asignada'}
+                                                            <Badge className={`badge-custom ${getPriorityBadgeClass(prioridadNombre)}`}>
+                                                                {prioridadNombre}
                                                             </Badge>
                                                         </td>
                                                         <td>
                                                             <ul className="timeline">
-                                                                {getUniqueHistory(item.history).map((h, i) => (
-                                                                    <li key={i} className="timeline-item">
-                                                                        <span className="timeline-dot"></span>
-                                                                        {h}
-                                                                    </li>
-                                                                ))}
+                                                                <li className="timeline-item">
+                                                                    <span className="timeline-dot"></span>
+                                                                    Creada: {getFormattedDate(item.created_at)}
+                                                                </li>
+                                                                <li className="timeline-item">
+                                                                    <span className="timeline-dot"></span>
+                                                                    Actualizada: {getFormattedDate(item.updated_at)}
+                                                                </li>
                                                             </ul>
                                                         </td>
                                                         <td>
@@ -357,9 +421,11 @@ function GestionTareas() {
                                                                 <button className="action-icon icon-edit" title="Editar" onClick={() => handleEdit(item)}>
                                                                     <i className="bi bi-pencil"></i>
                                                                 </button>
-                                                                <button className="action-icon icon-delete" title="Eliminar" onClick={() => handleDelete(item.id)}>
-                                                                    <i className="bi bi-trash"></i>
-                                                                </button>
+                                                                {Number(user?.rol_id) === 1 && (
+                                                                    <button className="action-icon icon-delete" title="Eliminar" onClick={() => handleDelete(item.id)}>
+                                                                        <i className="bi bi-trash"></i>
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -367,7 +433,8 @@ function GestionTareas() {
                                             })}
                                         </tbody>
                                     </Table>
-                                )}
+                                    );
+                                })()}
                             </Card.Body>
                         </Card>
                     </Col>

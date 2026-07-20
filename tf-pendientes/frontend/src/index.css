@@ -1,52 +1,182 @@
+@import "tailwindcss";
+
 /* Estilos globales para la aplicación */
+
+:root {
+    /* Modo Claro (Light Mode) */
+    --bg-primary: #f1f5f9;
+    --bg-secondary: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --border-color: #e2e8f0;
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --hover-bg: #f8fafc;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    
+    /* SweetAlert Light */
+    --swal-backdrop: rgba(248, 250, 252, 0.7);
+    --swal-bg: #ffffff;
+    --swal-text: #0f172a;
+}
+
+body.dark-mode {
+    /* Modo Oscuro (Dark Mode) */
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --border-color: #334155;
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --hover-bg: #334155;
+    --glass-bg: rgba(30, 41, 59, 0.95);
+    
+    /* SweetAlert Dark */
+    --swal-backdrop: rgba(15, 23, 42, 0.85);
+    --swal-bg: #1e293b;
+    --swal-text: #f8fafc;
+}
 
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-    background-color: #f1f5f9 !important; /* Premium light grayish-blue background */
-    color: #334155;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Difuminar el fondo de todas las ventanas emergentes de SweetAlert2 */
 div.swal2-container.swal2-backdrop-show {
     backdrop-filter: blur(5px) !important;
-    background: rgba(248, 250, 252, 0.7) !important;
+    background: var(--swal-backdrop) !important;
 }
 
-/* Navbar Premium Styles */
-.navbar-premium {
-    background-color: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid #e2e8f0;
-    padding: 12px 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+.swal2-popup {
+    background: var(--swal-bg) !important;
+    color: var(--swal-text) !important;
 }
 
-.navbar-brand-custom {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #0f172a;
-    letter-spacing: -0.5px;
-    text-decoration: none;
+.swal2-title, .swal2-html-container {
+    color: var(--swal-text) !important;
 }
 
-.navbar-brand-custom span {
-    color: #2563eb;
+/* Common Card Styles */
+.card-custom {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--card-shadow) !important;
+    border-radius: 12px !important;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-.nav-link-custom {
-    color: #64748b;
-    font-weight: 500;
-    text-decoration: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    font-size: 0.95rem;
+.card-custom .text-dark {
+    color: var(--text-primary) !important;
 }
 
-.nav-link-custom:hover,
-.nav-link-custom.active {
-    color: #0f172a;
-    background-color: #f1f5f9;
+.card-custom .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* Common Modal Styles */
+.modal-content {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color) !important;
+}
+
+/* Common Table Styles */
+.table-custom {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--text-primary);
+    --bs-table-border-color: var(--border-color);
+}
+
+.table-custom thead th {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-bottom: 2px solid var(--border-color) !important;
+}
+
+.table-custom tbody tr:hover td {
+    background-color: var(--hover-bg) !important;
+}
+
+.table-custom td {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Common Form Control Styles */
+.form-control, .form-select {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+}
+
+.form-select-transparent {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.form-label {
+    color: var(--text-primary) !important;
+}
+
+/* Overriding Bootstrap & Tailwind utility classes for Dark Mode */
+body.dark-mode .bg-white,
+body.dark-mode .table-light,
+body.dark-mode .bg-light {
+    background-color: var(--bg-secondary) !important;
+}
+
+body.dark-mode .bg-slate-50,
+body.dark-mode .bg-slate-100 {
+    background-color: var(--bg-primary) !important;
+}
+
+body.dark-mode .text-dark,
+body.dark-mode .text-slate-900 {
+    color: var(--text-primary) !important;
+}
+
+body.dark-mode .text-muted,
+body.dark-mode .text-slate-500,
+body.dark-mode .text-slate-600,
+body.dark-mode .text-slate-700 {
+    color: var(--text-secondary) !important;
+}
+
+body.dark-mode .border-slate-200,
+body.dark-mode .border-0 {
+    border-color: var(--border-color) !important;
+}
+
+/* Ensure table custom handles the background properly */
+body.dark-mode .table-custom,
+body.dark-mode .table-custom > :not(caption) > * > * {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.dark-mode .table-custom thead th {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
 }

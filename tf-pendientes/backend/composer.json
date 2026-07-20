@@ -1,6 +1,0 @@
-{
-    "name": "tecnofilm/backend",
-    "description": "Backend para el proyecto React/Vite de Tecnofilm",
-    "type": "project",
-    "require": {}
-}

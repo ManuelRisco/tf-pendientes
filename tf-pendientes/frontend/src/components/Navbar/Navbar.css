@@ -1,0 +1,60 @@
+/* Navbar Premium Styles */
+.navbar-premium {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.navbar-brand-custom {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.navbar-brand-custom span {
+    color: #2563eb;
+}
+
+.nav-link-custom {
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.nav-link-custom:hover,
+.nav-link-custom.active-link {
+    color: var(--text-primary);
+    background-color: var(--hover-bg);
+}
+
+.theme-toggle-btn {
+    transition: transform 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+    transform: scale(1.1);
+}
+
+.nav-user-name {
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.nav-user-role {
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
+}
+
+body.dark-mode .nav-user-role {
+    color: #ffffff;
+}

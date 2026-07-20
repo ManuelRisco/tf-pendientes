@@ -1,4 +1,5 @@
-import Navbar from "../components/Navbar";
+import Navbar from "../../components/Navbar/Navbar";
+import './Equipos.css';
 function Equipos() {
     return (
         <div>
