@@ -8,7 +8,15 @@ RUN npm run build
 
 # Etapa 2: Producción (Nginx)
 FROM nginx:alpine
-# Nginx oficial reemplazará automáticamente ${PORT} por la variable de Railway al arrancar
-COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+# Copiamos la configuración personalizada de Nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copiamos los archivos estáticos generados por Vite
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copiar el script de inicio y darle permisos
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Usar el script como entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
