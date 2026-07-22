@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import Navbar from '../../components/Navbar/Navbar';
 import { Container, Row, Col, Form, Button, Table, Card, Badge, Modal, Dropdown } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import api from '../../lib/axios';
 import { useAuth } from '../../context/AuthContext';
+import CustomPagination from '../../components/Pagination/CustomPagination';
 import './GestionTareas.css';
 
 function GestionTareas() {
@@ -20,14 +20,21 @@ function GestionTareas() {
     const [filtroPrioridad, setFiltroPrioridad] = useState('');
     const descRef = useRef(null);
 
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit = 10;
+
     const fetchTareas = async () => {
         try {
             // Dos llamadas paralelas: tareas y catálogos
             const [resTareas, resCatalogos] = await Promise.all([
-                api.get('/tareas'),
+                api.get(`/tareas?page=${currentPage}&limit=${limit}&estado_id=${filtroEstado}&prioridad_id=${filtroPrioridad}`),
                 api.get('/catalogos'),
             ]);
-            setItems(resTareas.data.data || []);
+            setItems(resTareas.data.data.items || []);
+            setTotalPages(resTareas.data.data.meta?.totalPages || 1);
+
             setEstados(resCatalogos.data.data?.estados || []);
             setPrioridades(resCatalogos.data.data?.prioridades || []);
         } catch (error) {
@@ -38,7 +45,7 @@ function GestionTareas() {
 
     useEffect(() => {
         fetchTareas();
-    }, []);
+    }, [currentPage, filtroEstado, filtroPrioridad]);
 
     const getFormattedDate = (dateString) => {
         if (!dateString) return '';
@@ -222,13 +229,12 @@ function GestionTareas() {
 
     return (
         <div>
-            <Navbar />
             <Container fluid className="gestion-tareas-container px-4">
                 <Row className="justify-content-center">
                     <Col xs={12}>
                         <Card className="card-custom mb-4">
                             <Card.Body>
-                                <div className="d-flex justify-content-between align-items-center mb-4">
+                                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                                     <h2 className="page-header-title m-0">Gestión de Tareas</h2>
                                     <Button variant="primary" onClick={() => setShowModal(true)} className="rounded-pill px-3">
                                         <i className="bi bi-plus-lg"></i> Agregar tarea
@@ -341,98 +347,101 @@ function GestionTareas() {
                                     </div>
                                 </div>
                                 {(() => {
-                                    const filteredItems = items.filter(item => {
-                                        const matchEstado = filtroEstado ? item.estado_id === parseInt(filtroEstado) : true;
-                                        const matchPrioridad = filtroPrioridad ? item.prioridad_id === parseInt(filtroPrioridad) : true;
-                                        return matchEstado && matchPrioridad;
-                                    });
-
-                                    if (filteredItems.length === 0) {
+                                    if (items.length === 0) {
                                         return <p className="text-muted text-center my-4">No hay tareas que coincidan con los filtros.</p>;
                                     }
 
                                     return (
-                                    <Table hover className="table-custom align-middle">
-                                        <thead>
-                                            <tr>
-                                                <th style={{ width: '28%' }}>Tarea</th>
-                                                <th style={{ width: '15%' }}>Estado</th>
-                                                <th style={{ width: '10%' }}>Prioridad</th>
-                                                <th style={{ width: '32%' }}>Fechas</th>
-                                                <th style={{ width: '15%' }}>Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredItems.map(item => {
-                                                const itemTitle = item.titulo;
-                                                // El backend devuelve 'estado' y 'prioridad' como strings directos
-                                                const estadoNombre = item.estado || 'Desconocido';
-                                                const prioridadNombre = item.prioridad || 'Desconocida';
-                                                return (
-                                                    <tr key={item.id}>
-                                                        <td>
-                                                            <div className="fw-bold text-dark">{itemTitle}</div>
-                                                            <div className="text-muted small text-truncate desc-truncate" title={item.descripcion}>
-                                                                {item.descripcion || 'Sin descripción'}
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            <Dropdown>
-                                                                <Dropdown.Toggle variant="light" className={`status-dropdown-toggle ${getStatusDotClass(estadoNombre)}`}>
-                                                                    <span className={`status-dot ${getStatusDotClass(estadoNombre)}`}></span>
-                                                                    {estadoNombre}
-                                                                </Dropdown.Toggle>
-                                                                <Dropdown.Menu className="status-dropdown-menu">
-                                                                    {estados.map(estado => (
-                                                                        <Dropdown.Item
-                                                                            key={estado.id}
-                                                                            className="status-dropdown-item"
-                                                                            onClick={() => handleChangeStatus(item.id, estado.id, item.estado_id)}
-                                                                        >
-                                                                            <span className={`status-dot ${getStatusDotClass(estado.nombre)}`}></span>
-                                                                            {estado.nombre}
-                                                                        </Dropdown.Item>
-                                                                    ))}
-                                                                </Dropdown.Menu>
-                                                            </Dropdown>
-                                                        </td>
-                                                        <td>
-                                                            <Badge className={`badge-custom ${getPriorityBadgeClass(prioridadNombre)}`}>
-                                                                {prioridadNombre}
-                                                            </Badge>
-                                                        </td>
-                                                        <td>
-                                                            <ul className="timeline">
-                                                                <li className="timeline-item">
-                                                                    <span className="timeline-dot"></span>
-                                                                    Creada: {getFormattedDate(item.created_at)}
-                                                                </li>
-                                                                <li className="timeline-item">
-                                                                    <span className="timeline-dot"></span>
-                                                                    Actualizada: {getFormattedDate(item.updated_at)}
-                                                                </li>
-                                                            </ul>
-                                                        </td>
-                                                        <td>
-                                                            <div className="d-flex gap-1 flex-wrap">
-                                                                <button className="action-icon icon-view" title="Ver detalles" onClick={() => handleView(item)}>
-                                                                    <i className="bi bi-eye"></i>
-                                                                </button>
-                                                                <button className="action-icon icon-edit" title="Editar" onClick={() => handleEdit(item)}>
-                                                                    <i className="bi bi-pencil"></i>
-                                                                </button>
-                                                                {Number(user?.rol_id) === 1 && (
-                                                                    <button className="action-icon icon-delete" title="Eliminar" onClick={() => handleDelete(item.id)}>
-                                                                        <i className="bi bi-trash"></i>
+                                    <>
+                                        <Table hover responsive className="table-custom align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th style={{ width: '28%' }}>Tarea</th>
+                                                    <th style={{ width: '15%' }}>Estado</th>
+                                                    <th style={{ width: '10%' }}>Prioridad</th>
+                                                    <th style={{ width: '32%' }}>Fechas</th>
+                                                    <th style={{ width: '15%' }}>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {items.map(item => {
+                                                    const itemTitle = item.titulo;
+                                                    const estadoNombre = item.estado || 'Desconocido';
+                                                    const prioridadNombre = item.prioridad || 'Desconocida';
+                                                    return (
+                                                        <tr key={item.id}>
+                                                            <td>
+                                                                <div className="fw-bold text-dark">{itemTitle}</div>
+                                                                <div className="text-muted small text-truncate desc-truncate" title={item.descripcion}>
+                                                                    {item.descripcion || 'Sin descripción'}
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <Dropdown>
+                                                                    <Dropdown.Toggle variant="light" className={`status-dropdown-toggle ${getStatusDotClass(estadoNombre)}`}>
+                                                                        <span className={`status-dot ${getStatusDotClass(estadoNombre)}`}></span>
+                                                                        {estadoNombre}
+                                                                    </Dropdown.Toggle>
+                                                                    <Dropdown.Menu className="status-dropdown-menu">
+                                                                        {estados.map(estado => (
+                                                                            <Dropdown.Item
+                                                                                key={estado.id}
+                                                                                className="status-dropdown-item"
+                                                                                onClick={() => handleChangeStatus(item.id, estado.id, item.estado_id)}
+                                                                            >
+                                                                                <span className={`status-dot ${getStatusDotClass(estado.nombre)}`}></span>
+                                                                                {estado.nombre}
+                                                                            </Dropdown.Item>
+                                                                        ))}
+                                                                    </Dropdown.Menu>
+                                                                </Dropdown>
+                                                            </td>
+                                                            <td>
+                                                                <Badge className={`badge-custom ${getPriorityBadgeClass(prioridadNombre)}`}>
+                                                                    {prioridadNombre}
+                                                                </Badge>
+                                                            </td>
+                                                            <td>
+                                                                <ul className="timeline">
+                                                                    <li className="timeline-item">
+                                                                        <span className="timeline-dot"></span>
+                                                                        Creada: {getFormattedDate(item.created_at)}
+                                                                    </li>
+                                                                    <li className="timeline-item">
+                                                                        <span className="timeline-dot"></span>
+                                                                        Actualizada: {getFormattedDate(item.updated_at)}
+                                                                    </li>
+                                                                </ul>
+                                                            </td>
+                                                            <td>
+                                                                <div className="d-flex gap-1 flex-wrap">
+                                                                    <button className="action-icon icon-view" title="Ver detalles" onClick={() => handleView(item)}>
+                                                                        <i className="bi bi-eye"></i>
                                                                     </button>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </Table>
+                                                                    <button className="action-icon icon-edit" title="Editar" onClick={() => handleEdit(item)}>
+                                                                        <i className="bi bi-pencil"></i>
+                                                                    </button>
+                                                                    {Number(user?.rol_id) === 1 && (
+                                                                        <button className="action-icon icon-delete" title="Eliminar" onClick={() => handleDelete(item.id)}>
+                                                                            <i className="bi bi-trash"></i>
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </Table>
+                                        
+                                        {totalPages > 1 && (
+                                            <CustomPagination 
+                                                currentPage={currentPage}
+                                                totalPages={totalPages}
+                                                onPageChange={setCurrentPage}
+                                            />
+                                        )}
+                                    </>
                                     );
                                 })()}
                             </Card.Body>

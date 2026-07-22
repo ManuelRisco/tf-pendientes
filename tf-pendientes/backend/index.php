@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+// Cargar variables de entorno (si usas vlucas/phpdotenv) y autoloader de Composer
+require_once __DIR__ . '/vendor/autoload.php';
+
 // Cargar .env si existe (Para desarrollo local)
 $envPath = __DIR__ . '/.env';
 if (file_exists($envPath)) {
@@ -22,6 +25,9 @@ if (file_exists($envPath)) {
 // ==============================================================================
 $allowedOrigins = [
     'http://localhost:5173',  // Vite dev
+    'http://localhost:4173',  // Vite preview (Producción local)
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:4173',
     'http://localhost:3000',
 ];
 
@@ -31,7 +37,7 @@ if ($frontendUrl) {
     $allowedOrigins[] = rtrim($frontendUrl, '/');
 }
 
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$origin = rtrim($_SERVER['HTTP_ORIGIN'] ?? '', '/');
 if (in_array($origin, $allowedOrigins, true)) {
     header("Access-Control-Allow-Origin: $origin");
 }
@@ -56,6 +62,7 @@ spl_autoload_register(function (string $class): void {
         __DIR__ . '/middleware/',
         __DIR__ . '/models/',
         __DIR__ . '/controllers/',
+        __DIR__ . '/entities/',
     ];
     foreach ($dirs as $dir) {
         $file = $dir . $class . '.php';
@@ -65,6 +72,9 @@ spl_autoload_register(function (string $class): void {
         }
     }
 });
+
+// Arrancar Eloquent ORM
+Database::bootEloquent();
 
 // ==============================================================================
 // Manejo global de excepciones no capturadas

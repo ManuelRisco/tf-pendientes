@@ -6,7 +6,7 @@
  */
 class JwtHelper {
 
-    // ⚠️Cambia este secreto por uno fuerte y guárdalo en variable de entorno
+    // Cambia este secreto por uno fuerte y guárdalo en variable de entorno
     private static string $secret = 'TU_CLAVE_SECRETA_MUY_LARGA_Y_SEGURA_2024';
     private static int    $ttl    = 28800; // 8 horas en segundos
 

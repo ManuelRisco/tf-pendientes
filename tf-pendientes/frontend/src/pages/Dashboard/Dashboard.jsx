@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import Navbar from "../../components/Navbar/Navbar";
+import { useEffect, useState, useRef } from "react";
 import api from "../../lib/axios";
 import { useAuth } from "../../context/AuthContext";
 import './Dashboard.css';
@@ -8,24 +7,57 @@ function Dashboard() {
     const { user } = useAuth();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const statsRef = useRef(null);
 
     useEffect(() => {
-        const fetchDashboard = async () => {
+        let isMounted = true;
+
+        const fetchDashboard = async (isPolling = false) => {
             try {
+                if (!isPolling) setLoading(true);
+
                 const resStats = await api.get('/dashboard');
-                setStats(resStats.data.data);
+                const newData = resStats.data.data;
+                const newStatsString = JSON.stringify(newData);
+
+                if (isMounted) {
+                    if (isPolling) {
+                        if (statsRef.current !== newStatsString) {
+                            setStats(newData);
+                            statsRef.current = newStatsString;
+                            setIsUpdating(true);
+                            setTimeout(() => {
+                                if (isMounted) setIsUpdating(false);
+                            }, 800); // Duración de la animación
+                        }
+                    } else {
+                        setStats(newData);
+                        statsRef.current = newStatsString;
+                    }
+                }
             } catch (error) {
                 console.error("Error fetching dashboard data", error);
             } finally {
-                setLoading(false);
+                if (isMounted && !isPolling) setLoading(false);
             }
         };
+
         if (user) {
             fetchDashboard();
+            
+            const interval = setInterval(() => {
+                fetchDashboard(true);
+            }, 5000); // Actualizar cada 5 segundos
+
+            return () => {
+                isMounted = false;
+                clearInterval(interval);
+            };
         }
     }, [user]);
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center text-slate-500">Cargando dashboard...</div>;
+    if (loading) return <div className="loading-screen text-slate-500">Cargando dashboard...</div>;
 
     const total = stats?.estadisticas?.total || 0;
     const estados = stats?.estadisticas?.porEstado || [];
@@ -56,81 +88,166 @@ function Dashboard() {
         return part;
     }).join(', ');
 
-    const conicGradient = total > 0 ? `conic-gradient(${gradientParts})` : 'conic-gradient(#e2e8f0 0% 100%)';
+    const conicGradient = total > 0 ? `conic-gradient(${gradientParts})` : 'conic-gradient(#2b2b40 0% 100%)';
+
+    const totalUsuarios = stats?.total_usuarios || 0;
+    const actividadReciente = stats?.actividad_reciente || [];
+
+    const getTimeAgo = (dateString) => {
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffInSeconds = Math.floor((now - date) / 1000);
+
+        if (diffInSeconds < 60) return `Hace ${diffInSeconds} seg`;
+        if (diffInSeconds < 3600) return `Hace ${Math.floor(diffInSeconds / 60)} min`;
+        if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)} horas`;
+        return `Hace ${Math.floor(diffInSeconds / 86400)} días`;
+    };
+
+    const getActionColor = (accion) => {
+        switch (accion) {
+            case 'CREAR': return 'bg-green-500';
+            case 'ACTUALIZAR': return 'bg-blue-500';
+            case 'ELIMINAR_LOGICO': return 'bg-red-500';
+            case 'RESTAURAR': return 'bg-orange-500';
+            default: return 'bg-gray-500';
+        }
+    };
+
+    const getActionText = (mov) => {
+        const nombre = mov.persona_nombre || mov.email || 'Alguien';
+        const isUser = mov.modulo === 'usuarios';
+        const articulo = isUser ? 'un usuario' : 'una tarea';
+
+        let targetInfo = '';
+        if (mov.detalles) {
+            const data = mov.detalles.nuevo || mov.detalles.anterior || {};
+            let name = data.email || data.titulo;
+            if (name) {
+                // Truncar si el nombre/título es muy largo
+                if (name.length > 25) {
+                    name = name.substring(0, 25) + '...';
+                }
+                targetInfo = ` (${name})`;
+            }
+        }
+
+        switch (mov.tipo_accion) {
+            case 'CREAR':
+                return `${nombre} creó ${isUser ? 'un nuevo usuario' : 'una nueva tarea'}${targetInfo}`;
+            case 'ACTUALIZAR':
+                return `${nombre} actualizó ${articulo}${targetInfo}`;
+            case 'ELIMINAR_LOGICO':
+                return isUser ? `${nombre} desactivó ${articulo}${targetInfo}` : `${nombre} eliminó ${articulo}${targetInfo}`;
+            case 'RESTAURAR':
+                return `${nombre} reactivó ${articulo}${targetInfo}`;
+            default:
+                return `${nombre} realizó una acción en ${articulo}${targetInfo}`;
+        }
+    };
 
     return (
-        <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-            <Navbar />
-            <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-                <h1 className="text-[2.25rem] font-bold mb-8 tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                    Bienvenido, {user?.nombre || 'Admin'}
-                </h1>
+        <div className="dashboard-container">
+            <h1 className="dashboard-title">Bienvenido, {user?.nombre || 'Admin'}</h1>
+            <p className="dashboard-subtitle">Aquí tienes un resumen de tus métricas.</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Card 1: Total Tareas */}
-                    <div className="rounded-[24px] p-8 flex flex-col" 
-                         style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
-                        <div className="flex justify-between items-start mb-6">
-                            <h3 className="font-semibold text-[1.1rem]" style={{ color: 'var(--text-secondary)' }}>Total Tareas</h3>
-                            <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shadow-sm">
-                                <i className="bi bi-clipboard-check text-2xl"></i>
-                            </div>
+            <div className="top-cards-grid">
+                {/* Card 1: Total Tareas */}
+                <div className="stat-card blue-gradient stacked-card">
+                    <div className="stat-card-header">
+                        <h3>Total Tareas</h3>
+                        <i className="bi bi-clipboard2-check"></i>
+                    </div>
+                    <div className="stat-card-body">
+                        <h2 className={isUpdating ? 'updating-anim' : ''}>{total}</h2>
+                    </div>
+                </div>
+
+                {/* Card 2: Active Users (Solo Admins) */}
+                {user?.rol_id === 1 && (
+                    <div className="stat-card orange-gradient stacked-card">
+                        <div className="stat-card-header">
+                            <h3>Usuarios Activos</h3>
+                            <i className="bi bi-people"></i>
                         </div>
-                        <div className="text-[4rem] font-extrabold leading-none tracking-tighter flex-grow flex items-center justify-center" style={{ color: 'var(--text-primary)' }}>
-                            {total}
+                        <div className="stat-card-body">
+                            <h2 className={isUpdating ? 'updating-anim' : ''}>{totalUsuarios}</h2>
                         </div>
                     </div>
+                )}
 
-                    {/* Card 2: Tareas por Estado */}
-                    <div className="rounded-[24px] p-8 flex flex-col"
-                         style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
-                        <h3 className="font-bold text-[1.1rem] mb-6" style={{ color: 'var(--text-primary)' }}>Tareas por Estado</h3>
-                        <div className="flex flex-col items-center flex-grow justify-center">
-                            {/* Donut Chart */}
-                            <div className="relative w-36 h-36 rounded-full flex items-center justify-center shadow-sm mb-8" style={{ background: conicGradient }}>
-                                <div className="absolute inset-0 m-[22px] rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
-                            </div>
-                            
-                            {/* Legend */}
-                            <div className="w-full space-y-3">
-                                {estados.map(estado => {
-                                    const p = total > 0 ? Math.round((estado.cantidad / total) * 100) : 0;
-                                    const color = estadoColors[estado.nombre] || '#cbd5e1';
-                                    return (
-                                        <div key={estado.nombre} className="flex justify-between items-center text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }}></span>
-                                                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>{estado.nombre}</span>
-                                            </div>
-                                            <span className="font-medium opacity-75" style={{ color: 'var(--text-secondary)' }}>{p}%</span>
+                {/* Card 3: Recent Activity (Solo Admins) */}
+                {user?.rol_id === 1 && (
+                    <div className="stat-card dark-card">
+                        <div className="stat-card-header">
+                            <h3>Actividad reciente</h3>
+                            <i className="bi bi-activity"></i>
+                        </div>
+                        <div className="recent-activity-list">
+                            {actividadReciente.length > 0 ? (
+                                actividadReciente.map((mov, index) => (
+                                    <div className="activity-item" key={mov.id || index}>
+                                        <span className={`activity-dot ${getActionColor(mov.tipo_accion)}`}></span>
+                                        <div className="activity-content">
+                                            <p>{getActionText(mov)}</p>
+                                            <span>{getTimeAgo(mov.created_at)}</span>
                                         </div>
-                                    );
-                                })}
-                            </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-sm text-slate-400">No hay actividad reciente.</p>
+                            )}
                         </div>
                     </div>
+                )}
+            </div>
 
-                    {/* Card 3: Tareas por Prioridad */}
-                    <div className="rounded-[24px] p-8 flex flex-col"
-                         style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', boxShadow: 'var(--card-shadow)' }}>
-                        <h3 className="font-bold text-[1.1rem] mb-8" style={{ color: 'var(--text-primary)' }}>Tareas por Prioridad</h3>
-                        <div className="space-y-6 flex-grow flex flex-col justify-center">
-                            {prioridades.map(prioridad => {
-                                const p = total > 0 ? Math.round((prioridad.cantidad / total) * 100) : 0;
-                                const color = prioridadColors[prioridad.nombre] || '#cbd5e1';
+            <div className="charts-grid mt-6">
+                {/* Tareas por Estado */}
+                <div className="chart-card dark-card">
+                    <h3 className="chart-title">Tareas por Estado</h3>
+                    <div className="donut-chart-container">
+                        <div className={`donut-chart ${isUpdating ? 'updating-anim' : ''}`} style={{ background: conicGradient }}>
+                            <div className="donut-inner"></div>
+                        </div>
+
+                        <div className="chart-legend">
+                            {estados.map(estado => {
+                                const p = total > 0 ? parseFloat(((estado.cantidad / total) * 100).toFixed(1)) : 0;
+                                const color = estadoColors[estado.nombre] || '#cbd5e1';
                                 return (
-                                    <div key={prioridad.nombre}>
-                                        <div className="flex justify-between text-[0.95rem] mb-2">
-                                            <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{prioridad.nombre}</span>
-                                            <span className="font-medium opacity-75" style={{ color: 'var(--text-secondary)' }}>{p}%</span>
+                                    <div key={estado.nombre} className="legend-item">
+                                        <div className="legend-label">
+                                            <span className="legend-dot" style={{ backgroundColor: color }}></span>
+                                            <span>{estado.nombre}</span>
                                         </div>
-                                        <div className="w-full rounded-full h-2.5 shadow-inner" style={{ backgroundColor: 'var(--bg-primary)' }}>
-                                            <div className="h-2.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${p}%`, backgroundColor: color }}></div>
-                                        </div>
+                                        <span className="legend-value">{p}%</span>
                                     </div>
                                 );
                             })}
                         </div>
+                    </div>
+                </div>
+
+                {/* Tareas por Prioridad */}
+                <div className="chart-card dark-card">
+                    <h3 className="chart-title">Tareas por Prioridad</h3>
+                    <div className="progress-bars-container">
+                        {prioridades.map(prioridad => {
+                            const p = total > 0 ? parseFloat(((prioridad.cantidad / total) * 100).toFixed(1)) : 0;
+                            const color = prioridadColors[prioridad.nombre] || '#cbd5e1';
+                            return (
+                                <div key={prioridad.nombre} className="progress-bar-wrapper">
+                                    <div className="progress-bar-header">
+                                        <span>{prioridad.nombre}</span>
+                                        <span>{p}%</span>
+                                    </div>
+                                    <div className="progress-track">
+                                        <div className="progress-fill" style={{ width: `${p}%`, backgroundColor: color }}></div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

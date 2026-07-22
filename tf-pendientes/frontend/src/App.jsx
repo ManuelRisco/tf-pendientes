@@ -1,12 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
-import Login from "./pages/Login/Login";
-import Dashboard from "./pages/Dashboard/Dashboard";
-import Usuarios from "./pages/Usuarios/Usuarios";
-import Equipos from "./pages/Equipos/Equipos";
-import NotFound from "./pages/NotFound/NotFound";
-import GestionTareas from "./pages/GestionTareas/GestionTareas";
-import Movimientos from "./pages/Movimientos/Movimientos";
+import { lazy, Suspense } from "react";
+import Layout from "./components/Layout/Layout";
+
+// Lazy loading de páginas para mejorar el rendimiento (Code Splitting)
+const Login = lazy(() => import("./pages/Login/Login"));
+const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
+const Usuarios = lazy(() => import("./pages/Usuarios/Usuarios"));
+const Equipos = lazy(() => import("./pages/Equipos/Equipos"));
+const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
+const GestionTareas = lazy(() => import("./pages/GestionTareas/GestionTareas"));
+const Movimientos = lazy(() => import("./pages/Movimientos/Movimientos"));
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -27,19 +32,27 @@ const PublicRoute = ({ children }) => {
 };
 
 function App() {
+  // Cuando React termina de renderizar la aplicación por primera vez, 
+  // quitamos el candado (preload) para que las transiciones de Modo Oscuro vuelvan a funcionar con normalidad.
+  useEffect(() => {
+    document.body.classList.remove('preload');
+  }, []);
+
   return (
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/usuarios" element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
-          <Route path="/equipos" element={<ProtectedRoute><Equipos /></ProtectedRoute>} />
-          <Route path="/gestion-tareas" element={<ProtectedRoute><GestionTareas /></ProtectedRoute>} />
-          <Route path="/movimientos" element={<ProtectedRoute><Movimientos /></ProtectedRoute>} />
-          
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando aplicación...</div>}>
+          <Routes>
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+            <Route path="/usuarios" element={<ProtectedRoute><Layout><Usuarios /></Layout></ProtectedRoute>} />
+            <Route path="/equipos" element={<ProtectedRoute><Layout><Equipos /></Layout></ProtectedRoute>} />
+            <Route path="/gestion-tareas" element={<ProtectedRoute><Layout><GestionTareas /></Layout></ProtectedRoute>} />
+            <Route path="/movimientos" element={<ProtectedRoute><Layout><Movimientos /></Layout></ProtectedRoute>} />
+            
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
   );
 }

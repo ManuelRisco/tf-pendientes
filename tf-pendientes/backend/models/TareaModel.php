@@ -1,138 +1,161 @@
 <?php
 
-class TareaModel {
-    private PDO $db;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
-    public function __construct() {
-        $this->db = Database::getConnection();
-    }
+class TareaModel {
 
     // ------------------------------------------------------------------
     // Listar tareas con filtros opcionales
     // Admins ven todas; Empleados solo las suyas
     // ------------------------------------------------------------------
-    public function getAll(array $filters = [], ?int $usuarioId = null): array {
-        $where  = ['t.deleted_at IS NULL'];
-        $params = [];
+    public function getAll(array $filters = [], ?int $usuarioId = null, int $limit = 10, int $offset = 0): array {
+        $query = Tarea::with(['estado', 'prioridad', 'usuario.persona'])
+            ->orderBy('created_at', 'desc');
 
         if ($usuarioId !== null) {
-            $where[]          = 't.usuario_id = :uid';
-            $params['uid']    = $usuarioId;
+            $query->where('usuario_id', $usuarioId);
         }
+
         if (!empty($filters['estado_id'])) {
-            $where[]               = 't.estado_id = :estado_id';
-            $params['estado_id']   = (int)$filters['estado_id'];
+            $query->where('estado_id', (int)$filters['estado_id']);
         }
+
         if (!empty($filters['prioridad_id'])) {
-            $where[]               = 't.prioridad_id = :prioridad_id';
-            $params['prioridad_id'] = (int)$filters['prioridad_id'];
+            $query->where('prioridad_id', (int)$filters['prioridad_id']);
         }
+
         if (!empty($filters['search'])) {
-            $where[]              = '(t.titulo LIKE :search OR t.descripcion LIKE :search)';
-            $params['search']     = '%' . $filters['search'] . '%';
+            $search = '%' . $filters['search'] . '%';
+            $query->where(function($q) use ($search) {
+                $q->where('titulo', 'LIKE', $search)
+                  ->orWhere('descripcion', 'LIKE', $search);
+            });
         }
 
-        $whereSQL = implode(' AND ', $where);
+        $tareas = $query->skip($offset)->take($limit)->get();
 
-        $stmt = $this->db->prepare("
-            SELECT  t.id, t.titulo, t.descripcion,
-                    t.estado_id,    e.nombre AS estado,
-                    t.prioridad_id, pr.nombre AS prioridad,
-                    t.usuario_id,
-                    CONCAT(p.nombre, ' ', p.apellido) AS usuario_nombre,
-                    t.created_at, t.updated_at
-            FROM    tareas t
-            JOIN    estados    e  ON e.id  = t.estado_id
-            JOIN    prioridades pr ON pr.id = t.prioridad_id
-            JOIN    usuarios   u  ON u.id  = t.usuario_id
-            JOIN    personas   p  ON p.id  = u.persona_id
-            WHERE   $whereSQL
-            ORDER   BY t.created_at DESC
-        ");
-        $stmt->execute($params);
-        return $stmt->fetchAll();
+        $result = [];
+        foreach ($tareas as $t) {
+            $result[] = [
+                'id'             => $t->id,
+                'titulo'         => $t->titulo,
+                'descripcion'    => $t->descripcion,
+                'estado_id'      => $t->estado_id,
+                'estado'         => $t->estado ? $t->estado->nombre : null,
+                'prioridad_id'   => $t->prioridad_id,
+                'prioridad'      => $t->prioridad ? $t->prioridad->nombre : null,
+                'usuario_id'     => $t->usuario_id,
+                'usuario_nombre' => $t->usuario && $t->usuario->persona ? $t->usuario->persona->nombre . ' ' . $t->usuario->persona->apellido : null,
+                'created_at'     => $t->created_at,
+                'updated_at'     => $t->updated_at,
+            ];
+        }
+
+        return $result;
+    }
+
+    public function countAll(array $filters = [], ?int $usuarioId = null): int {
+        $query = Tarea::query();
+
+        if ($usuarioId !== null) {
+            $query->where('usuario_id', $usuarioId);
+        }
+
+        if (!empty($filters['estado_id'])) {
+            $query->where('estado_id', (int)$filters['estado_id']);
+        }
+
+        if (!empty($filters['prioridad_id'])) {
+            $query->where('prioridad_id', (int)$filters['prioridad_id']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = '%' . $filters['search'] . '%';
+            $query->where(function($q) use ($search) {
+                $q->where('titulo', 'LIKE', $search)
+                  ->orWhere('descripcion', 'LIKE', $search);
+            });
+        }
+
+        return $query->count();
     }
 
     // ------------------------------------------------------------------
     public function findById(int $id): ?array {
-        $stmt = $this->db->prepare("
-            SELECT  t.id, t.titulo, t.descripcion,
-                    t.estado_id,    e.nombre AS estado,
-                    t.prioridad_id, pr.nombre AS prioridad,
-                    t.usuario_id,
-                    CONCAT(p.nombre, ' ', p.apellido) AS usuario_nombre,
-                    t.created_at, t.updated_at
-            FROM    tareas t
-            JOIN    estados    e  ON e.id  = t.estado_id
-            JOIN    prioridades pr ON pr.id = t.prioridad_id
-            JOIN    usuarios   u  ON u.id  = t.usuario_id
-            JOIN    personas   p  ON p.id  = u.persona_id
-            WHERE   t.id = :id AND t.deleted_at IS NULL
-        ");
-        $stmt->execute(['id' => $id]);
-        $row = $stmt->fetch();
-        return $row ?: null;
+        $t = Tarea::with(['estado', 'prioridad', 'usuario.persona'])->find($id);
+
+        if (!$t) return null;
+
+        return [
+            'id'             => $t->id,
+            'titulo'         => $t->titulo,
+            'descripcion'    => $t->descripcion,
+            'estado_id'      => $t->estado_id,
+            'estado'         => $t->estado ? $t->estado->nombre : null,
+            'prioridad_id'   => $t->prioridad_id,
+            'prioridad'      => $t->prioridad ? $t->prioridad->nombre : null,
+            'usuario_id'     => $t->usuario_id,
+            'usuario_nombre' => $t->usuario && $t->usuario->persona ? $t->usuario->persona->nombre . ' ' . $t->usuario->persona->apellido : null,
+            'created_at'     => $t->created_at,
+            'updated_at'     => $t->updated_at,
+        ];
     }
 
     // ------------------------------------------------------------------
     public function create(array $data, int $creadorId): int {
-        $this->db->exec("SET @usuario_id_app = $creadorId");
+        Capsule::statement("SET @usuario_id_app = ?", [$creadorId]);
 
-        $stmt = $this->db->prepare("
-            INSERT INTO tareas (titulo, descripcion, estado_id, prioridad_id, usuario_id)
-            VALUES (:titulo, :descripcion, :estado_id, :prioridad_id, :usuario_id)
-        ");
-        $stmt->execute([
+        $tarea = Tarea::create([
             'titulo'       => $data['titulo'],
             'descripcion'  => $data['descripcion'] ?? null,
             'estado_id'    => $data['estado_id']   ?? 1,
             'prioridad_id' => (int)$data['prioridad_id'],
             'usuario_id'   => (int)$data['usuario_id'],
         ]);
-        return (int)$this->db->lastInsertId();
+
+        return $tarea->id;
     }
 
     // ------------------------------------------------------------------
     public function update(int $id, array $data, int $editorId): bool {
-        $this->db->exec("SET @usuario_id_app = $editorId");
+        Capsule::statement("SET @usuario_id_app = ?", [$editorId]);
 
-        $fields = [];
-        $params = ['id' => $id];
+        $tarea = Tarea::find($id);
+        if (!$tarea) return false;
 
+        $updateData = [];
         $allowed = ['titulo', 'descripcion', 'estado_id', 'prioridad_id', 'usuario_id'];
+        
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {
-                $fields[]       = "$field = :$field";
-                $params[$field] = $data[$field];
+                $updateData[$field] = $data[$field];
             }
         }
 
-        if (empty($fields)) return false;
+        if (empty($updateData)) return false;
 
-        $stmt = $this->db->prepare(
-            "UPDATE tareas SET " . implode(', ', $fields) . " WHERE id = :id AND deleted_at IS NULL"
-        );
-        $stmt->execute($params);
-        return $stmt->rowCount() > 0;
+        return $tarea->update($updateData);
     }
 
     // ------------------------------------------------------------------
     public function softDelete(int $id, int $editorId): bool {
-        $this->db->exec("SET @usuario_id_app = $editorId");
-        $stmt = $this->db->prepare(
-            "UPDATE tareas SET deleted_at = NOW() WHERE id = :id AND deleted_at IS NULL"
-        );
-        $stmt->execute(['id' => $id]);
-        return $stmt->rowCount() > 0;
+        Capsule::statement("SET @usuario_id_app = ?", [$editorId]);
+
+        $tarea = Tarea::find($id);
+        if ($tarea) {
+            return $tarea->delete();
+        }
+        return false;
     }
 
     // ------------------------------------------------------------------
     public function restore(int $id, int $editorId): bool {
-        $this->db->exec("SET @usuario_id_app = $editorId");
-        $stmt = $this->db->prepare(
-            "UPDATE tareas SET deleted_at = NULL WHERE id = :id AND deleted_at IS NOT NULL"
-        );
-        $stmt->execute(['id' => $id]);
-        return $stmt->rowCount() > 0;
+        Capsule::statement("SET @usuario_id_app = ?", [$editorId]);
+
+        $tarea = Tarea::withTrashed()->find($id);
+        if ($tarea) {
+            return $tarea->restore();
+        }
+        return false;
     }
 }

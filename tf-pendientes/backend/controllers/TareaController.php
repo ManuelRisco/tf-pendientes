@@ -19,7 +19,23 @@ class TareaController {
         // Todos pueden ver todas las tareas
         $usuarioId = null;
 
-        Response::success($this->model->getAll($filters, $usuarioId));
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 10;
+        $offset = ($page - 1) * $limit;
+
+        $items = $this->model->getAll($filters, $usuarioId, $limit, $offset);
+        $total = $this->model->countAll($filters, $usuarioId);
+        $totalPages = ceil($total / $limit);
+
+        Response::success([
+            'items' => $items,
+            'meta' => [
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'totalPages' => $totalPages
+            ]
+        ]);
     }
 
     // GET /api/tareas/:id

@@ -1,0 +1,37 @@
+.notfound-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.notfound-card {
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.notfound-icon {
+    font-size: 5rem;
+    color: #cbd5e1;
+    margin-bottom: 1.5rem;
+}
+
+body.dark-mode .notfound-icon {
+    color: #475569;
+}
+
+.notfound-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.notfound-text {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}

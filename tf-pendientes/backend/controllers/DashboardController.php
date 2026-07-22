@@ -20,10 +20,10 @@ class DashboardController {
 
         $data = ['estadisticas' => $stats];
 
-        // Solo el admin ve el total de usuarios
-        if ($esAdmin) {
-            $data['total_usuarios'] = $this->model->getTotalUsuarios();
-        }
+        // Solo el admin ve el total de usuarios y todos los movimientos detallados
+        // Por ahora lo retornaremos para que se vea en el dashboard.
+        $data['total_usuarios'] = $this->model->getTotalUsuarios();
+        $data['actividad_reciente'] = $this->model->getMovimientos(3);
 
         Response::success($data);
     }

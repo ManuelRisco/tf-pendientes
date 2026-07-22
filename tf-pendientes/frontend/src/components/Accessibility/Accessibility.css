@@ -1,0 +1,199 @@
+/* AccessibilityMenu Wrapper */
+.accessibility-wrapper {
+    position: relative;
+}
+
+/* Dropdown Menu */
+.accessibility-dropdown {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    width: 260px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e2e8f0;
+    z-index: 1050;
+    animation: fadeInDown 0.2s ease-out;
+}
+
+body.dark-mode .accessibility-dropdown {
+    background-color: #1e1e2d;
+    border-color: #2b2b40;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    color: #f8fafc;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header */
+.accessibility-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+body.dark-mode .accessibility-header {
+    border-bottom-color: #2b2b40;
+}
+
+/* Body */
+.accessibility-body {
+    padding: 16px;
+}
+
+.accessibility-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.option-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+}
+
+.dropdown-divider {
+    margin: 16px 0;
+    border: none;
+    border-top: 1px solid #e2e8f0;
+}
+
+body.dark-mode .dropdown-divider {
+    border-top-color: #2b2b40;
+}
+
+.accessibility-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.section-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+body.dark-mode .section-title {
+    color: #94a3b8;
+}
+
+/* Custom Radio Buttons */
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.radio-label input[type="radio"] {
+    accent-color: #0d6efd;
+    width: 16px;
+    height: 16px;
+}
+
+/* Switch Toggle (iOS Style) */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #0d6efd;
+}
+
+input:checked + .slider:before {
+    transform: translateX(18px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+
+/* ========================================================
+   ACCESSIBILITY GLOBAL CLASSES (Applied to body)
+======================================================== */
+
+/* Dislexia Font */
+body.dyslexia-font,
+body.dyslexia-font * {
+    font-family: 'Comic Sans MS', 'Comic Neue', 'Lexend', 'OpenDyslexic', sans-serif !important;
+    letter-spacing: 0.05em !important;
+    word-spacing: 0.1em !important;
+    line-height: 1.6 !important;
+}
+
+/* Color Blindness Filters via SVG filters or generic CSS */
+body.filter-grayscale {
+    filter: grayscale(100%);
+}
+
+body.filter-high-contrast {
+    filter: contrast(130%) saturate(120%);
+}
+
+body.filter-protanopia {
+    filter: url('#protanopia');
+}
+
+body.filter-deuteranopia {
+    filter: url('#deuteranopia');
+}
+
+body.filter-tritanopia {
+    filter: url('#tritanopia');
+}

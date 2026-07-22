@@ -1,192 +1,178 @@
 <?php
 
-class UsuarioModel {
-    private PDO $db;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
-    public function __construct() {
-        $this->db = Database::getConnection();
-    }
+class UsuarioModel {
 
     // ------------------------------------------------------------------
     // Búsqueda por email (para login)
     // ------------------------------------------------------------------
     public function findByEmail(string $email): ?array {
-        $stmt = $this->db->prepare("
-            SELECT u.id, u.email, u.password, u.rol_id, u.deleted_at,
-                   p.nombre, p.apellido, p.id AS persona_id
-            FROM   usuarios u
-            JOIN   personas p ON p.id = u.persona_id
-            WHERE  u.email = :email
-            LIMIT  1
-        ");
-        $stmt->execute(['email' => $email]);
-        $row = $stmt->fetch();
-        return $row ?: null;
+        $usuario = Usuario::with('persona')
+            ->where('email', $email)
+            ->first();
+
+        if (!$usuario) return null;
+
+        return [
+            'id'         => $usuario->id,
+            'email'      => $usuario->email,
+            'password'   => $usuario->makeVisible('password')->password, 
+            'rol_id'     => $usuario->rol_id,
+            'deleted_at' => $usuario->deleted_at,
+            'nombre'     => $usuario->persona ? $usuario->persona->nombre : null,
+            'apellido'   => $usuario->persona ? $usuario->persona->apellido : null,
+            'persona_id' => $usuario->persona_id,
+        ];
     }
 
     // ------------------------------------------------------------------
-    // Listar usuarios activos (con datos de persona y rol)
+    // Listar usuarios activos (con datos de persona y rol) con paginación
     // ------------------------------------------------------------------
-    public function getAll(): array {
-        $stmt = $this->db->query("
-            SELECT u.id, u.email, u.rol_id, r.nombre AS rol,
-                   p.id AS persona_id, p.nombre, p.apellido,
-                   u.created_at, u.updated_at, u.deleted_at
-            FROM   usuarios u
-            JOIN   personas p ON p.id  = u.persona_id
-            JOIN   roles    r ON r.id  = u.rol_id
-            ORDER  BY u.id DESC
-        ");
-        return $stmt->fetchAll();
+    public function getAll(int $limit = 10, int $offset = 0): array {
+        $usuarios = Usuario::withTrashed() // Trae todos para coincidir con la query original
+            ->with(['persona', 'rol'])
+            ->orderBy('id', 'desc')
+            ->skip($offset)
+            ->take($limit)
+            ->get();
+
+        $result = [];
+        foreach ($usuarios as $u) {
+            $result[] = [
+                'id'         => $u->id,
+                'email'      => $u->email,
+                'rol_id'     => $u->rol_id,
+                'rol'        => $u->rol ? $u->rol->nombre : null,
+                'persona_id' => $u->persona_id,
+                'nombre'     => $u->persona ? $u->persona->nombre : null,
+                'apellido'   => $u->persona ? $u->persona->apellido : null,
+                'created_at' => $u->created_at,
+                'updated_at' => $u->updated_at,
+                'deleted_at' => $u->deleted_at,
+            ];
+        }
+        return $result;
+    }
+
+    // ------------------------------------------------------------------
+    // Contar total de usuarios para paginación
+    // ------------------------------------------------------------------
+    public function countAll(): int {
+        return Usuario::withTrashed()->count();
     }
 
     // ------------------------------------------------------------------
     // Obtener uno por id
     // ------------------------------------------------------------------
     public function findById(int $id): ?array {
-        $stmt = $this->db->prepare("
-            SELECT u.id, u.email, u.rol_id, r.nombre AS rol,
-                   p.id AS persona_id, p.nombre, p.apellido,
-                   u.created_at, u.updated_at
-            FROM   usuarios u
-            JOIN   personas p ON p.id = u.persona_id
-            JOIN   roles    r ON r.id = u.rol_id
-            WHERE  u.id = :id
-              AND  u.deleted_at IS NULL
-        ");
-        $stmt->execute(['id' => $id]);
-        $row = $stmt->fetch();
-        return $row ?: null;
+        $usuario = Usuario::with(['persona', 'rol'])->find($id);
+
+        if (!$usuario) return null;
+
+        return [
+            'id'         => $usuario->id,
+            'email'      => $usuario->email,
+            'rol_id'     => $usuario->rol_id,
+            'rol'        => $usuario->rol ? $usuario->rol->nombre : null,
+            'persona_id' => $usuario->persona_id,
+            'nombre'     => $usuario->persona ? $usuario->persona->nombre : null,
+            'apellido'   => $usuario->persona ? $usuario->persona->apellido : null,
+            'created_at' => $usuario->created_at,
+            'updated_at' => $usuario->updated_at,
+        ];
     }
 
     // ------------------------------------------------------------------
     // Crear persona + usuario en una transacción
     // ------------------------------------------------------------------
-    public function create(array $data): int {
-        $this->db->beginTransaction();
-        try {
+    public function create(array $data, int $creatorId): int {
+        // Disparar la variable de sesión para el trigger de bitácora
+        Capsule::statement("SET @usuario_id_app = ?", [$creatorId]);
+        
+        return Capsule::transaction(function () use ($data) {
             // 1. Insertar persona
-            $stmt = $this->db->prepare("
-                INSERT INTO personas (nombre, apellido) VALUES (:nombre, :apellido)
-            ");
-            $stmt->execute([
+            $persona = Persona::create([
                 'nombre'   => $data['nombre'],
-                'apellido' => $data['apellido'],
+                'apellido' => $data['apellido']
             ]);
-            $personaId = (int)$this->db->lastInsertId();
 
             // 2. Insertar usuario
-            $stmt = $this->db->prepare("
-                INSERT INTO usuarios (persona_id, rol_id, email, password)
-                VALUES (:persona_id, :rol_id, :email, :password)
-            ");
-            $stmt->execute([
-                'persona_id' => $personaId,
+            $usuario = Usuario::create([
+                'persona_id' => $persona->id,
                 'rol_id'     => $data['rol_id'],
                 'email'      => $data['email'],
-                'password'   => password_hash($data['password'], PASSWORD_BCRYPT),
+                'password'   => $data['password']
             ]);
-            $usuarioId = (int)$this->db->lastInsertId();
 
-            // 3. Disparar la variable de sesión para el trigger de bitácora
-            $this->db->exec("SET @usuario_id_app = $usuarioId");
-
-            $this->db->commit();
-            return $usuarioId;
-        } catch (Throwable $e) {
-            $this->db->rollBack();
-            throw $e;
-        }
+            return $usuario->id;
+        });
     }
 
     // ------------------------------------------------------------------
-    // Actualizar email / rol
+    // Actualizar persona + usuario en transacción
     // ------------------------------------------------------------------
     public function update(int $id, array $data, int $editorId): bool {
-        $this->db->exec("SET @usuario_id_app = $editorId");
+        Capsule::statement("SET @usuario_id_app = ?", [$editorId]);
 
-        $fields = [];
-        $params = ['id' => $id];
+        return Capsule::transaction(function () use ($id, $data) {
+            $usuario = Usuario::find($id);
+            if (!$usuario) return false;
 
-        if (isset($data['email'])) {
-            $fields[] = 'email = :email';
-            $params['email'] = $data['email'];
-        }
-        if (isset($data['rol_id'])) {
-            $fields[] = 'rol_id = :rol_id';
-            $params['rol_id'] = (int)$data['rol_id'];
-        }
-        if (isset($data['password'])) {
-            $fields[] = 'password = :password';
-            $params['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
-        }
-        // Actualizar persona si viene nombre/apellido
-        if (isset($data['nombre']) || isset($data['apellido'])) {
-            $usuario = $this->findById($id);
-            if ($usuario) {
-                $pFields = [];
-                $pParams = ['persona_id' => $usuario['persona_id']];
-                if (isset($data['nombre'])) {
-                    $pFields[] = 'nombre = :nombre';
-                    $pParams['nombre'] = $data['nombre'];
-                }
-                if (isset($data['apellido'])) {
-                    $pFields[] = 'apellido = :apellido';
-                    $pParams['apellido'] = $data['apellido'];
-                }
-                $pStmt = $this->db->prepare(
-                    "UPDATE personas SET " . implode(', ', $pFields) . " WHERE id = :persona_id"
-                );
-                $pStmt->execute($pParams);
+            if ($usuario->persona) {
+                $usuario->persona->update([
+                    'nombre'   => $data['nombre'],
+                    'apellido' => $data['apellido']
+                ]);
             }
+
+            $updateData = [
+                'rol_id' => $data['rol_id'],
+                'email'  => $data['email']
+            ];
+
+            if (!empty($data['password'])) {
+                $updateData['password'] = $data['password'];
+            }
+
+            return $usuario->update($updateData);
+        });
+    }
+
+    // ------------------------------------------------------------------
+    // Eliminación lógica
+    // ------------------------------------------------------------------
+    public function delete(int $id, int $deleterId): bool {
+        Capsule::statement("SET @usuario_id_app = ?", [$deleterId]);
+
+        $usuario = Usuario::find($id);
+        if ($usuario) {
+            return $usuario->delete();
         }
-
-        if (empty($fields)) return false;
-
-        $stmt = $this->db->prepare(
-            "UPDATE usuarios SET " . implode(', ', $fields) . " WHERE id = :id AND deleted_at IS NULL"
-        );
-        $stmt->execute($params);
-        return $stmt->rowCount() > 0;
+        return false;
     }
 
     // ------------------------------------------------------------------
-    // Soft delete
+    // Restaurar usuario
     // ------------------------------------------------------------------
-    public function softDelete(int $id, int $editorId): bool {
-        $this->db->exec("SET @usuario_id_app = $editorId");
+    public function restore(int $id, int $restorerId): bool {
+        Capsule::statement("SET @usuario_id_app = ?", [$restorerId]);
 
-        // Obtener el persona_id primero para evitar el error 1442 de MySQL con el trigger
-        $stmtGet = $this->db->prepare("SELECT persona_id FROM usuarios WHERE id = :id AND deleted_at IS NULL");
-        $stmtGet->execute(['id' => $id]);
-        $personaId = $stmtGet->fetchColumn();
-
-        if (!$personaId) return false;
-
-        // Actualizar personas (esto disparará el trigger que actualiza usuarios)
-        $stmtUpdate = $this->db->prepare("UPDATE personas SET deleted_at = NOW() WHERE id = :pid");
-        $stmtUpdate->execute(['pid' => $personaId]);
-
-        return $stmtUpdate->rowCount() > 0;
+        $usuario = Usuario::withTrashed()->find($id);
+        if ($usuario) {
+            return $usuario->restore();
+        }
+        return false;
     }
 
     // ------------------------------------------------------------------
-    // Restaurar
+    // Validar si un email ya existe (ignorando un id)
     // ------------------------------------------------------------------
-    public function restore(int $id, int $editorId): bool {
-        $this->db->exec("SET @usuario_id_app = $editorId");
-
-        // Obtener el persona_id primero
-        $stmtGet = $this->db->prepare("SELECT persona_id FROM usuarios WHERE id = :id AND deleted_at IS NOT NULL");
-        $stmtGet->execute(['id' => $id]);
-        $personaId = $stmtGet->fetchColumn();
-
-        if (!$personaId) return false;
-
-        // Actualizar personas (esto disparará el trigger)
-        $stmtUpdate = $this->db->prepare("UPDATE personas SET deleted_at = NULL WHERE id = :pid");
-        $stmtUpdate->execute(['pid' => $personaId]);
-
-        return $stmtUpdate->rowCount() > 0;
+    public function emailExists(string $email, ?int $excludeId = null): bool {
+        $query = Usuario::withTrashed()->where('email', $email);
+        if ($excludeId !== null) {
+            $query->where('id', '!=', $excludeId);
+        }
+        return $query->exists();
     }
 }

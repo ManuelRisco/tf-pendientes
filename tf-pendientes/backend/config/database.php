@@ -1,6 +1,9 @@
 <?php
 
+use Illuminate\Database\Capsule\Manager as Capsule;
+
 class Database {
+    private static ?Capsule $capsule = null;
     private static ?PDO $instance = null;
 
     private function __construct() {}
@@ -12,37 +15,45 @@ class Database {
         return $_ENV[$key] ?? $default;
     }
 
+    public static function bootEloquent(): void {
+        if (self::$capsule !== null) return;
+
+        self::$capsule = new Capsule;
+
+        $host     = self::getEnv('MYSQLHOST', 'localhost');
+        $dbname   = self::getEnv('MYSQLDATABASE', '');
+        $user     = self::getEnv('MYSQLUSER', 'root');
+        $password = self::getEnv('MYSQLPASSWORD', '');
+        $port     = self::getEnv('MYSQLPORT', '3306');
+
+        self::$capsule->addConnection([
+            'driver'    => 'mysql',
+            'host'      => $host,
+            'port'      => $port,
+            'database'  => $dbname,
+            'username'  => $user,
+            'password'  => $password,
+            'charset'   => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix'    => '',
+        ]);
+
+        // Evitar que el ORM intente usar created_at / updated_at automáticamente si no existen
+        // pero sí lo dejaremos activado en cada modelo explícitamente
+
+        self::$capsule->setAsGlobal();
+        self::$capsule->bootEloquent();
+    }
+
     public static function getConnection(): PDO {
-        if (self::$instance === null) {
-            // Lee los datos de conexión exclusivamente desde las variables de entorno
-            $host     = self::getEnv('MYSQLHOST', 'localhost');
-            $dbname   = self::getEnv('MYSQLDATABASE', '');
-            $user     = self::getEnv('MYSQLUSER', 'root');
-            $password = self::getEnv('MYSQLPASSWORD', '');
-            $port     = self::getEnv('MYSQLPORT', '3306');
-            $charset  = 'utf8mb4';
-
-            $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
-
-            $options = [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-            ];
-
-            try {
-                self::$instance = new PDO($dsn, $user, $password, $options);
-            } catch (PDOException $e) {
-                http_response_code(500);
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Error de conexión a la base de datos.',
-                    'error'   => $e->getMessage()
-                ]);
-                exit;
-            }
+        if (self::$capsule === null) {
+            self::bootEloquent();
         }
+        
+        if (self::$instance === null) {
+            self::$instance = self::$capsule->getConnection()->getPdo();
+        }
+        
         return self::$instance;
     }
 }

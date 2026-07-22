@@ -1,0 +1,68 @@
+.movimientos-container {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+.page-header-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.action-badge {
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 600;
+    border-radius: 50rem;
+    display: inline-block;
+}
+
+.badge-crear {
+    background-color: #d1fae5;
+    color: #047857;
+}
+
+.badge-actualizar {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge-eliminar {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.badge-restaurar {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+
+.badge-default {
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+body.dark-mode .badge-crear {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+body.dark-mode .badge-actualizar {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+body.dark-mode .badge-eliminar {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+body.dark-mode .badge-restaurar {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+body.dark-mode .badge-default {
+    background-color: rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+}

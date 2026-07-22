@@ -1,0 +1,79 @@
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 32px;
+    background-color: transparent;
+}
+
+@media (max-width: 768px) {
+    .topbar {
+        padding: 16px;
+    }
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background-color: #1e1e2d;
+    border-radius: 8px;
+    padding: 8px 16px;
+    width: 300px;
+    gap: 12px;
+}
+
+.search-bar i {
+    color: #64748b;
+}
+
+.search-bar input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #f8fafc;
+    width: 100%;
+    font-size: 0.95rem;
+}
+
+.search-bar input::placeholder {
+    color: #64748b;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+}
+
+.icon-btn:hover {
+    color: #f8fafc;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+body:not(.dark-mode) .search-bar {
+    background-color: #f1f5f9;
+}
+body:not(.dark-mode) .search-bar input {
+    color: #334155;
+}
+body:not(.dark-mode) .icon-btn {
+    color: #64748b;
+}
+body:not(.dark-mode) .icon-btn:hover {
+    color: #0f172a;
+    background-color: rgba(0, 0, 0, 0.05);
+}

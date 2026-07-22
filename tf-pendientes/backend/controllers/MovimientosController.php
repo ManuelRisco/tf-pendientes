@@ -12,9 +12,22 @@ class MovimientosController {
         // Solo los administradores pueden ver los movimientos
         AuthMiddleware::requireAdmin();
 
-        // Obtener los últimos 100 movimientos
-        $movimientos = $this->model->getMovimientos(100);
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 10;
+        $offset = ($page - 1) * $limit;
 
-        Response::success(['movimientos' => $movimientos]);
+        $items = $this->model->getMovimientos($limit, $offset);
+        $total = $this->model->countMovimientos();
+        $totalPages = ceil($total / $limit);
+
+        Response::success([
+            'items' => $items,
+            'meta' => [
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'totalPages' => $totalPages
+            ]
+        ]);
     }
 }

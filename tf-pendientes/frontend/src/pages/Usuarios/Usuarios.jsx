@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from "../../components/Navbar/Navbar";
 import { Container, Row, Col, Card, Table, Badge, Button, Modal, Form } from 'react-bootstrap';
 import Swal from 'sweetalert2';
 import api from '../../lib/axios';
 import { useAuth } from '../../context/AuthContext';
+import CustomPagination from '../../components/Pagination/CustomPagination';
 import './Usuarios.css';
 
 function Usuarios() {
@@ -14,6 +14,11 @@ function Usuarios() {
     const [usuarios, setUsuarios] = useState([]);
     const [roles, setRoles] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit = 10;
 
     // Estados para el CRUD
     const [showModal, setShowModal] = useState(false);
@@ -27,12 +32,17 @@ function Usuarios() {
     });
 
     const fetchData = async () => {
+        setLoading(true);
         try {
             const [resUsers, resCatalogos] = await Promise.all([
-                api.get('/usuarios'),
+                api.get(`/usuarios?page=${currentPage}&limit=${limit}`),
                 api.get('/catalogos')
             ]);
-            setUsuarios(resUsers.data.data || []);
+            
+            // La respuesta ahora tiene { items, meta }
+            setUsuarios(resUsers.data.data.items || []);
+            setTotalPages(resUsers.data.data.meta?.totalPages || 1);
+
             if (resCatalogos.data?.data?.roles) {
                 setRoles(resCatalogos.data.data.roles);
             }
@@ -46,7 +56,7 @@ function Usuarios() {
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [currentPage]);
 
     const getFormattedDate = (dateString) => {
         if (!dateString) return '';
@@ -190,13 +200,12 @@ function Usuarios() {
 
     return (
         <div>
-            <Navbar />
             <Container fluid className="px-4 py-4">
                 <Row className="justify-content-center">
                     <Col xs={12}>
                         <Card className="card-custom mb-4 shadow-sm border-0">
                             <Card.Body className="p-4">
-                                <div className="d-flex justify-content-between align-items-center mb-4">
+                                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                                     <h5 className="text-dark fw-bold m-0">Directorio de Usuarios</h5>
                                     {Number(user?.rol_id) === 1 && (
                                         <Button variant="primary" onClick={handleCreateClick} className="rounded-pill px-3 shadow-sm border-0 d-flex align-items-center">
@@ -228,6 +237,9 @@ function Usuarios() {
                                                     <td>
                                                         <div className={`fw-bold ${u.deleted_at ? 'text-secondary' : 'text-dark'}`}>
                                                             {u.nombre} {u.apellido}
+                                                            {user && Number(user.id) === Number(u.id) && (
+                                                                <Badge bg="secondary" className="ms-2 fw-normal" style={{fontSize: '0.75rem'}}>Tú</Badge>
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="text-muted">{u.email}</td>
@@ -272,6 +284,14 @@ function Usuarios() {
                                             ))}
                                         </tbody>
                                     </Table>
+                                )}
+                                
+                                {totalPages > 1 && (
+                                    <CustomPagination 
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={setCurrentPage}
+                                    />
                                 )}
                             </Card.Body>
                         </Card>

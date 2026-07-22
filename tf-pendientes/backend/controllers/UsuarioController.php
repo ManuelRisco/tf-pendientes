@@ -10,7 +10,24 @@ class UsuarioController {
     // GET /api/usuarios
     public function index(): void {
         AuthMiddleware::requireAdmin();
-        Response::success($this->model->getAll());
+        
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 10;
+        $offset = ($page - 1) * $limit;
+
+        $items = $this->model->getAll($limit, $offset);
+        $total = $this->model->countAll();
+        $totalPages = ceil($total / $limit);
+
+        Response::success([
+            'items' => $items,
+            'meta' => [
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'totalPages' => $totalPages
+            ]
+        ]);
     }
 
     // GET /api/usuarios/:id
@@ -44,7 +61,7 @@ class UsuarioController {
         }
 
         try {
-            $id = $this->model->create($body);
+            $id = $this->model->create($body, (int)$auth['id']);
             Response::success(['id' => $id], 'Usuario creado correctamente.', 201);
         } catch (PDOException $e) {
             throw $e;

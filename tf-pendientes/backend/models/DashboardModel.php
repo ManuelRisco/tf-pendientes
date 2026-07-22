@@ -1,54 +1,50 @@
 <?php
 
 class DashboardModel {
-    private PDO $db;
-
-    public function __construct() {
-        $this->db = Database::getConnection();
-    }
 
     /**
      * Estadísticas generales — para administradores ve todo,
      * para empleados solo sus propias tareas.
      */
     public function getStats(?int $usuarioId = null): array {
-        $whereUser = $usuarioId !== null ? 'AND t.usuario_id = :uid' : '';
-        $params    = $usuarioId !== null ? ['uid' => $usuarioId] : [];
+        $tareasQuery = Tarea::query();
+        if ($usuarioId !== null) {
+            $tareasQuery->where('usuario_id', $usuarioId);
+        }
 
         // Total de tareas activas
-        $stmt = $this->db->prepare("
-            SELECT COUNT(*) AS total
-            FROM   tareas t
-            WHERE  t.deleted_at IS NULL $whereUser
-        ");
-        $stmt->execute($params);
-        $total = (int)$stmt->fetchColumn();
+        $total = clone $tareasQuery;
+        $total = $total->count();
 
         // Por estado
-        $stmt = $this->db->prepare("
-            SELECT  e.nombre, COUNT(t.id) AS cantidad
-            FROM    estados e
-            LEFT JOIN tareas t ON t.estado_id = e.id
-                               AND t.deleted_at IS NULL
-                               $whereUser
-            GROUP BY e.id, e.nombre
-            ORDER BY e.id
-        ");
-        $stmt->execute($params);
-        $porEstado = $stmt->fetchAll();
+        $porEstado = Estado::select('estados.id', 'estados.nombre')
+            ->selectRaw('COUNT(tareas.id) as cantidad')
+            ->leftJoin('tareas', function ($join) use ($usuarioId) {
+                $join->on('tareas.estado_id', '=', 'estados.id')
+                     ->whereNull('tareas.deleted_at');
+                if ($usuarioId !== null) {
+                    $join->where('tareas.usuario_id', '=', $usuarioId);
+                }
+            })
+            ->groupBy('estados.id', 'estados.nombre')
+            ->orderBy('estados.id')
+            ->get()
+            ->toArray();
 
         // Por prioridad
-        $stmt = $this->db->prepare("
-            SELECT  p.nombre, COUNT(t.id) AS cantidad
-            FROM    prioridades p
-            LEFT JOIN tareas t ON t.prioridad_id = p.id
-                               AND t.deleted_at IS NULL
-                               $whereUser
-            GROUP BY p.id, p.nombre
-            ORDER BY p.id
-        ");
-        $stmt->execute($params);
-        $porPrioridad = $stmt->fetchAll();
+        $porPrioridad = Prioridad::select('prioridades.id', 'prioridades.nombre')
+            ->selectRaw('COUNT(tareas.id) as cantidad')
+            ->leftJoin('tareas', function ($join) use ($usuarioId) {
+                $join->on('tareas.prioridad_id', '=', 'prioridades.id')
+                     ->whereNull('tareas.deleted_at');
+                if ($usuarioId !== null) {
+                    $join->where('tareas.usuario_id', '=', $usuarioId);
+                }
+            })
+            ->groupBy('prioridades.id', 'prioridades.nombre')
+            ->orderBy('prioridades.id')
+            ->get()
+            ->toArray();
 
         return [
             'total'        => $total,
@@ -61,45 +57,40 @@ class DashboardModel {
      * Solo para admins: número de usuarios activos
      */
     public function getTotalUsuarios(): int {
-        return (int)$this->db->query("
-            SELECT COUNT(*) FROM usuarios WHERE deleted_at IS NULL
-        ")->fetchColumn();
+        return Usuario::count();
     }
 
     /**
      * Solo para admins: obtener los últimos movimientos de la bitácora
      */
-    public function getMovimientos(int $limite = 50): array {
-        $stmt = $this->db->prepare("
-            SELECT 
-                b.id,
-                b.modulo,
-                b.registro_id,
-                b.detalles,
-                b.created_at,
-                ta.nombre AS tipo_accion,
-                p.nombre AS persona_nombre,
-                p.apellido AS persona_apellido,
-                u.email
-            FROM bitacora b
-            INNER JOIN tipos_acciones ta ON b.tipo_accion_id = ta.id
-            LEFT JOIN usuarios u ON b.usuario_id = u.id
-            LEFT JOIN personas p ON u.persona_id = p.id
-            ORDER BY b.created_at DESC
-            LIMIT :limite
-        ");
-        $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        $movimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Decodificar JSON de detalles para que React pueda usarlo fácilmente
-        foreach ($movimientos as &$mov) {
-            if (!empty($mov['detalles'])) {
-                $mov['detalles'] = json_decode($mov['detalles'], true);
-            }
+    public function getMovimientos(int $limite = 10, int $offset = 0): array {
+        $bitacoras = Bitacora::with(['tipoAccion', 'usuario.persona'])
+            ->orderBy('created_at', 'desc')
+            ->skip($offset)
+            ->take($limite)
+            ->get();
+
+        $movimientos = [];
+        foreach ($bitacoras as $b) {
+            $detalles = !empty($b->detalles) ? json_decode($b->detalles, true) : null;
+            
+            $movimientos[] = [
+                'id'               => $b->id,
+                'modulo'           => $b->modulo,
+                'registro_id'      => $b->registro_id,
+                'detalles'         => $detalles,
+                'created_at'       => $b->created_at,
+                'tipo_accion'      => $b->tipoAccion ? $b->tipoAccion->nombre : null,
+                'persona_nombre'   => $b->usuario && $b->usuario->persona ? $b->usuario->persona->nombre : null,
+                'persona_apellido' => $b->usuario && $b->usuario->persona ? $b->usuario->persona->apellido : null,
+                'email'            => $b->usuario ? $b->usuario->email : null,
+            ];
         }
-        
+
         return $movimientos;
+    }
+
+    public function countMovimientos(): int {
+        return Bitacora::count();
     }
 }

@@ -341,3 +341,27 @@ body.dark-mode .swal2-cancel.btn-secondary {
     background-color: #334155 !important;
     color: #f8fafc !important;
 }
+
+/* Custom Pagination Dark Mode */
+body.dark-mode .pagination .page-link {
+    background-color: #171f32 !important;
+    border-color: #283552 !important;
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .pagination .page-link:hover {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+}
+
+body.dark-mode .pagination .page-item.active .page-link {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: white !important;
+}
+
+body.dark-mode .pagination .page-item.disabled .page-link {
+    background-color: #0f172a !important;
+    border-color: #1e293b !important;
+    color: #475569 !important;
+}
