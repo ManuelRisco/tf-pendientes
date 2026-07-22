@@ -3,12 +3,6 @@
 class Database {
     private static ?PDO $instance = null;
 
-    private static string $host     = 'localhost';
-    private static string $dbname   = 'tf_pendientes'; // Cambia al nombre de tu BD
-    private static string $user     = 'root';          // Cambia a tu usuario
-    private static string $password = '';              // Cambia a tu contraseña
-    private static string $charset  = 'utf8mb4';
-
     private function __construct() {}
     private function __clone() {}
 
@@ -20,9 +14,9 @@ class Database {
 
     public static function getConnection(): PDO {
         if (self::$instance === null) {
-            // Prioriza variables de entorno (Railway u otros) y usa valores por defecto para localhost
+            // Lee los datos de conexión exclusivamente desde las variables de entorno
             $host     = self::getEnv('MYSQLHOST', 'localhost');
-            $dbname   = self::getEnv('MYSQLDATABASE', 'tf_pendientes');
+            $dbname   = self::getEnv('MYSQLDATABASE', '');
             $user     = self::getEnv('MYSQLUSER', 'root');
             $password = self::getEnv('MYSQLPASSWORD', '');
             $port     = self::getEnv('MYSQLPORT', '3306');
