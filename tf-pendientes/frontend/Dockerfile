@@ -8,10 +8,7 @@ RUN npm run build
 
 # Etapa 2: Producción (Nginx)
 FROM nginx:alpine
-# Copiamos la configuración personalizada de Nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Nginx oficial reemplazará automáticamente ${PORT} por la variable de Railway al arrancar
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 # Copiamos los archivos estáticos generados por Vite
 COPY --from=builder /app/dist /usr/share/nginx/html
-EXPOSE 80
-# Reemplazamos el puerto de Nginx por el que provee Railway dinámicamente
-CMD sed -i "s/listen 80;/listen ${PORT:-80};/g" /etc/nginx/conf.d/default.conf && nginx -g "daemon off;"
