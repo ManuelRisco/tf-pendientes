@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+const isProd = import.meta.env.PROD;
+const defaultBaseUrl = isProd 
+    ? 'https://tf-pendientes-production.up.railway.app' 
+    : 'http://localhost/tf-pendientes/backend';
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost/tf-pendientes/backend',
+    baseURL: import.meta.env.VITE_API_URL || defaultBaseUrl,
     headers: {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json',
