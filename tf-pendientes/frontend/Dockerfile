@@ -13,4 +13,5 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copiamos los archivos estáticos generados por Vite
 COPY --from=builder /app/dist /usr/share/nginx/html
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Reemplazamos el puerto de Nginx por el que provee Railway dinámicamente
+CMD sed -i "s/listen 80;/listen ${PORT:-80};/g" /etc/nginx/conf.d/default.conf && nginx -g "daemon off;"
