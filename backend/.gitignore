@@ -1,3 +1,6 @@
+# Dependencias
+vendor/
+
 # Archivos de entorno
 .env
 .env.*
