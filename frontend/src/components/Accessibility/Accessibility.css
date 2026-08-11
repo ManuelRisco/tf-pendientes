@@ -1,0 +1,83 @@
+/* Switch Toggle (iOS Style) */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: .3s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+}
+
+input:checked + .slider {
+    background-color: #2563eb;
+}
+
+input:checked + .slider:before {
+    transform: translateX(16px);
+}
+
+.slider.round {
+    border-radius: 20px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* ========================================================
+   ACCESSIBILITY GLOBAL CLASSES (Applied to body)
+======================================================== */
+
+body.dyslexia-font,
+body.dyslexia-font * {
+    font-family: 'Comic Sans MS', 'Comic Neue', 'Lexend', 'OpenDyslexic', sans-serif !important;
+    letter-spacing: 0.05em !important;
+    word-spacing: 0.1em !important;
+    line-height: 1.6 !important;
+}
+
+body.filter-grayscale {
+    filter: grayscale(100%);
+}
+
+body.filter-high-contrast {
+    filter: contrast(130%) saturate(120%);
+}
+
+body.filter-protanopia {
+    filter: url('#protanopia');
+}
+
+body.filter-deuteranopia {
+    filter: url('#deuteranopia');
+}
+
+body.filter-tritanopia {
+    filter: url('#tritanopia');
+}
