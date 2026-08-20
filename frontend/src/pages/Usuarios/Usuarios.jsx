@@ -35,13 +35,13 @@ function Usuarios() {
     } = useUsuarios();
 
     return (
-        <div className="py-2 sm:py-6 px-1 sm:px-4 max-w-7xl mx-auto">
+        <div className="py-1 sm:py-4 px-0 sm:px-2 max-w-7xl mx-auto">
             <Container fluid className="p-0">
                 <Row className="justify-content-center m-0">
                     <Col xs={12} className="p-0">
-                        <div className="card-app p-4 sm:p-6 mb-6">
+                        <div className="card-app p-3.5 sm:p-6 mb-5 sm:mb-6">
                             {/* Encabezado Superior */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
                                 <div>
                                     <h4 className="text-xl sm:text-2xl font-bold tracking-tight m-0" style={{ color: 'var(--text-primary)' }}>
                                         Directorio de Usuarios
@@ -53,7 +53,7 @@ function Usuarios() {
                                 {Number(user?.rol_id) === 1 && (
                                     <button
                                         onClick={handleCreateClick}
-                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium shadow-md shadow-blue-500/20 transition-all shrink-0"
+                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium shadow-md shadow-blue-500/20 transition-all shrink-0"
                                     >
                                         <i className="bi bi-person-plus-fill"></i>
                                         <span>Nuevo Usuario</span>
@@ -63,12 +63,12 @@ function Usuarios() {
 
                             {/* Barra de Filtros */}
                             <div
-                                className="rounded-2xl p-3 sm:p-4 mb-6 border"
+                                className="rounded-2xl p-3 sm:p-4 mb-5 sm:mb-6 border"
                                 style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                             >
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 sm:gap-4 items-end">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 sm:gap-4 items-end">
                                     {/* Búsqueda */}
-                                    <div className="col-span-1 sm:col-span-2 md:col-span-5">
+                                    <div className="col-span-1 sm:col-span-2 lg:col-span-5">
                                         <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                                             Buscar usuario
                                         </label>
@@ -95,7 +95,7 @@ function Usuarios() {
                                     </div>
 
                                     {/* Filtro por Estado */}
-                                    <div className="col-span-1 md:col-span-3">
+                                    <div className="col-span-1 sm:col-span-1 lg:col-span-3">
                                         <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                                             Estado
                                         </label>
@@ -112,7 +112,7 @@ function Usuarios() {
                                     </div>
 
                                     {/* Filtro por Rol */}
-                                    <div className="col-span-1 md:col-span-3">
+                                    <div className="col-span-1 sm:col-span-1 lg:col-span-3">
                                         <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                                             Rol
                                         </label>
@@ -124,13 +124,13 @@ function Usuarios() {
                                         >
                                             <option value="">Todos los roles</option>
                                             {roles.map(r => (
-                                                <option key={r.id} value={r.id}>{r.nombre}</option>
+                                                 <option key={r.id} value={r.id}>{r.nombre}</option>
                                             ))}
                                         </select>
                                     </div>
 
                                     {/* Botón Limpiar */}
-                                    <div className="col-span-1 sm:col-span-2 md:col-span-1 flex items-center">
+                                    <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex items-center">
                                         {hasActiveFilters && (
                                             <button
                                                 onClick={handleClearFilters}
@@ -139,7 +139,7 @@ function Usuarios() {
                                                 title="Restablecer filtros"
                                             >
                                                 <i className="bi bi-arrow-counterclockwise"></i>
-                                                <span className="sm:hidden text-xs">Limpiar</span>
+                                                <span className="lg:hidden text-xs">Limpiar</span>
                                             </button>
                                         )}
                                     </div>
@@ -253,12 +253,12 @@ function Usuarios() {
 
                                                         {/* Fecha de Registro */}
                                                         <td className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                                                            <i className="bi bi-calendar3 mr-1 opacity-70"></i>
-                                                            {getFormattedDate(u.created_at)}
+                                                             <i className="bi bi-calendar3 mr-1 opacity-70"></i>
+                                                             {getFormattedDate(u.created_at)}
                                                         </td>
 
                                                         {/* Acciones */}
-                                                        {Number(user?.rol_id) === 1 && (
+                                                        {(Number(user?.rol_id) === 1 || isCurrentUser) && (
                                                             <td className="text-end">
                                                                 <div className="inline-flex gap-1.5">
                                                                     <button
@@ -270,7 +270,7 @@ function Usuarios() {
                                                                         <i className="bi bi-pencil"></i>
                                                                     </button>
 
-                                                                    {!isCurrentUser && isInactive && (
+                                                                    {Number(user?.rol_id) === 1 && !isCurrentUser && isInactive && (
                                                                         <button
                                                                             className="w-8 h-8 rounded-lg flex items-center justify-center border text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all"
                                                                             style={{ borderColor: 'var(--border-color)' }}
@@ -281,7 +281,7 @@ function Usuarios() {
                                                                         </button>
                                                                     )}
 
-                                                                    {!isCurrentUser && !isInactive && (
+                                                                    {Number(user?.rol_id) === 1 && !isCurrentUser && !isInactive && (
                                                                         <button
                                                                             className="w-8 h-8 rounded-lg flex items-center justify-center border text-red-600 hover:bg-red-600 hover:text-white transition-all"
                                                                             style={{ borderColor: 'var(--border-color)' }}
@@ -389,6 +389,7 @@ function Usuarios() {
                                 name="rol_id"
                                 value={formData.rol_id}
                                 onChange={handleInputChange}
+                                disabled={Number(user?.rol_id) !== 1}
                                 required
                             >
                                 <option value="">Seleccione un rol...</option>
@@ -396,6 +397,11 @@ function Usuarios() {
                                     <option key={r.id} value={r.id}>{r.nombre}</option>
                                 ))}
                             </Form.Select>
+                            {Number(user?.rol_id) !== 1 && (
+                                <small className="text-xs mt-1 block" style={{ color: 'var(--text-secondary)' }}>
+                                    Solo los administradores pueden cambiar los roles.
+                                </small>
+                            )}
                         </Form.Group>
                         <div className="flex flex-col sm:flex-row justify-end gap-2 pt-3 border-t" style={{ borderColor: 'var(--border-color)' }}>
                             <button

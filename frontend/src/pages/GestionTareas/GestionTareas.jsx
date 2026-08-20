@@ -38,13 +38,13 @@ function GestionTareas() {
     } = useGestionTareas();
 
     return (
-        <div className="py-2 sm:py-6 px-1 sm:px-4 max-w-7xl mx-auto">
+        <div className="py-1 sm:py-4 px-0 sm:px-2 max-w-7xl mx-auto">
             <Container fluid className="p-0">
                 <Row className="justify-content-center m-0">
                     <Col xs={12} className="p-0">
-                        <div className="card-app p-4 sm:p-6 mb-6">
+                        <div className="card-app p-3.5 sm:p-6 mb-5 sm:mb-6">
                             {/* Header Superior */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
                                 <div>
                                     <h2 className="text-xl sm:text-2xl font-bold tracking-tight m-0" style={{ color: 'var(--text-primary)' }}>
                                         Gestión de Tareas
@@ -53,11 +53,11 @@ function GestionTareas() {
                                         Crea, supervisa y actualiza el estado de las tareas operativas.
                                     </p>
                                 </div>
-                                <button 
-                                    onClick={() => setShowModal(true)} 
-                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium shadow-md shadow-blue-500/20 transition-all shrink-0"
+                                <button
+                                    onClick={() => setShowModal(true)}
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium shadow-md shadow-blue-500/20 transition-all shrink-0"
                                 >
-                                    <i className="bi bi-plus-lg"></i> 
+                                    <i className="bi bi-plus-lg"></i>
                                     <span>Agregar tarea</span>
                                 </button>
                             </div>
@@ -125,16 +125,16 @@ function GestionTareas() {
                                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-3 border-t" style={{ borderColor: 'var(--border-color)' }}>
                                             <small className="text-xs" style={{ color: 'var(--text-secondary)' }}><span className="text-red-500">*</span> Campos obligatorios</small>
                                             <div className="flex gap-2 w-full sm:w-auto justify-end">
-                                                <button 
-                                                    type="button" 
+                                                <button
+                                                    type="button"
                                                     onClick={resetForm}
                                                     className="w-1/2 sm:w-auto px-4 py-2 text-sm rounded-lg opacity-80 hover:opacity-100 font-medium transition-all"
                                                     style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                                                 >
                                                     Cancelar
                                                 </button>
-                                                <button 
-                                                    type="submit" 
+                                                <button
+                                                    type="submit"
                                                     className="w-1/2 sm:w-auto px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all shadow-md shadow-blue-500/20"
                                                 >
                                                     {editId ? 'Actualizar' : 'Guardar'}
@@ -148,16 +148,16 @@ function GestionTareas() {
                             {/* Filtros de la Lista */}
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
                                 <h5 className="text-sm sm:text-base font-bold m-0" style={{ color: 'var(--text-primary)' }}>Lista de tareas</h5>
-                                
+
                                 <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2.5">
                                     {/* Filtro Estado */}
-                                    <div 
+                                    <div
                                         className="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs w-full sm:w-auto"
                                         style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                                     >
                                         <i className="bi bi-funnel-fill text-blue-500 text-xs"></i>
-                                        <select 
-                                            value={filtroEstado} 
+                                        <select
+                                            value={filtroEstado}
                                             onChange={e => setFiltroEstado(e.target.value)}
                                             className="w-full bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
                                             style={{ color: 'var(--text-primary)' }}
@@ -168,13 +168,13 @@ function GestionTareas() {
                                     </div>
 
                                     {/* Filtro Prioridad */}
-                                    <div 
+                                    <div
                                         className="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs w-full sm:w-auto"
                                         style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                                     >
                                         <i className="bi bi-flag-fill text-red-500 text-xs"></i>
-                                        <select 
-                                            value={filtroPrioridad} 
+                                        <select
+                                            value={filtroPrioridad}
                                             onChange={e => setFiltroPrioridad(e.target.value)}
                                             className="w-full bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
                                             style={{ color: 'var(--text-primary)' }}
@@ -218,15 +218,14 @@ function GestionTareas() {
                                                         </td>
                                                         <td>
                                                             <Dropdown>
-                                                                <Dropdown.Toggle 
-                                                                    as="button" 
+                                                                <Dropdown.Toggle
+                                                                    as="button"
                                                                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusStyle(estadoNombre)} focus:outline-none`}
                                                                 >
                                                                     <span className={`w-2 h-2 rounded-full ${getStatusDotColor(estadoNombre)}`}></span>
                                                                     <span>{estadoNombre}</span>
-                                                                    <i className="bi bi-chevron-down text-[10px] opacity-70 ml-0.5"></i>
                                                                 </Dropdown.Toggle>
-                                                                <Dropdown.Menu 
+                                                                <Dropdown.Menu
                                                                     className="shadow-lg border text-xs py-1 rounded-xl"
                                                                     style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
                                                                 >
@@ -257,27 +256,27 @@ function GestionTareas() {
                                                         </td>
                                                         <td className="text-end">
                                                             <div className="inline-flex gap-1.5">
-                                                                <button 
-                                                                    className="w-8 h-8 rounded-lg flex items-center justify-center border hover:opacity-80 transition-all" 
+                                                                <button
+                                                                    className="w-8 h-8 rounded-lg flex items-center justify-center border hover:opacity-80 transition-all"
                                                                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
-                                                                    title="Ver detalles" 
+                                                                    title="Ver detalles"
                                                                     onClick={() => handleView(item)}
                                                                 >
                                                                     <i className="bi bi-eye"></i>
                                                                 </button>
-                                                                <button 
-                                                                    className="w-8 h-8 rounded-lg flex items-center justify-center border text-blue-500 hover:bg-blue-600 hover:text-white transition-all" 
+                                                                <button
+                                                                    className="w-8 h-8 rounded-lg flex items-center justify-center border text-blue-500 hover:bg-blue-600 hover:text-white transition-all"
                                                                     style={{ borderColor: 'var(--border-color)' }}
-                                                                    title="Editar" 
+                                                                    title="Editar"
                                                                     onClick={() => handleEdit(item)}
                                                                 >
                                                                     <i className="bi bi-pencil"></i>
                                                                 </button>
                                                                 {Number(user?.rol_id) === 1 && (
-                                                                    <button 
-                                                                        className="w-8 h-8 rounded-lg flex items-center justify-center border text-red-500 hover:bg-red-600 hover:text-white transition-all" 
+                                                                    <button
+                                                                        className="w-8 h-8 rounded-lg flex items-center justify-center border text-red-500 hover:bg-red-600 hover:text-white transition-all"
                                                                         style={{ borderColor: 'var(--border-color)' }}
-                                                                        title="Eliminar" 
+                                                                        title="Eliminar"
                                                                         onClick={() => handleDelete(item.id)}
                                                                     >
                                                                         <i className="bi bi-trash"></i>
@@ -292,9 +291,9 @@ function GestionTareas() {
                                     </Table>
                                 </div>
                             )}
-                            
+
                             {totalPages > 1 && (
-                                <CustomPagination 
+                                <CustomPagination
                                     currentPage={currentPage}
                                     totalPages={totalPages}
                                     onPageChange={setCurrentPage}

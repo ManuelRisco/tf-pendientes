@@ -1,45 +1,25 @@
 <?php
 declare(strict_types=1);
 
-// Cargar variables de entorno (si usas vlucas/phpdotenv) y autoloader de Composer
+// Autoloader de Composer
 require_once __DIR__ . '/vendor/autoload.php';
 
-// Cargar .env si existe (Para desarrollo local)
-$envPath = __DIR__ . '/.env';
-if (file_exists($envPath)) {
-    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if (strpos($line, '#') === 0 || strpos($line, '=') === false) continue;
-        list($name, $value) = explode('=', $line, 2);
-        $name = trim($name);
-        $value = trim($value);
-        putenv(sprintf('%s=%s', $name, $value));
-        $_ENV[$name] = $value;
-        $_SERVER[$name] = $value;
-    }
-}
-
 // ==============================================================================
-// CORS — permite peticiones desde React (Vite dev server u origen de producción)
+// CORS — permite peticiones desde React (Vite dev server u origen local)
 // ==============================================================================
 $allowedOrigins = [
     'http://localhost:5173',  // Vite dev
-    'http://localhost:4173',  // Vite preview (Producción local)
+    'http://localhost:4173',  // Vite preview
     'http://127.0.0.1:5173',
     'http://127.0.0.1:4173',
     'http://localhost:3000',
+    'http://localhost',
+    'http://127.0.0.1',
 ];
 
-// Agregamos la URL del frontend en producción (Railway) si existe
-$frontendUrl = getenv('FRONTEND_URL');
-if ($frontendUrl) {
-    $allowedOrigins[] = rtrim($frontendUrl, '/');
-}
-
 $origin = rtrim($_SERVER['HTTP_ORIGIN'] ?? '', '/');
-if (in_array($origin, $allowedOrigins, true)) {
-    header("Access-Control-Allow-Origin: $origin");
+if ($origin === '' || in_array($origin, $allowedOrigins, true)) {
+    header("Access-Control-Allow-Origin: " . ($origin ?: '*'));
 }
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
@@ -123,6 +103,10 @@ $router->post('/tareas',                fn()      => (new TareaController())->st
 $router->put('/tareas/:id',             fn($p)    => (new TareaController())->update($p));
 $router->delete('/tareas/:id',          fn($p)    => (new TareaController())->destroy($p));
 $router->patch('/tareas/:id/restaurar', fn($p)    => (new TareaController())->restore($p));
+
+// --- Reportes ---
+$router->get('/reportes/resumen',       fn()      => (new ReporteController())->getResumen());
+$router->get('/reportes/frecuentes',    fn()      => (new ReporteController())->getFrecuentes());
 
 // ==============================================================================
 // Despachar

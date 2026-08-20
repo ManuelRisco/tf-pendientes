@@ -11,14 +11,16 @@ function AccessibilityMenu() {
         setColorFilter,
         fontSize,
         setFontSize,
+        resetAccessibility,
+        hasCustomSettings,
         menuRef
     } = useAccessibility();
 
     return (
         <div className="relative" ref={menuRef}>
             <button 
-                className="w-10 h-10 rounded-xl flex items-center justify-center hover:opacity-80 transition-colors" 
-                style={{ color: 'var(--text-secondary)' }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors relative ${hasCustomSettings ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400' : 'hover:bg-slate-500/10'}`} 
+                style={{ color: hasCustomSettings ? '#2563eb' : 'var(--text-secondary)' }}
                 onClick={() => setIsOpen(!isOpen)}
                 title="Opciones de Accesibilidad"
                 aria-label="Opciones de Accesibilidad"
@@ -26,6 +28,9 @@ function AccessibilityMenu() {
                 aria-expanded={isOpen}
             >
                 <i className="bi bi-universal-access-circle text-lg" aria-hidden="true"></i>
+                {hasCustomSettings && (
+                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-600 shadow-xs" title="Accesibilidad personalizada activa"></span>
+                )}
             </button>
 
             {isOpen && (
@@ -132,6 +137,20 @@ function AccessibilityMenu() {
                                 </label>
                             ))}
                         </div>
+                    </div>
+
+                    {/* Footer / Reset Button */}
+                    <div className="p-3 border-t flex justify-end" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
+                        <button
+                            type="button"
+                            onClick={resetAccessibility}
+                            disabled={!hasCustomSettings}
+                            className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed border hover:bg-red-500/10 text-red-500"
+                            style={{ borderColor: 'var(--border-color)' }}
+                        >
+                            <i className="bi bi-arrow-counterclockwise"></i>
+                            <span>Restablecer predeterminados</span>
+                        </button>
                     </div>
                 </div>
             )}

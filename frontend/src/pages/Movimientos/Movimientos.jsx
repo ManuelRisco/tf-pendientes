@@ -37,11 +37,11 @@ function Movimientos() {
     }
 
     return (
-        <div className="py-2 sm:py-6 px-1 sm:px-4 max-w-7xl mx-auto">
+        <div className="py-1 sm:py-4 px-0 sm:px-2 max-w-7xl mx-auto">
             <Container fluid className="p-0">
                 <Row className="justify-content-center m-0">
                     <Col xs={12} className="p-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
                             <div>
                                 <h2 className="text-xl sm:text-2xl font-bold tracking-tight m-0" style={{ color: 'var(--text-primary)' }}>
                                     Movimientos del Sistema
@@ -52,7 +52,7 @@ function Movimientos() {
                             </div>
                         </div>
 
-                        <div className="card-app p-4 sm:p-6 mb-6">
+                        <div className="card-app p-3.5 sm:p-6 mb-5 sm:mb-6">
                             {/* Filtros superiores */}
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4 mb-6 pb-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
                                 <h5 className="text-sm sm:text-base font-bold m-0 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>

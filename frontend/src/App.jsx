@@ -8,10 +8,10 @@ import Layout from "./components/Layout/Layout";
 const Login = lazy(() => import("./pages/Login/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
 const Usuarios = lazy(() => import("./pages/Usuarios/Usuarios"));
-const Equipos = lazy(() => import("./pages/Equipos/Equipos"));
 const NotFound = lazy(() => import("./pages/NotFound/NotFound"));
 const GestionTareas = lazy(() => import("./pages/GestionTareas/GestionTareas"));
 const Movimientos = lazy(() => import("./pages/Movimientos/Movimientos"));
+const Reportes = lazy(() => import("./pages/Reportes/Reportes"));
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -39,21 +39,21 @@ function App() {
   }, []);
 
   return (
-      <BrowserRouter>
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando aplicación...</div>}>
-          <Routes>
-            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-            <Route path="/usuarios" element={<ProtectedRoute><Layout><Usuarios /></Layout></ProtectedRoute>} />
-            <Route path="/equipos" element={<ProtectedRoute><Layout><Equipos /></Layout></ProtectedRoute>} />
-            <Route path="/gestion-tareas" element={<ProtectedRoute><Layout><GestionTareas /></Layout></ProtectedRoute>} />
-            <Route path="/movimientos" element={<ProtectedRoute><Layout><Movimientos /></Layout></ProtectedRoute>} />
-            
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+    <BrowserRouter>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando aplicación...</div>}>
+        <Routes>
+          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+          <Route path="/usuarios" element={<ProtectedRoute><Layout><Usuarios /></Layout></ProtectedRoute>} />
+          <Route path="/gestion-tareas" element={<ProtectedRoute><Layout><GestionTareas /></Layout></ProtectedRoute>} />
+          <Route path="/movimientos" element={<ProtectedRoute><Layout><Movimientos /></Layout></ProtectedRoute>} />
+          <Route path="/reportes" element={<ProtectedRoute><Layout><Reportes /></Layout></ProtectedRoute>} />
+
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
   );
 }
 

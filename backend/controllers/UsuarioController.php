@@ -9,13 +9,18 @@ class UsuarioController {
 
     // GET /api/usuarios
     public function index(): void {
-        AuthMiddleware::requireAdmin();
+        $auth = AuthMiddleware::require();
         
         $filters = [
             'search' => $_GET['search'] ?? null,
             'estado' => $_GET['estado'] ?? null,
             'rol_id' => $_GET['rol_id'] ?? null,
         ];
+
+        // Si no es admin, solo puede listar usuarios activos
+        if ((int)$auth['rol_id'] !== 1) {
+            $filters['estado'] = 'activo';
+        }
 
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 10;
@@ -42,7 +47,7 @@ class UsuarioController {
         $id   = (int)$params['id'];
 
         // Un empleado solo puede ver su propio perfil
-        if ((int)$auth['rol_id'] !== 1 && $auth['id'] !== $id) {
+        if ((int)$auth['rol_id'] !== 1 && (int)$auth['id'] !== $id) {
             Response::forbidden();
         }
 
@@ -80,13 +85,13 @@ class UsuarioController {
         $id   = (int)$params['id'];
         $body = $this->json();
 
-        // Solo admin puede cambiar el rol
-        if (isset($body['rol_id']) && (int)$auth['rol_id'] !== 1) {
-            Response::forbidden('No puedes cambiar el rol.');
+        // Si no es admin, no puede cambiar el rol
+        if ((int)$auth['rol_id'] !== 1) {
+            unset($body['rol_id']);
         }
 
         // Empleado solo puede editar su propio perfil
-        if ((int)$auth['rol_id'] !== 1 && $auth['id'] !== $id) {
+        if ((int)$auth['rol_id'] !== 1 && (int)$auth['id'] !== $id) {
             Response::forbidden();
         }
 

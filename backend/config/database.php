@@ -9,30 +9,18 @@ class Database {
     private function __construct() {}
     private function __clone() {}
 
-    private static function getEnv(string $key, string $default = ''): string {
-        $val = getenv($key);
-        if ($val !== false && $val !== '') return $val;
-        return $_ENV[$key] ?? $default;
-    }
-
     public static function bootEloquent(): void {
         if (self::$capsule !== null) return;
 
         self::$capsule = new Capsule;
 
-        $host     = self::getEnv('MYSQLHOST', 'localhost');
-        $dbname   = self::getEnv('MYSQLDATABASE', '');
-        $user     = self::getEnv('MYSQLUSER', 'root');
-        $password = self::getEnv('MYSQLPASSWORD', '');
-        $port     = self::getEnv('MYSQLPORT', '3306');
-
         self::$capsule->addConnection([
             'driver'    => 'mysql',
-            'host'      => $host,
-            'port'      => $port,
-            'database'  => $dbname,
-            'username'  => $user,
-            'password'  => $password,
+            'host'      => 'localhost',
+            'port'      => '3306',
+            'database'  => 'tf_pendientes',
+            'username'  => 'root',
+            'password'  => '',
             'charset'   => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix'    => '',

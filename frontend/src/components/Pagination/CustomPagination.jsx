@@ -27,7 +27,7 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
                 <button
                     disabled={currentPage === 1}
                     onClick={() => onPageChange(1)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-colors"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-colors shrink-0"
                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
                     title="Primera página"
                     aria-label="Primera página"
@@ -39,7 +39,7 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
                 <button
                     disabled={currentPage === 1}
                     onClick={() => onPageChange(currentPage - 1)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-colors"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-colors shrink-0"
                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
                     title="Página anterior"
                     aria-label="Página anterior"
@@ -48,7 +48,7 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
                 </button>
 
                 {startPage > 1 && (
-                    <span className="px-1 text-xs opacity-50">...</span>
+                    <span className="px-0.5 sm:px-1 text-xs opacity-50">...</span>
                 )}
 
                 {/* Páginas */}
@@ -58,7 +58,7 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
                         <button
                             key={p}
                             onClick={() => onPageChange(p)}
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center border text-xs font-semibold transition-all ${
+                            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border text-xs font-semibold transition-all shrink-0 ${
                                 isActive
                                     ? 'bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-500/30 font-bold'
                                     : 'hover:bg-slate-500/10'
@@ -75,14 +75,14 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
                 })}
 
                 {endPage < totalPages && (
-                    <span className="px-1 text-xs opacity-50">...</span>
+                    <span className="px-0.5 sm:px-1 text-xs opacity-50">...</span>
                 )}
 
                 {/* Siguiente */}
                 <button
                     disabled={currentPage === totalPages}
                     onClick={() => onPageChange(currentPage + 1)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-colors"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-colors shrink-0"
                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
                     title="Página siguiente"
                     aria-label="Página siguiente"
@@ -94,7 +94,7 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
                 <button
                     disabled={currentPage === totalPages}
                     onClick={() => onPageChange(totalPages)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-colors"
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-colors shrink-0"
                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
                     title="Última página"
                     aria-label="Última página"

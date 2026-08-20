@@ -1,0 +1,57 @@
+/* ==========================================================================
+   Tablas (Custom, Usuarios, Movimientos, etc.)
+   ========================================================================== */
+
+.table-custom,
+.table-usuarios,
+.table-movimientos {
+    --bs-table-bg: transparent !important;
+    --bs-table-color: var(--text-primary) !important;
+    --bs-table-border-color: var(--border-color) !important;
+    margin-bottom: 0;
+}
+
+.table-custom thead th,
+.table-usuarios thead th,
+.table-movimientos thead th {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-secondary) !important;
+    border-bottom: 2px solid var(--border-color) !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 10px 12px;
+}
+
+@media (min-width: 640px) {
+    .table-custom thead th,
+    .table-usuarios thead th,
+    .table-movimientos thead th {
+        padding: 14px 16px;
+    }
+}
+
+.table-custom tbody td,
+.table-usuarios tbody td,
+.table-movimientos tbody td {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+
+@media (min-width: 640px) {
+    .table-custom tbody td,
+    .table-usuarios tbody td,
+    .table-movimientos tbody td {
+        padding: 14px 16px;
+    }
+}
+
+.table-custom tbody tr:hover td,
+.table-usuarios tbody tr:hover td,
+.table-movimientos tbody tr:hover td {
+    background-color: var(--hover-bg) !important;
+}

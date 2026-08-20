@@ -1,0 +1,41 @@
+/* ==========================================================================
+   Variables de Tema (Modo Claro y Modo Oscuro)
+   ========================================================================== */
+
+:root {
+    /* Modo Claro - Máximo Contraste y Claridad */
+    --bg-primary: #f1f5f9;
+    --bg-secondary: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --border-color: #cbd5e1;
+    --border-strong: #94a3b8;
+    --track-bg: #e2e8f0;
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    --hover-bg: #f1f5f9;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    
+    /* SweetAlert */
+    --swal-backdrop: rgba(15, 23, 42, 0.5);
+    --swal-bg: #ffffff;
+    --swal-text: #0f172a;
+}
+
+html.dark,
+html.dark-mode,
+body.dark-mode,
+.dark {
+    /* Modo Oscuro - Máximo Contraste y Claridad */
+    --bg-primary: #0b1120;
+    --bg-secondary: #171f32;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --border-color: #283552;
+    --border-strong: #475569;
+    --track-bg: #0b1120;
+    --card-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+    --hover-bg: #1e293f;
+    --glass-bg: rgba(23, 31, 50, 0.95);
+    
+    color-scheme: dark;
+}

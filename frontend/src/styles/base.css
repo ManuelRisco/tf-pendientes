@@ -1,0 +1,58 @@
+/* ==========================================================================
+   Estilos Base y Tipografía Global
+   ========================================================================== */
+
+html {
+    transition: font-size 0.3s ease;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Eliminar subrayados de enlaces globales */
+a,
+a:hover,
+a:focus,
+a:active,
+.no-underline {
+    text-decoration: none !important;
+}
+
+/* Transiciones universales suaves */
+*, *::before, *::after {
+    transition-property: background-color, border-color, box-shadow;
+    transition-duration: 0.25s;
+    transition-timing-function: ease;
+}
+
+/* Bordes y separadores */
+.border,
+.border-t,
+.border-b,
+.border-l,
+.border-r,
+.border-x,
+.border-y {
+    border-color: var(--border-color);
+}
+
+hr {
+    border-color: var(--border-color) !important;
+    opacity: 1 !important;
+}
+
+/* Excepciones de transición */
+.progress-fill {
+    transition-property: width, background-color;
+    transition-duration: 1s, 0.25s;
+    transition-timing-function: ease-out, ease !important;
+}
+
+.sidebar {
+    transition-property: transform, background-color, border-color !important;
+}

@@ -50,6 +50,17 @@ export function useAccessibility() {
         localStorage.setItem('fontSize', fontSize);
     }, [fontSize]);
 
+    const resetAccessibility = () => {
+        setDyslexiaFont(false);
+        setColorFilter('none');
+        setFontSize('100%');
+        localStorage.removeItem('dyslexiaFont');
+        localStorage.removeItem('colorFilter');
+        localStorage.removeItem('fontSize');
+    };
+
+    const hasCustomSettings = dyslexiaFont || colorFilter !== 'none' || fontSize !== '100%';
+
     return {
         isOpen,
         setIsOpen,
@@ -59,6 +70,8 @@ export function useAccessibility() {
         setColorFilter,
         fontSize,
         setFontSize,
+        resetAccessibility,
+        hasCustomSettings,
         menuRef
     };
 }

@@ -35,6 +35,19 @@ export function useUsuarios() {
         rol_id: ''
     });
 
+    const handleEditClick = useCallback((u) => {
+        if (!u) return;
+        setEditId(u.id);
+        setFormData({
+            nombre: u.nombre || '',
+            apellido: u.apellido || '',
+            email: u.email || '',
+            password: '',
+            rol_id: u.rol_id || ''
+        });
+        setShowModal(true);
+    }, []);
+
     // Debounce para el input de búsqueda
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -137,18 +150,6 @@ export function useUsuarios() {
 
     const handleCreateClick = () => {
         resetForm();
-        setShowModal(true);
-    };
-
-    const handleEditClick = (u) => {
-        setEditId(u.id);
-        setFormData({
-            nombre: u.nombre || '',
-            apellido: u.apellido || '',
-            email: u.email || '',
-            password: '',
-            rol_id: u.rol_id || ''
-        });
         setShowModal(true);
     };
 

@@ -1,0 +1,21 @@
+/* ==========================================================================
+   SweetAlert2 Integración con Temas
+   ========================================================================== */
+
+div.swal2-container.swal2-backdrop-show {
+    backdrop-filter: blur(5px) !important;
+    background: var(--swal-backdrop) !important;
+}
+
+.swal2-popup {
+    background: var(--swal-bg) !important;
+    color: var(--swal-text) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 16px !important;
+    box-shadow: var(--card-shadow) !important;
+}
+
+.swal2-title,
+.swal2-html-container {
+    color: var(--swal-text) !important;
+}

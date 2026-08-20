@@ -27,9 +27,9 @@ function Dashboard() {
     }
 
     return (
-        <div className="py-2 sm:py-6 px-1 sm:px-4 max-w-7xl mx-auto">
+        <div className="py-1 sm:py-4 px-0 sm:px-2 max-w-7xl mx-auto">
             {/* Encabezado */}
-            <div className="mb-6 sm:mb-8">
+            <div className="mb-4 sm:mb-6">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight m-0" style={{ color: 'var(--text-primary)' }}>
                     Bienvenido, {user?.nombre || 'Usuario'}
                 </h1>
@@ -39,34 +39,34 @@ function Dashboard() {
             </div>
 
             {/* Grid Superior de Métricas */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+            <div className={`grid gap-3 sm:gap-5 mb-5 sm:mb-6 ${user?.rol_id === 1 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 max-w-xl'}`}>
                 {/* Card 1: Total Tareas */}
-                <div className="rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-500/20 flex flex-col justify-between min-h-[130px] sm:min-h-[140px] relative overflow-hidden">
-                    <div className="flex justify-between items-center opacity-90">
+                <div className="rounded-2xl p-4 sm:p-6 bg-gradient-to-br from-indigo-600 to-blue-600 text-white shadow-lg shadow-indigo-500/20 flex flex-col justify-between min-h-[120px] sm:min-h-[140px] relative overflow-hidden">
+                    <div className="flex justify-center items-center gap-1.5 opacity-90">
                         <span className="text-xs sm:text-sm font-semibold tracking-wide uppercase">Total Tareas</span>
-                        <i className="bi bi-clipboard2-check text-xl sm:text-2xl"></i>
+                        <i className="bi bi-clipboard2-check text-base sm:text-xl"></i>
                     </div>
-                    <div className="mt-3 sm:mt-4">
-                        <h2 className={`text-3xl sm:text-4xl font-extrabold m-0 ${isUpdating ? 'animate-pulse' : ''}`}>{total}</h2>
+                    <div className="flex-1 flex items-center justify-center py-1 sm:py-2">
+                        <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold m-0 text-center ${isUpdating ? 'animate-pulse' : ''}`}>{total}</h2>
                     </div>
                 </div>
 
                 {/* Card 2: Active Users (Admin) */}
                 {user?.rol_id === 1 && (
-                    <div className="rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/20 flex flex-col justify-between min-h-[130px] sm:min-h-[140px] relative overflow-hidden">
-                        <div className="flex justify-between items-center opacity-90">
+                    <div className="rounded-2xl p-4 sm:p-6 bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/20 flex flex-col justify-between min-h-[120px] sm:min-h-[140px] relative overflow-hidden">
+                        <div className="flex justify-center items-center gap-1.5 opacity-90">
                             <span className="text-xs sm:text-sm font-semibold tracking-wide uppercase">Usuarios Activos</span>
-                            <i className="bi bi-people text-xl sm:text-2xl"></i>
+                            <i className="bi bi-people text-base sm:text-xl"></i>
                         </div>
-                        <div className="mt-3 sm:mt-4">
-                            <h2 className={`text-3xl sm:text-4xl font-extrabold m-0 ${isUpdating ? 'animate-pulse' : ''}`}>{totalUsuarios}</h2>
+                        <div className="flex-1 flex items-center justify-center py-1 sm:py-2">
+                            <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold m-0 text-center ${isUpdating ? 'animate-pulse' : ''}`}>{totalUsuarios}</h2>
                         </div>
                     </div>
                 )}
 
                 {/* Card 3: Recent Activity (Admin) */}
                 {user?.rol_id === 1 && (
-                    <div className="card-app p-4 sm:p-5 flex flex-col justify-between min-h-[130px] sm:min-h-[140px] col-span-1 sm:col-span-2 lg:col-span-1">
+                    <div className="card-app p-4 sm:p-5 flex flex-col justify-between min-h-[120px] sm:min-h-[140px] col-span-1 sm:col-span-2 lg:col-span-1">
                         <div className="flex justify-between items-center mb-2 sm:mb-3">
                             <h3 className="text-xs sm:text-sm font-bold tracking-wide uppercase m-0" style={{ color: 'var(--text-primary)' }}>
                                 Actividad reciente
@@ -122,12 +122,12 @@ function Dashboard() {
                                         </span>
                                     </div>
                                     {/* Track con fondo visible y contraste en ambos modos */}
-                                    <div 
+                                    <div
                                         className="w-full h-3 rounded-full overflow-hidden border"
                                         style={{ backgroundColor: 'var(--track-bg)', borderColor: 'var(--border-color)' }}
                                     >
-                                        <div 
-                                            className="h-full rounded-full transition-all duration-700 ease-out shadow-xs" 
+                                        <div
+                                            className="h-full rounded-full transition-all duration-700 ease-out shadow-xs"
                                             style={{ width: `${p}%`, backgroundColor: color }}
                                         ></div>
                                     </div>
@@ -165,12 +165,12 @@ function Dashboard() {
                                         </span>
                                     </div>
                                     {/* Track con fondo visible y contraste en ambos modos */}
-                                    <div 
+                                    <div
                                         className="w-full h-3 rounded-full overflow-hidden border"
                                         style={{ backgroundColor: 'var(--track-bg)', borderColor: 'var(--border-color)' }}
                                     >
-                                        <div 
-                                            className="h-full rounded-full transition-all duration-700 ease-out shadow-xs" 
+                                        <div
+                                            className="h-full rounded-full transition-all duration-700 ease-out shadow-xs"
                                             style={{ width: `${p}%`, backgroundColor: color }}
                                         ></div>
                                     </div>
