@@ -7,7 +7,7 @@ class TareaController {
         $this->model = new TareaModel();
     }
 
-    // GET /api/tareas[?estado_id=&prioridad_id=&search=]
+    // GET /api/tareas[?estado_id=&prioridad_id=&search=&scope=&usuario_id=]
     public function index(): void {
         $auth    = AuthMiddleware::require();
         $filters = [
@@ -16,15 +16,29 @@ class TareaController {
             'search'       => $_GET['search']       ?? null,
         ];
 
-        // Todos pueden ver todas las tareas
-        $usuarioId = null;
+        // Control de visibilidad según rol
+        $isEmpleado = ((int)$auth['rol_id'] !== 1);
+        if ($isEmpleado) {
+            // Empleado solo puede ver sus propias tareas
+            $filters['usuario_id'] = (int)$auth['id'];
+        } else {
+            // Administrador: soporte de scopes ('mis_tareas', 'otros', 'todos') o usuario específico
+            $scope = $_GET['scope'] ?? 'todos';
+            if ($scope === 'mis_tareas') {
+                $filters['usuario_id'] = (int)$auth['id'];
+            } elseif ($scope === 'otros') {
+                $filters['excluir_usuario_id'] = (int)$auth['id'];
+            } elseif (!empty($_GET['usuario_id']) && is_numeric($_GET['usuario_id'])) {
+                $filters['usuario_id'] = (int)$_GET['usuario_id'];
+            }
+        }
 
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 10;
         $offset = ($page - 1) * $limit;
 
-        $items = $this->model->getAll($filters, $usuarioId, $limit, $offset);
-        $total = $this->model->countAll($filters, $usuarioId);
+        $items = $this->model->getAll($filters, null, $limit, $offset);
+        $total = $this->model->countAll($filters, null);
         $totalPages = ceil($total / $limit);
 
         Response::success([
@@ -44,6 +58,11 @@ class TareaController {
         $tarea = $this->model->findById((int)$params['id']);
 
         if (!$tarea) Response::notFound('Tarea no encontrada.');
+
+        // Si es empleado, solo puede ver sus propias tareas
+        if ((int)$auth['rol_id'] !== 1 && (int)$tarea['usuario_id'] !== (int)$auth['id']) {
+            Response::forbidden('No tienes permisos para ver esta tarea.');
+        }
 
         Response::success($tarea);
     }
@@ -73,6 +92,11 @@ class TareaController {
         $tarea = $this->model->findById($id);
 
         if (!$tarea) Response::notFound('Tarea no encontrada.');
+
+        // Si es empleado, solo puede actualizar sus propias tareas
+        if ((int)$auth['rol_id'] !== 1 && (int)$tarea['usuario_id'] !== (int)$auth['id']) {
+            Response::forbidden('No tienes permisos para modificar esta tarea.');
+        }
 
         $errors = $this->validate($body, false);
         if ($errors) Response::error('Datos inválidos.', 422, $errors);

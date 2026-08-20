@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import TopBar from '../TopBar/TopBar';
+import ProfileModal from '../Profile/ProfileModal';
 
 function Layout({ children }) {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
         if (window.innerWidth < 768) return false;
         const saved = localStorage.getItem('tf_sidebar_open');
@@ -54,7 +56,7 @@ function Layout({ children }) {
                 ></div>
             )}
             
-            <Sidebar isOpen={isSidebarOpen} />
+            <Sidebar isOpen={isSidebarOpen} onOpenProfile={() => setIsProfileModalOpen(true)} />
 
             <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'ml-0'}`}>
                 <TopBar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
@@ -62,6 +64,9 @@ function Layout({ children }) {
                     {children}
                 </main>
             </div>
+
+            {/* Modal para Editar Perfil del Usuario */}
+            <ProfileModal show={isProfileModalOpen} onHide={() => setIsProfileModalOpen(false)} />
         </div>
     );
 }

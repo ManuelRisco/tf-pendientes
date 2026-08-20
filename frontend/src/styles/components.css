@@ -3,11 +3,13 @@
    ========================================================================== */
 
 /* Clases de Componentes */
+.card,
 .card-app {
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--card-shadow);
-    border-radius: 0.875rem;
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--card-shadow) !important;
+    border-radius: 0.875rem !important;
+    color: var(--text-primary) !important;
 }
 
 /* Modal Bootstrap Integrado */
@@ -52,8 +54,20 @@ body.dark-mode .modal-header .btn-close {
     filter: invert(1) grayscale(100%) brightness(200%) !important;
 }
 
-/* Fix text colors for Recharts SVG text in Dark Mode */
+/* Fix text colors and tooltips for Recharts SVG in Dark Mode */
 .dark .recharts-text,
 body.dark-mode .recharts-text {
     fill: var(--text-primary) !important;
+}
+
+.recharts-default-tooltip {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    color: var(--text-primary) !important;
+    box-shadow: var(--card-shadow) !important;
+}
+
+.recharts-legend-item-text {
+    color: var(--text-primary) !important;
 }

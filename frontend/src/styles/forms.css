@@ -6,6 +6,7 @@
 input[type="text"],
 input[type="email"],
 input[type="password"],
+input[type="date"],
 textarea,
 select,
 .form-control,
@@ -14,6 +15,11 @@ select,
     color: var(--text-primary) !important;
     border: 1px solid var(--border-strong) !important;
     border-radius: 8px !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: var(--calendar-filter, none);
+    cursor: pointer;
 }
 
 input:focus,

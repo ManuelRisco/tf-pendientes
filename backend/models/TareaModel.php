@@ -9,11 +9,19 @@ class TareaModel {
     // Admins ven todas; Empleados solo las suyas
     // ------------------------------------------------------------------
     public function getAll(array $filters = [], ?int $usuarioId = null, int $limit = 10, int $offset = 0): array {
-        $query = Tarea::with(['estado', 'prioridad', 'usuario.persona'])
+        $query = Tarea::with(['estado', 'prioridad', 'usuario.persona', 'usuario.rol'])
             ->orderBy('created_at', 'desc');
 
         if ($usuarioId !== null) {
             $query->where('usuario_id', $usuarioId);
+        }
+
+        if (!empty($filters['usuario_id'])) {
+            $query->where('usuario_id', (int)$filters['usuario_id']);
+        }
+
+        if (!empty($filters['excluir_usuario_id'])) {
+            $query->where('usuario_id', '!=', (int)$filters['excluir_usuario_id']);
         }
 
         if (!empty($filters['estado_id'])) {
@@ -45,7 +53,9 @@ class TareaModel {
                 'prioridad_id'   => $t->prioridad_id,
                 'prioridad'      => $t->prioridad ? $t->prioridad->nombre : null,
                 'usuario_id'     => $t->usuario_id,
-                'usuario_nombre' => $t->usuario && $t->usuario->persona ? $t->usuario->persona->nombre . ' ' . $t->usuario->persona->apellido : null,
+                'usuario_nombre' => $t->usuario && $t->usuario->persona ? $t->usuario->persona->nombre . ' ' . $t->usuario->persona->apellido : ($t->usuario ? $t->usuario->email : 'Usuario'),
+                'usuario_email'  => $t->usuario ? $t->usuario->email : null,
+                'usuario_rol'    => $t->usuario && $t->usuario->rol ? $t->usuario->rol->nombre : null,
                 'created_at'     => $t->created_at,
                 'updated_at'     => $t->updated_at,
             ];
@@ -59,6 +69,14 @@ class TareaModel {
 
         if ($usuarioId !== null) {
             $query->where('usuario_id', $usuarioId);
+        }
+
+        if (!empty($filters['usuario_id'])) {
+            $query->where('usuario_id', (int)$filters['usuario_id']);
+        }
+
+        if (!empty($filters['excluir_usuario_id'])) {
+            $query->where('usuario_id', '!=', (int)$filters['excluir_usuario_id']);
         }
 
         if (!empty($filters['estado_id'])) {
@@ -82,7 +100,7 @@ class TareaModel {
 
     // ------------------------------------------------------------------
     public function findById(int $id): ?array {
-        $t = Tarea::with(['estado', 'prioridad', 'usuario.persona'])->find($id);
+        $t = Tarea::with(['estado', 'prioridad', 'usuario.persona', 'usuario.rol'])->find($id);
 
         if (!$t) return null;
 
@@ -95,7 +113,9 @@ class TareaModel {
             'prioridad_id'   => $t->prioridad_id,
             'prioridad'      => $t->prioridad ? $t->prioridad->nombre : null,
             'usuario_id'     => $t->usuario_id,
-            'usuario_nombre' => $t->usuario && $t->usuario->persona ? $t->usuario->persona->nombre . ' ' . $t->usuario->persona->apellido : null,
+            'usuario_nombre' => $t->usuario && $t->usuario->persona ? $t->usuario->persona->nombre . ' ' . $t->usuario->persona->apellido : ($t->usuario ? $t->usuario->email : 'Usuario'),
+            'usuario_email'  => $t->usuario ? $t->usuario->email : null,
+            'usuario_rol'    => $t->usuario && $t->usuario->rol ? $t->usuario->rol->nombre : null,
             'created_at'     => $t->created_at,
             'updated_at'     => $t->updated_at,
         ];

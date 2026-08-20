@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import api from '../../lib/axios';
 import { useAuth } from '../../context/AuthContext';
+import { formatDateTime } from '../../lib/dateUtils';
 
 export function useGestionTareas() {
     const { user } = useAuth();
     const [items, setItems] = useState([]);
     const [estados, setEstados] = useState([]);
     const [prioridades, setPrioridades] = useState([]);
+    const [usuariosList, setUsuariosList] = useState([]);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [priorityId, setPriorityId] = useState('');
@@ -15,6 +17,8 @@ export function useGestionTareas() {
     const [showModal, setShowModal] = useState(false);
     const [filtroEstado, setFiltroEstado] = useState('');
     const [filtroPrioridad, setFiltroPrioridad] = useState('');
+    const [filtroAlcance, setFiltroAlcance] = useState('todos'); // 'todos', 'mis_tareas', 'otros', 'usuario_especifico'
+    const [filtroUsuarioId, setFiltroUsuarioId] = useState('');
     const descRef = useRef(null);
 
     // Paginación
@@ -24,15 +28,31 @@ export function useGestionTareas() {
 
     const fetchTareas = async () => {
         try {
-            const [resTareas, resCatalogos] = await Promise.all([
-                api.get(`/tareas?page=${currentPage}&limit=${limit}&estado_id=${filtroEstado}&prioridad_id=${filtroPrioridad}`),
+            const promises = [
+                api.get(`/tareas?page=${currentPage}&limit=${limit}&estado_id=${filtroEstado}&prioridad_id=${filtroPrioridad}&scope=${filtroAlcance}&usuario_id=${filtroUsuarioId}`),
                 api.get('/catalogos'),
-            ]);
-            setItems(resTareas.data.data.items || []);
-            setTotalPages(resTareas.data.data.meta?.totalPages || 1);
+            ];
+
+            // Si es administrador y aún no cargó usuarios, cargarlos para el selector
+            if (user && Number(user.rol_id) === 1 && usuariosList.length === 0) {
+                promises.push(api.get('/usuarios?limit=100'));
+            }
+
+            const results = await Promise.all(promises);
+            const resTareas = results[0];
+            const resCatalogos = results[1];
+
+            setItems(resTareas.data.data?.items || []);
+            setTotalPages(resTareas.data.data?.meta?.totalPages || 1);
 
             setEstados(resCatalogos.data.data?.estados || []);
             setPrioridades(resCatalogos.data.data?.prioridades || []);
+
+            if (results[2] && results[2].data.success) {
+                const uData = results[2].data.data;
+                const usersArr = Array.isArray(uData) ? uData : (uData?.items || []);
+                setUsuariosList(usersArr);
+            }
         } catch (error) {
             console.error("Error fetching tareas", error);
             Swal.fire('Error', 'No se pudieron cargar las tareas', 'error');
@@ -41,15 +61,15 @@ export function useGestionTareas() {
 
     useEffect(() => {
         fetchTareas();
-    }, [currentPage, filtroEstado, filtroPrioridad]);
+    }, [currentPage, filtroEstado, filtroPrioridad, filtroAlcance, filtroUsuarioId]);
+
+    // Resetear a página 1 cuando cambian los filtros
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filtroEstado, filtroPrioridad, filtroAlcance, filtroUsuarioId]);
 
     const getFormattedDate = (dateString) => {
-        if (!dateString) return '—';
-        const date = new Date(dateString);
-        return date.toLocaleString('es-ES', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        });
+        return formatDateTime(dateString);
     };
 
     const handleSubmit = async (e) => {
@@ -156,6 +176,7 @@ export function useGestionTareas() {
             html: `
                 <div style="text-align: left; margin-top: 15px; font-size: 0.95rem; line-height: 1.6;">
                     <p style="margin-bottom: 8px;"><strong>Descripción:</strong><br/> ${displayDesc}</p>
+                    <p style="margin-bottom: 8px;"><strong>Creado por / Responsable:</strong> ${item.usuario_nombre || 'Usuario'}${item.usuario_email ? ` (${item.usuario_email})` : ''}</p>
                     <p style="margin-bottom: 8px;"><strong>Estado:</strong> ${item.estado || 'Desconocido'}</p>
                     <p style="margin-bottom: 8px;"><strong>Prioridad:</strong> ${item.prioridad || 'Desconocida'}</p>
                     <p style="margin-bottom: 8px;"><strong>Creada:</strong> ${getFormattedDate(item.created_at)}</p>
@@ -235,6 +256,7 @@ export function useGestionTareas() {
         items,
         estados,
         prioridades,
+        usuariosList,
         title,
         setTitle,
         description,
@@ -248,6 +270,10 @@ export function useGestionTareas() {
         setFiltroEstado,
         filtroPrioridad,
         setFiltroPrioridad,
+        filtroAlcance,
+        setFiltroAlcance,
+        filtroUsuarioId,
+        setFiltroUsuarioId,
         descRef,
         currentPage,
         setCurrentPage,

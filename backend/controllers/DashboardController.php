@@ -7,23 +7,45 @@ class DashboardController {
         $this->model = new DashboardModel();
     }
 
-    // GET /dashboard
+    // GET /dashboard[?scope=&usuario_id=]
     public function index(): void {
         $auth = AuthMiddleware::require();
+        $isEmpleado = ((int)$auth['rol_id'] !== 1);
 
-        $esAdmin   = (int)$auth['rol_id'] === 1;
-
-        // Todos ven las estadísticas de todas las tareas
         $usuarioId = null;
+        $excluirUsuarioId = null;
 
-        $stats = $this->model->getStats($usuarioId);
+        if ($isEmpleado) {
+            // Empleado solo ve las estadísticas de sus propias tareas
+            $usuarioId = (int)$auth['id'];
+        } else {
+            // Administrador: soporte de scopes ('mis_tareas', 'otros', 'todos') o usuario específico
+            $scope = $_GET['scope'] ?? 'todos';
+            if ($scope === 'mis_tareas') {
+                $usuarioId = (int)$auth['id'];
+            } elseif ($scope === 'otros') {
+                $excluirUsuarioId = (int)$auth['id'];
+            } elseif (!empty($_GET['usuario_id']) && is_numeric($_GET['usuario_id'])) {
+                $usuarioId = (int)$_GET['usuario_id'];
+            }
+        }
 
+        $stats = $this->model->getStats($usuarioId, $excluirUsuarioId);
         $data = ['estadisticas' => $stats];
 
-        // Solo el admin ve el total de usuarios y todos los movimientos detallados
-        // Por ahora lo retornaremos para que se vea en el dashboard.
-        $data['total_usuarios'] = $this->model->getTotalUsuarios();
-        $data['actividad_reciente'] = $this->model->getMovimientos(3);
+        if (!$isEmpleado) {
+            $data['total_usuarios'] = $this->model->getTotalUsuarios();
+            
+            // Si el admin está filtrando por un usuario específico, mostrar actividad de ese usuario
+            if ($usuarioId !== null) {
+                $data['actividad_reciente'] = $this->model->getMovimientosPorUsuario($usuarioId, 5);
+            } else {
+                $data['actividad_reciente'] = $this->model->getMovimientos(5);
+            }
+        } else {
+            // Empleado: solo su actividad reciente
+            $data['actividad_reciente'] = $this->model->getMovimientosPorUsuario((int)$auth['id'], 5);
+        }
 
         Response::success($data);
     }

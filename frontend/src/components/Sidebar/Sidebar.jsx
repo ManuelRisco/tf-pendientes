@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-function Sidebar({ isOpen }) {
+function Sidebar({ isOpen, onOpenProfile }) {
     const { user, logout } = useAuth();
     const location = useLocation();
 
@@ -10,9 +10,9 @@ function Sidebar({ isOpen }) {
     const navItems = [
         { path: "/dashboard", label: "Dashboard", icon: "bi-grid-1x2-fill" },
         { path: "/gestion-tareas", label: "Tareas", icon: "bi-card-checklist" },
+        { path: "/movimientos", label: "Movimientos", icon: "bi-arrow-left-right" },
         { path: "/usuarios", label: "Usuarios", icon: "bi-people" },
         ...(user && Number(user.rol_id) === 1 ? [
-            { path: "/movimientos", label: "Movimientos", icon: "bi-arrow-left-right" },
             { path: "/reportes", label: "Reportes", icon: "bi-bar-chart-fill" }
         ] : [])
     ];
@@ -60,25 +60,34 @@ function Sidebar({ isOpen }) {
                 })}
             </nav>
 
-            {/* Footer / User Profile */}
-            <div className="p-4 border-t flex flex-col gap-3" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-600/10 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0 border" style={{ borderColor: 'var(--border-color)' }}>
-                        <i className="bi bi-person-fill text-lg"></i>
+            {/* Footer / User Profile (Clickeable para editar) */}
+            <div className="p-3 border-t flex flex-col gap-2" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+                <button
+                    onClick={onOpenProfile}
+                    type="button"
+                    className="w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all hover:bg-blue-50 dark:hover:bg-slate-800/80 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 group cursor-pointer"
+                    title="Hacer clic para ver y editar tu perfil"
+                    aria-label="Editar mi perfil"
+                >
+                    <div className="w-10 h-10 rounded-full bg-blue-600/10 text-blue-600 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center font-bold text-sm shrink-0 border border-blue-500/20 transition-colors">
+                        {(user?.nombre?.charAt(0) || 'U').toUpperCase()}
+                        {(user?.apellido?.charAt(0) || '').toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
-                            {user?.nombre ? `${user.nombre} ${user.apellido || ''}`.trim() : (user?.email || 'Usuario')}
+                        <div className="text-sm font-bold truncate group-hover:text-blue-600 transition-colors flex items-center justify-between" style={{ color: 'var(--text-primary)' }}>
+                            <span className="truncate">{user?.nombre ? `${user.nombre} ${user.apellido || ''}`.trim() : (user?.email || 'Usuario')}</span>
+                            <i className="bi bi-pencil-square text-xs opacity-0 group-hover:opacity-100 text-blue-600 transition-opacity ml-1"></i>
                         </div>
-                        <div className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
-                            {user?.rol_id === 1 ? 'Administrador' : 'Empleado'}
+                        <div className="text-xs truncate flex items-center gap-1" style={{ color: 'var(--text-secondary)' }}>
+                            <span>{Number(user?.rol_id) === 1 ? 'Administrador' : 'Empleado'}</span>
+                            <span className="text-[10px] opacity-60">• Editar</span>
                         </div>
                     </div>
-                </div>
+                </button>
 
                 <button
                     onClick={logout}
-                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors border border-transparent hover:border-red-500/20"
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors border border-transparent hover:border-red-500/20 cursor-pointer"
                     aria-label="Cerrar sesión"
                 >
                     <i className="bi bi-box-arrow-right"></i>

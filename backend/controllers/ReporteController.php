@@ -33,7 +33,7 @@ class ReporteController {
     public function getFrecuentes() {
         $auth = AuthMiddleware::requireAdmin();
 
-        $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 10;
+        $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 500;
         $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-d', strtotime('-1 month'));
         $fechaFin = $_GET['fecha_fin'] ?? date('Y-m-d');
 

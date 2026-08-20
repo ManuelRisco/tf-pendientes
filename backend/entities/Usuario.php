@@ -15,6 +15,20 @@ class Usuario extends Model {
     // Ocultar password de serialización por seguridad
     protected $hidden = ['password'];
 
+    /**
+     * Mutador para asegurar que cualquier contraseña asignada se cifre con Bcrypt.
+     */
+    public function setPasswordAttribute($value): void {
+        if (!empty($value)) {
+            $info = password_get_info($value);
+            if ($info['algo'] !== null && $info['algo'] !== 0) {
+                $this->attributes['password'] = $value;
+            } else {
+                $this->attributes['password'] = password_hash($value, PASSWORD_BCRYPT);
+            }
+        }
+    }
+
     public function persona() {
         return $this->belongsTo(Persona::class, 'persona_id');
     }

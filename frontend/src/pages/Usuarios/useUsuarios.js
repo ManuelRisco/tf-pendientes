@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../../lib/axios';
 import { useAuth } from '../../context/AuthContext';
+import { formatDateTime } from '../../lib/dateUtils';
 
 export function useUsuarios() {
     const { user, logout } = useAuth();
@@ -123,12 +124,7 @@ export function useUsuarios() {
     const hasActiveFilters = search.trim() !== '' || filtroEstado !== 'todos' || filtroRol !== '';
 
     const getFormattedDate = (dateString) => {
-        if (!dateString) return '—';
-        const date = new Date(dateString);
-        return date.toLocaleString('es-ES', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        });
+        return formatDateTime(dateString);
     };
 
     const getInitials = (nombre, apellido) => {

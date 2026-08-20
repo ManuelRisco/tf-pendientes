@@ -3,13 +3,16 @@
 class DashboardModel {
 
     /**
-     * Estadísticas generales — para administradores ve todo,
+     * Estadísticas generales — para administradores ve todo o filtrado por scope,
      * para empleados solo sus propias tareas.
      */
-    public function getStats(?int $usuarioId = null): array {
+    public function getStats(?int $usuarioId = null, ?int $excluirUsuarioId = null): array {
         $tareasQuery = Tarea::query();
         if ($usuarioId !== null) {
             $tareasQuery->where('usuario_id', $usuarioId);
+        }
+        if ($excluirUsuarioId !== null) {
+            $tareasQuery->where('usuario_id', '!=', $excluirUsuarioId);
         }
 
         // Total de tareas activas
@@ -19,11 +22,14 @@ class DashboardModel {
         // Por estado
         $porEstado = Estado::select('estados.id', 'estados.nombre')
             ->selectRaw('COUNT(tareas.id) as cantidad')
-            ->leftJoin('tareas', function ($join) use ($usuarioId) {
+            ->leftJoin('tareas', function ($join) use ($usuarioId, $excluirUsuarioId) {
                 $join->on('tareas.estado_id', '=', 'estados.id')
                      ->whereNull('tareas.deleted_at');
                 if ($usuarioId !== null) {
                     $join->where('tareas.usuario_id', '=', $usuarioId);
+                }
+                if ($excluirUsuarioId !== null) {
+                    $join->where('tareas.usuario_id', '!=', $excluirUsuarioId);
                 }
             })
             ->groupBy('estados.id', 'estados.nombre')
@@ -34,11 +40,14 @@ class DashboardModel {
         // Por prioridad
         $porPrioridad = Prioridad::select('prioridades.id', 'prioridades.nombre')
             ->selectRaw('COUNT(tareas.id) as cantidad')
-            ->leftJoin('tareas', function ($join) use ($usuarioId) {
+            ->leftJoin('tareas', function ($join) use ($usuarioId, $excluirUsuarioId) {
                 $join->on('tareas.prioridad_id', '=', 'prioridades.id')
                      ->whereNull('tareas.deleted_at');
                 if ($usuarioId !== null) {
                     $join->where('tareas.usuario_id', '=', $usuarioId);
+                }
+                if ($excluirUsuarioId !== null) {
+                    $join->where('tareas.usuario_id', '!=', $excluirUsuarioId);
                 }
             })
             ->groupBy('prioridades.id', 'prioridades.nombre')
@@ -61,11 +70,19 @@ class DashboardModel {
     }
 
     /**
-     * Solo para admins: obtener los últimos movimientos de la bitácora
+     * Obtener movimientos de la bitácora con soporte para filtros de usuario
      */
-    public function getMovimientos(int $limite = 10, int $offset = 0): array {
-        $bitacoras = Bitacora::with(['tipoAccion', 'usuario.persona'])
-            ->orderBy('created_at', 'desc')
+    public function getMovimientos(int $limite = 10, int $offset = 0, ?int $usuarioId = null, ?int $excluirUsuarioId = null): array {
+        $query = Bitacora::with(['tipoAccion', 'usuario.persona']);
+
+        if ($usuarioId !== null) {
+            $query->where('usuario_id', $usuarioId);
+        }
+        if ($excluirUsuarioId !== null) {
+            $query->where('usuario_id', '!=', $excluirUsuarioId);
+        }
+
+        $bitacoras = $query->orderBy('created_at', 'desc')
             ->skip($offset)
             ->take($limite)
             ->get();
@@ -90,7 +107,21 @@ class DashboardModel {
         return $movimientos;
     }
 
-    public function countMovimientos(): int {
-        return Bitacora::count();
+    /**
+     * Obtener movimientos de la bitácora filtrados por un usuario específico
+     */
+    public function getMovimientosPorUsuario(int $usuarioId, int $limite = 10, int $offset = 0): array {
+        return $this->getMovimientos($limite, $offset, $usuarioId);
+    }
+
+    public function countMovimientos(?int $usuarioId = null, ?int $excluirUsuarioId = null): int {
+        $query = Bitacora::query();
+        if ($usuarioId !== null) {
+            $query->where('usuario_id', $usuarioId);
+        }
+        if ($excluirUsuarioId !== null) {
+            $query->where('usuario_id', '!=', $excluirUsuarioId);
+        }
+        return $query->count();
     }
 }

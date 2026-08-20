@@ -152,12 +152,21 @@ class UsuarioModel {
                 'apellido' => $data['apellido']
             ]);
 
-            // 2. Insertar usuario
+            // 2. Cifrar contraseña con Bcrypt si no está cifrada
+            $password = $data['password'] ?? '';
+            if (!empty($password)) {
+                $info = password_get_info($password);
+                if ($info['algo'] === null || $info['algo'] === 0) {
+                    $password = password_hash($password, PASSWORD_BCRYPT);
+                }
+            }
+
+            // 3. Insertar usuario
             $usuario = Usuario::create([
                 'persona_id' => $persona->id,
                 'rol_id'     => $data['rol_id'],
                 'email'      => $data['email'],
-                'password'   => $data['password']
+                'password'   => $password
             ]);
 
             return $usuario->id;
@@ -174,20 +183,29 @@ class UsuarioModel {
             $usuario = Usuario::find($id);
             if (!$usuario) return false;
 
-            if ($usuario->persona) {
-                $usuario->persona->update([
-                    'nombre'   => $data['nombre'],
-                    'apellido' => $data['apellido']
-                ]);
+            if ($usuario->persona && (isset($data['nombre']) || isset($data['apellido']))) {
+                $personaData = [];
+                if (isset($data['nombre']))   $personaData['nombre']   = $data['nombre'];
+                if (isset($data['apellido'])) $personaData['apellido'] = $data['apellido'];
+                $usuario->persona->update($personaData);
             }
 
-            $updateData = [
-                'rol_id' => $data['rol_id'],
-                'email'  => $data['email']
-            ];
+            $updateData = [];
+            if (isset($data['rol_id'])) $updateData['rol_id'] = $data['rol_id'];
+            if (isset($data['email']))  $updateData['email']  = $data['email'];
 
+            // Si se envió una nueva contraseña, cifrarla con Bcrypt
             if (!empty($data['password'])) {
-                $updateData['password'] = $data['password'];
+                $password = $data['password'];
+                $info = password_get_info($password);
+                if ($info['algo'] === null || $info['algo'] === 0) {
+                    $password = password_hash($password, PASSWORD_BCRYPT);
+                }
+                $updateData['password'] = $password;
+            }
+
+            if (empty($updateData) && empty($personaData)) {
+                return true;
             }
 
             return $usuario->update($updateData);
