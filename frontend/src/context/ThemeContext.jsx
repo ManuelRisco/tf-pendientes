@@ -12,9 +12,11 @@ export function ThemeProvider({ children }) {
         if (isDarkMode) {
             document.documentElement.classList.add("dark", "dark-mode");
             document.body.classList.add("dark", "dark-mode");
+            document.documentElement.setAttribute("data-bs-theme", "dark");
         } else {
             document.documentElement.classList.remove("dark", "dark-mode");
             document.body.classList.remove("dark", "dark-mode");
+            document.documentElement.setAttribute("data-bs-theme", "light");
         }
         localStorage.setItem("darkMode", isDarkMode);
     }, [isDarkMode]);

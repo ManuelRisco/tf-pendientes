@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import api from "../../lib/axios";
 import { useAuth } from "../../context/AuthContext";
 import { formatDate } from "../../lib/dateUtils";
+import { ESTADO_COLORS, PRIORIDAD_COLORS } from "../../lib/themeConstants";
 
 export function useDashboard() {
     const { user } = useAuth();
@@ -13,60 +14,66 @@ export function useDashboard() {
     const [usuariosList, setUsuariosList] = useState([]);
     const statsRef = useRef(null);
 
+    const fetchDashboard = useCallback(async (isPolling = false) => {
+        try {
+            if (!isPolling) setLoading(true);
+
+            const promises = [
+                api.get(`/dashboard?scope=${filtroAlcance}&usuario_id=${filtroUsuarioId}`)
+            ];
+
+            // Si es administrador y aún no cargó usuarios, cargarlos para el selector
+            if (user && Number(user.rol_id) === 1 && usuariosList.length === 0) {
+                promises.push(api.get('/usuarios?limit=100'));
+            }
+
+            const results = await Promise.all(promises);
+            const resStats = results[0];
+            const newData = resStats.data.data;
+            const newStatsString = JSON.stringify(newData);
+
+            if (results[1] && results[1].data.success) {
+                const uData = results[1].data.data;
+                const usersArr = Array.isArray(uData) ? uData : (uData?.items || []);
+                setUsuariosList(usersArr);
+            }
+
+            if (isPolling) {
+                if (statsRef.current !== newStatsString) {
+                    setStats(newData);
+                    statsRef.current = newStatsString;
+                    setIsUpdating(true);
+                    setTimeout(() => {
+                        setIsUpdating(false);
+                    }, 800);
+                }
+            } else {
+                setStats(newData);
+                statsRef.current = newStatsString;
+            }
+        } catch (error) {
+            console.error("Error fetching dashboard data", error);
+        } finally {
+            if (!isPolling) setLoading(false);
+        }
+    }, [user, filtroAlcance, filtroUsuarioId, usuariosList.length]);
+
+    const refreshDashboard = useCallback(async () => {
+        setIsUpdating(true);
+        await fetchDashboard(true);
+        setTimeout(() => setIsUpdating(false), 500);
+    }, [fetchDashboard]);
+
     useEffect(() => {
         let isMounted = true;
-
-        const fetchDashboard = async (isPolling = false) => {
-            try {
-                if (!isPolling) setLoading(true);
-
-                const promises = [
-                    api.get(`/dashboard?scope=${filtroAlcance}&usuario_id=${filtroUsuarioId}`)
-                ];
-
-                // Si es administrador y aún no cargó usuarios, cargarlos para el selector
-                if (user && Number(user.rol_id) === 1 && usuariosList.length === 0) {
-                    promises.push(api.get('/usuarios?limit=100'));
-                }
-
-                const results = await Promise.all(promises);
-                const resStats = results[0];
-                const newData = resStats.data.data;
-                const newStatsString = JSON.stringify(newData);
-
-                if (isMounted) {
-                    if (results[1] && results[1].data.success) {
-                        const uData = results[1].data.data;
-                        const usersArr = Array.isArray(uData) ? uData : (uData?.items || []);
-                        setUsuariosList(usersArr);
-                    }
-
-                    if (isPolling) {
-                        if (statsRef.current !== newStatsString) {
-                            setStats(newData);
-                            statsRef.current = newStatsString;
-                            setIsUpdating(true);
-                            setTimeout(() => {
-                                if (isMounted) setIsUpdating(false);
-                            }, 800);
-                        }
-                    } else {
-                        setStats(newData);
-                        statsRef.current = newStatsString;
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching dashboard data", error);
-            } finally {
-                if (isMounted && !isPolling) setLoading(false);
-            }
-        };
 
         if (user) {
             fetchDashboard();
             
             const interval = setInterval(() => {
-                fetchDashboard(true);
+                if (isMounted) {
+                    fetchDashboard(true);
+                }
             }, 5000);
 
             return () => {
@@ -74,26 +81,14 @@ export function useDashboard() {
                 clearInterval(interval);
             };
         }
-    }, [user, filtroAlcance, filtroUsuarioId]);
+    }, [user, fetchDashboard]);
 
     const total = stats?.estadisticas?.total || 0;
     const estados = stats?.estadisticas?.porEstado || [];
     const prioridades = stats?.estadisticas?.porPrioridad || [];
 
-    const estadoColors = {
-        'Pendiente': '#2563eb', // Rich Blue
-        'En curso': '#ea580c', // Rich Orange
-        'En revisión': '#ca8a04', // Rich Amber
-        'Finalizado': '#16a34a'  // Rich Emerald Green
-    };
-
-    const prioridadColors = {
-        'Baja': '#16a34a',     // Green
-        'Media': '#ea580c',    // Amber/Orange
-        'Alta': '#dc2626',     // Bright Red
-        'Crítico': '#9333ea',  // Purple / Crimson
-        'Crítica': '#9333ea'
-    };
+    const estadoColors = ESTADO_COLORS;
+    const prioridadColors = PRIORIDAD_COLORS;
 
     const totalUsuarios = stats?.total_usuarios || 0;
     const actividadReciente = stats?.actividad_reciente || [];
@@ -104,7 +99,8 @@ export function useDashboard() {
         const date = new Date(dateString);
         const diffInSeconds = Math.floor((now - date) / 1000);
 
-        if (diffInSeconds < 60) return `Hace ${diffInSeconds} seg`;
+        if (diffInSeconds < 10) return 'Justo ahora';
+        if (diffInSeconds < 60) return `Hace ${diffInSeconds} s`;
         if (diffInSeconds < 3600) return `Hace ${Math.floor(diffInSeconds / 60)} min`;
         if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)} h`;
         return formatDate(dateString);
@@ -164,6 +160,8 @@ export function useDashboard() {
         usuariosList,
         getTimeAgo,
         getActionColor,
-        getActionText
+        getActionText,
+        refreshDashboard
     };
 }
+

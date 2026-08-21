@@ -24,7 +24,7 @@ function Sidebar({ isOpen, onOpenProfile }) {
             aria-label="Menú lateral"
         >
             {/* Header Brand */}
-            <div className="p-6 flex items-center border-b" style={{ borderColor: 'var(--border-color)' }}>
+            <div className="p-6 flex items-center border-b shrink-0" style={{ borderColor: 'var(--border-color)' }}>
                 <Link
                     to="/"
                     className="text-xl font-extrabold flex items-center gap-2 no-underline hover:no-underline"
@@ -61,11 +61,11 @@ function Sidebar({ isOpen, onOpenProfile }) {
             </nav>
 
             {/* Footer / User Profile (Clickeable para editar) */}
-            <div className="p-3 border-t flex flex-col gap-2" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+            <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-1.5" style={{ backgroundColor: 'var(--bg-primary)' }}>
                 <button
                     onClick={onOpenProfile}
                     type="button"
-                    className="w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all hover:bg-blue-50 dark:hover:bg-slate-800/80 border border-transparent hover:border-blue-200 dark:hover:border-slate-700 group cursor-pointer"
+                    className="w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all hover:bg-blue-50 dark:hover:bg-slate-800/80 border-0 group cursor-pointer"
                     title="Hacer clic para ver y editar tu perfil"
                     aria-label="Editar mi perfil"
                 >
@@ -87,7 +87,7 @@ function Sidebar({ isOpen, onOpenProfile }) {
 
                 <button
                     onClick={logout}
-                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors border border-transparent hover:border-red-500/20 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors border-0 cursor-pointer"
                     aria-label="Cerrar sesión"
                 >
                     <i className="bi bi-box-arrow-right"></i>

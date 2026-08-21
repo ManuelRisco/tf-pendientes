@@ -34,11 +34,11 @@
     transition: .3s;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: #2563eb;
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     transform: translateX(16px);
 }
 
@@ -80,4 +80,16 @@ body.filter-deuteranopia {
 
 body.filter-tritanopia {
     filter: url('#tritanopia');
+}
+
+body.filter-inverter {
+    filter: invert(100%) hue-rotate(180deg);
+}
+
+/* Inversión inteligente: mantiene imágenes, avatares y gráficos con colores naturales */
+body.filter-inverter img,
+body.filter-inverter video,
+body.filter-inverter canvas,
+body.filter-inverter .recharts-wrapper {
+    filter: invert(100%) hue-rotate(180deg);
 }

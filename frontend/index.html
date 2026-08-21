@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es" class="dark dark-mode">
+<html lang="es" class="dark dark-mode" data-bs-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -28,9 +28,11 @@
           if (isDark === "false") {
             document.documentElement.classList.remove("dark", "dark-mode");
             document.body.classList.remove("dark", "dark-mode");
+            document.documentElement.setAttribute("data-bs-theme", "light");
           } else {
             document.documentElement.classList.add("dark", "dark-mode");
             document.body.classList.add("dark", "dark-mode");
+            document.documentElement.setAttribute("data-bs-theme", "dark");
           }
           
           var dyslexia = localStorage.getItem("dyslexiaFont") === "true";

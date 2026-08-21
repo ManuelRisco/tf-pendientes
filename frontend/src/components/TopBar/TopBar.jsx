@@ -6,7 +6,7 @@ function TopBar({ toggleSidebar, isSidebarOpen }) {
 
     return (
         <header 
-            className="h-16 px-4 sm:px-6 flex items-center justify-between border-b sticky top-0 z-30 transition-colors"
+            className="h-16 px-4 sm:px-6 flex items-center justify-between border-b sticky top-0 z-30 transition-colors shrink-0"
             style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
         >
             <div className="flex items-center gap-3">

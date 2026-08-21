@@ -2,7 +2,8 @@
    Variables de Tema (Modo Claro y Modo Oscuro)
    ========================================================================== */
 
-:root {
+:root,
+[data-bs-theme="light"] {
     /* Modo Claro - Máximo Contraste y Claridad */
     --bg-primary: #f1f5f9;
     --bg-secondary: #ffffff;
@@ -16,6 +17,12 @@
     --glass-bg: rgba(255, 255, 255, 0.95);
     --calendar-filter: none;
     
+    /* Bootstrap Theme Variables */
+    --bs-border-color: #cbd5e1 !important;
+    --bs-border-color-translucent: rgba(203, 213, 225, 0.5) !important;
+    --bs-body-bg: #f1f5f9 !important;
+    --bs-body-color: #0f172a !important;
+    
     /* SweetAlert */
     --swal-backdrop: rgba(15, 23, 42, 0.5);
     --swal-bg: #ffffff;
@@ -25,19 +32,26 @@
 html.dark,
 html.dark-mode,
 body.dark-mode,
-.dark {
-    /* Modo Oscuro - Máximo Contraste y Claridad */
-    --bg-primary: #0b1120;
-    --bg-secondary: #171f32;
-    --text-primary: #f8fafc;
+.dark,
+[data-bs-theme="dark"] {
+    /* Modo Oscuro - Suave, Elegante y sin bordes blancos molestos */
+    --bg-primary: #090e1a;
+    --bg-secondary: #0f172a;
+    --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
-    --border-color: #283552;
-    --border-strong: #475569;
-    --track-bg: #0b1120;
-    --card-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
-    --hover-bg: #1e293f;
-    --glass-bg: rgba(23, 31, 50, 0.95);
+    --border-color: #1e293b;
+    --border-strong: #334155;
+    --track-bg: #1e293b;
+    --card-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    --hover-bg: #1e293b;
+    --glass-bg: rgba(15, 23, 42, 0.95);
     --calendar-filter: invert(1) brightness(150%);
+    
+    /* Bootstrap Theme Variables en Modo Oscuro */
+    --bs-border-color: #1e293b !important;
+    --bs-border-color-translucent: rgba(30, 41, 59, 0.5) !important;
+    --bs-body-bg: #090e1a !important;
+    --bs-body-color: #f1f5f9 !important;
     
     color-scheme: dark;
 }

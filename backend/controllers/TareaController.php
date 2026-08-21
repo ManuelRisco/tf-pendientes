@@ -98,6 +98,11 @@ class TareaController {
             Response::forbidden('No tienes permisos para modificar esta tarea.');
         }
 
+        // Si es empleado, no puede modificar el estado de la tarea
+        if ((int)$auth['rol_id'] !== 1 && isset($body['estado_id']) && (int)$body['estado_id'] !== (int)$tarea['estado_id']) {
+            Response::forbidden('Solo los administradores pueden cambiar el estado de las tareas.');
+        }
+
         $errors = $this->validate($body, false);
         if ($errors) Response::error('Datos inválidos.', 422, $errors);
 

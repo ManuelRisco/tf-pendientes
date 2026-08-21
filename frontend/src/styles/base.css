@@ -30,17 +30,7 @@ a:active,
     transition-timing-function: ease;
 }
 
-/* Bordes y separadores */
-.border,
-.border-t,
-.border-b,
-.border-l,
-.border-r,
-.border-x,
-.border-y {
-    border-color: var(--border-color);
-}
-
+/* Separadores */
 hr {
     border-color: var(--border-color) !important;
     opacity: 1 !important;

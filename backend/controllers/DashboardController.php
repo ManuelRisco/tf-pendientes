@@ -38,13 +38,13 @@ class DashboardController {
             
             // Si el admin está filtrando por un usuario específico, mostrar actividad de ese usuario
             if ($usuarioId !== null) {
-                $data['actividad_reciente'] = $this->model->getMovimientosPorUsuario($usuarioId, 5);
+                $data['actividad_reciente'] = $this->model->getMovimientosPorUsuario($usuarioId, 10);
             } else {
-                $data['actividad_reciente'] = $this->model->getMovimientos(5);
+                $data['actividad_reciente'] = $this->model->getMovimientos(10);
             }
         } else {
             // Empleado: solo su actividad reciente
-            $data['actividad_reciente'] = $this->model->getMovimientosPorUsuario((int)$auth['id'], 5);
+            $data['actividad_reciente'] = $this->model->getMovimientosPorUsuario((int)$auth['id'], 10);
         }
 
         Response::success($data);

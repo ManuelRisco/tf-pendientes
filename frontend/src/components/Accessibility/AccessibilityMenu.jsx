@@ -18,8 +18,8 @@ function AccessibilityMenu() {
 
     return (
         <div className="relative" ref={menuRef}>
-            <button 
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors relative ${hasCustomSettings ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400' : 'hover:bg-slate-500/10'}`} 
+            <button
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors relative ${hasCustomSettings ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400' : 'hover:bg-slate-500/10'}`}
                 style={{ color: hasCustomSettings ? '#2563eb' : 'var(--text-secondary)' }}
                 onClick={() => setIsOpen(!isOpen)}
                 title="Opciones de Accesibilidad"
@@ -34,26 +34,26 @@ function AccessibilityMenu() {
             </button>
 
             {isOpen && (
-                <div 
-                    className="absolute top-12 right-0 w-72 rounded-2xl shadow-2xl z-50 overflow-hidden" 
-                    style={{ 
-                        backgroundColor: 'var(--bg-secondary)', 
-                        borderColor: 'var(--border-color)', 
-                        border: '1px solid var(--border-color)', 
+                <div
+                    className="absolute top-12 right-0 w-72 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                    style={{
+                        backgroundColor: 'var(--bg-secondary)',
+                        borderColor: 'var(--border-color)',
+                        border: '1px solid var(--border-color)',
                         color: 'var(--text-primary)',
                         boxShadow: 'var(--card-shadow)'
                     }}
-                    role="dialog" 
+                    role="dialog"
                     aria-label="Menú de Accesibilidad"
                 >
-                    <div 
+                    <div
                         className="p-4 border-b flex items-center gap-2.5 font-bold text-sm"
                         style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
                     >
                         <i className="bi bi-universal-access-circle text-blue-600 text-base" aria-hidden="true"></i>
                         <span>Accesibilidad</span>
                     </div>
-                    
+
                     <div className="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
                         {/* Toggle Dislexia */}
                         <div className="flex items-center justify-between">
@@ -62,8 +62,8 @@ function AccessibilityMenu() {
                                 <span id="dyslexia-label">Fuente para Dislexia</span>
                             </div>
                             <label className="switch">
-                                <input 
-                                    type="checkbox" 
+                                <input
+                                    type="checkbox"
                                     checked={dyslexiaFont}
                                     onChange={(e) => setDyslexiaFont(e.target.checked)}
                                     aria-labelledby="dyslexia-label"
@@ -79,23 +79,23 @@ function AccessibilityMenu() {
                             <span className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }} id="fontsize-label">
                                 Tamaño de Texto
                             </span>
-                            
+
                             {[
                                 { val: '75%', label: 'Pequeño (75%)' },
                                 { val: '100%', label: 'Normal (100%)' },
                                 { val: '125%', label: 'Grande (125%)' },
                                 { val: '150%', label: 'Extra Grande (150%)' }
                             ].map(item => (
-                                <label 
-                                    key={item.val} 
+                                <label
+                                    key={item.val}
                                     className="flex items-center gap-2.5 text-xs cursor-pointer py-1 hover:text-blue-500 transition-colors w-full"
                                     style={{ color: fontSize === item.val ? '#2563eb' : 'var(--text-primary)' }}
                                 >
-                                    <input 
-                                        type="radio" 
-                                        name="fontSize" 
-                                        value={item.val} 
-                                        checked={fontSize === item.val} 
+                                    <input
+                                        type="radio"
+                                        name="fontSize"
+                                        value={item.val}
+                                        checked={fontSize === item.val}
                                         onChange={(e) => setFontSize(e.target.value)}
                                         style={{ accentColor: '#2563eb' }}
                                     />
@@ -111,25 +111,26 @@ function AccessibilityMenu() {
                             <span className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-secondary)' }} id="filters-label">
                                 Filtros Visuales
                             </span>
-                            
+
                             {[
                                 { val: 'none', label: 'Sin filtro (Normal)' },
                                 { val: 'protanopia', label: 'Protanopía (Rojo débil)' },
                                 { val: 'deuteranopia', label: 'Deuteranopía (Verde débil)' },
                                 { val: 'tritanopia', label: 'Tritanopía (Azul débil)' },
                                 { val: 'grayscale', label: 'Escala de Grises' },
-                                { val: 'high-contrast', label: 'Alto Contraste' }
+                                { val: 'high-contrast', label: 'Alto Contraste' },
+                                { val: 'inverter', label: 'Invertido' }
                             ].map(item => (
-                                <label 
-                                    key={item.val} 
+                                <label
+                                    key={item.val}
                                     className="flex items-center gap-2.5 text-xs cursor-pointer py-1 hover:text-blue-500 transition-colors w-full"
                                     style={{ color: colorFilter === item.val ? '#2563eb' : 'var(--text-primary)' }}
                                 >
-                                    <input 
-                                        type="radio" 
-                                        name="colorFilter" 
-                                        value={item.val} 
-                                        checked={colorFilter === item.val} 
+                                    <input
+                                        type="radio"
+                                        name="colorFilter"
+                                        value={item.val}
+                                        checked={colorFilter === item.val}
                                         onChange={(e) => setColorFilter(e.target.value)}
                                         style={{ accentColor: '#2563eb' }}
                                     />

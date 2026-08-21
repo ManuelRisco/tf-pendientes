@@ -262,8 +262,7 @@ function Usuarios() {
                                                             <td className="text-end">
                                                                 <div className="inline-flex gap-1.5">
                                                                     <button
-                                                                        className="w-8 h-8 rounded-lg flex items-center justify-center border text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
-                                                                        style={{ borderColor: 'var(--border-color)' }}
+                                                                        className="w-8 h-8 rounded-lg flex items-center justify-center border-0 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white transition-all cursor-pointer"
                                                                         title="Editar Usuario"
                                                                         onClick={() => handleEditClick(u)}
                                                                     >
@@ -272,8 +271,7 @@ function Usuarios() {
 
                                                                     {Number(user?.rol_id) === 1 && !isCurrentUser && isInactive && (
                                                                         <button
-                                                                            className="w-8 h-8 rounded-lg flex items-center justify-center border text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all"
-                                                                            style={{ borderColor: 'var(--border-color)' }}
+                                                                            className="w-8 h-8 rounded-lg flex items-center justify-center border-0 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white transition-all cursor-pointer"
                                                                             title="Reactivar Usuario"
                                                                             onClick={() => handleRestoreClick(u.id)}
                                                                         >
@@ -283,8 +281,7 @@ function Usuarios() {
 
                                                                     {Number(user?.rol_id) === 1 && !isCurrentUser && !isInactive && (
                                                                         <button
-                                                                            className="w-8 h-8 rounded-lg flex items-center justify-center border text-red-600 hover:bg-red-600 hover:text-white transition-all"
-                                                                            style={{ borderColor: 'var(--border-color)' }}
+                                                                            className="w-8 h-8 rounded-lg flex items-center justify-center border-0 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-600 dark:hover:text-white transition-all cursor-pointer"
                                                                             title="Desactivar Usuario"
                                                                             onClick={() => handleDeleteClick(u.id)}
                                                                         >

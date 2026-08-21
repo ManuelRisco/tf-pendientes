@@ -3,17 +3,17 @@
    ========================================================================== */
 
 /* Controles de Entrada */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="date"],
-textarea,
-select,
+input[type="text"]:not(.border-0),
+input[type="email"]:not(.border-0),
+input[type="password"]:not(.border-0),
+input[type="date"]:not(.border-0),
+textarea:not(.border-0),
+select:not(.border-0),
 .form-control,
 .form-select {
     background-color: var(--bg-primary) !important;
     color: var(--text-primary) !important;
-    border: 1px solid var(--border-strong) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 8px !important;
 }
 
@@ -28,7 +28,7 @@ textarea:focus,
 .form-control:focus,
 .form-select:focus {
     border-color: #2563eb !important;
-    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25) !important;
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25) !important;
 }
 
 input::placeholder,

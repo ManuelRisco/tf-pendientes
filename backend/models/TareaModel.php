@@ -33,10 +33,23 @@ class TareaModel {
         }
 
         if (!empty($filters['search'])) {
-            $search = '%' . $filters['search'] . '%';
-            $query->where(function($q) use ($search) {
+            $search = '%' . trim($filters['search']) . '%';
+            $rawSearch = trim($filters['search']);
+            $query->where(function($q) use ($search, $rawSearch) {
                 $q->where('titulo', 'LIKE', $search)
                   ->orWhere('descripcion', 'LIKE', $search);
+
+                if (is_numeric($rawSearch)) {
+                    $q->orWhere('id', (int)$rawSearch);
+                }
+
+                $q->orWhereHas('usuario', function($qu) use ($search) {
+                    $qu->where('email', 'LIKE', $search)
+                       ->orWhereHas('persona', function($qp) use ($search) {
+                           $qp->where('nombre', 'LIKE', $search)
+                              ->orWhere('apellido', 'LIKE', $search);
+                       });
+                });
             });
         }
 
@@ -88,10 +101,23 @@ class TareaModel {
         }
 
         if (!empty($filters['search'])) {
-            $search = '%' . $filters['search'] . '%';
-            $query->where(function($q) use ($search) {
+            $search = '%' . trim($filters['search']) . '%';
+            $rawSearch = trim($filters['search']);
+            $query->where(function($q) use ($search, $rawSearch) {
                 $q->where('titulo', 'LIKE', $search)
                   ->orWhere('descripcion', 'LIKE', $search);
+
+                if (is_numeric($rawSearch)) {
+                    $q->orWhere('id', (int)$rawSearch);
+                }
+
+                $q->orWhereHas('usuario', function($qu) use ($search) {
+                    $qu->where('email', 'LIKE', $search)
+                       ->orWhereHas('persona', function($qp) use ($search) {
+                           $qp->where('nombre', 'LIKE', $search)
+                              ->orWhere('apellido', 'LIKE', $search);
+                       });
+                });
             });
         }
 

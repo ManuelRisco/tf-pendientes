@@ -37,7 +37,12 @@ export function useAccessibility() {
     }, [dyslexiaFont]);
 
     useEffect(() => {
-        document.body.classList.remove('filter-protanopia', 'filter-deuteranopia', 'filter-tritanopia', 'filter-grayscale', 'filter-high-contrast');
+        // Remover cualquier clase de filtro anterior dinámicamente
+        Array.from(document.body.classList).forEach(className => {
+            if (className.startsWith('filter-')) {
+                document.body.classList.remove(className);
+            }
+        });
         
         if (colorFilter !== 'none') {
             document.body.classList.add(`filter-${colorFilter}`);

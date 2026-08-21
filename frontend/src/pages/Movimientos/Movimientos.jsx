@@ -2,6 +2,7 @@ import { Container, Row, Col, Table } from "react-bootstrap";
 import { useMovimientos } from "./useMovimientos";
 import CustomPagination from "../../components/Pagination/CustomPagination";
 import { formatDateTime } from "../../lib/dateUtils";
+import { getActionMeta } from "../../lib/themeConstants";
 
 function Movimientos() {
     const {
@@ -185,26 +186,7 @@ function Movimientos() {
                                         </thead>
                                         <tbody>
                                             {movimientosFiltrados.map(mov => {
-                                                let badgeStyle = 'bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700';
-                                                let actionBadge = mov.tipo_accion;
-                                                
-                                                switch(mov.tipo_accion) {
-                                                    case 'CREAR': 
-                                                        badgeStyle = 'bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700';
-                                                        break;
-                                                    case 'ACTUALIZAR': 
-                                                        badgeStyle = 'bg-blue-100 text-blue-950 border-blue-300 dark:bg-blue-950/80 dark:text-blue-200 dark:border-blue-700';
-                                                        break;
-                                                    case 'ELIMINAR_LOGICO': 
-                                                        badgeStyle = 'bg-red-100 text-red-950 border-red-300 dark:bg-red-950/80 dark:text-red-200 dark:border-red-700';
-                                                        actionBadge = mov.modulo === 'usuarios' ? 'DESACTIVAR' : 'ELIMINAR';
-                                                        break;
-                                                    case 'RESTAURAR': 
-                                                        badgeStyle = 'bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700';
-                                                        actionBadge = 'REACTIVAR';
-                                                        break;
-                                                }
-
+                                                const meta = getActionMeta(mov.tipo_accion, mov.modulo);
                                                 const nombreCompleto = mov.persona_nombre 
                                                     ? `${mov.persona_nombre} ${mov.persona_apellido || ''}`.trim() 
                                                     : (mov.email || 'Sistema / Automático');
@@ -230,8 +212,9 @@ function Movimientos() {
                                                             </div>
                                                         </td>
                                                         <td>
-                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badgeStyle}`}>
-                                                                {actionBadge}
+                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${meta.badgeBg}`}>
+                                                                <i className={`bi ${meta.icon} text-[10px]`}></i>
+                                                                <span>{meta.label}</span>
                                                             </span>
                                                         </td>
                                                         <td>

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@variant dark (&:where(.dark, .dark *, .dark-mode, .dark-mode *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ==========================================================================
    Módulos de Estilos Personalizados

@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import CustomPagination from '../../components/Pagination/CustomPagination';
 import DateInput from '../../components/Common/DateInput';
 import { formatDate, formatDateTime, getTodayISO, getMonthsAgoISO } from '../../lib/dateUtils';
+import { ESTADO_COLORS, PRIORIDAD_COLORS } from '../../lib/themeConstants';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     PieChart, Pie, Cell
@@ -293,7 +294,11 @@ function Reportes() {
                                             itemStyle={{ color: 'var(--text-primary)' }}
                                             cursor={{ fill: 'var(--hover-bg)' }}
                                         />
-                                        <Bar dataKey="valor" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                                        <Bar dataKey="valor" radius={[6, 6, 0, 0]}>
+                                            {dataEstados.map((entry, index) => (
+                                                <Cell key={`bar-cell-${index}`} fill={ESTADO_COLORS[entry.name] || '#2563eb'} />
+                                            ))}
+                                        </Bar>
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
@@ -328,7 +333,7 @@ function Reportes() {
                                             label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
                                         >
                                             {dataPrioridades.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                <Cell key={`cell-${index}`} fill={PRIORIDAD_COLORS[entry.name] || '#64748b'} />
                                             ))}
                                         </Pie>
                                         <Tooltip
