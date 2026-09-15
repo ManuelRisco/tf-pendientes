@@ -6,9 +6,63 @@ import DateInput from '../../components/Common/DateInput';
 import { formatDate, formatDateTime, getTodayISO, getMonthsAgoISO } from '../../lib/dateUtils';
 import { ESTADO_COLORS, PRIORIDAD_COLORS } from '../../lib/themeConstants';
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-    PieChart, Pie, Cell
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    Cell, LabelList
 } from 'recharts';
+
+// Tooltip personalizado para interpretación clara de cantidad y porcentaje
+const CustomBarTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        const item = payload[0].payload;
+        return (
+            <div
+                className="p-3 rounded-xl border shadow-lg text-xs space-y-1.5 min-w-[170px]"
+                style={{
+                    backgroundColor: 'var(--bg-secondary)',
+                    borderColor: 'var(--border-color)',
+                    boxShadow: 'var(--card-shadow)',
+                    color: 'var(--text-primary)'
+                }}
+            >
+                <div className="flex items-center gap-2 font-bold pb-1.5 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="truncate">{label}</span>
+                </div>
+                <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
+                    <span>Volumen:</span>
+                    <strong className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>
+                        {item.valor} {item.valor === 1 ? 'ticket' : 'tickets'}
+                    </strong>
+                </div>
+                <div className="flex justify-between items-center text-slate-500 dark:text-slate-400">
+                    <span>Proporción:</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400">
+                        {item.porcentaje}% del total
+                    </span>
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
+// Renderizador del valor cuantitativo y porcentaje directamente sobre cada barra
+const renderCustomBarLabel = (props) => {
+    const { x, y, width, value } = props;
+    if (value === undefined || value === null || value === '0') return null;
+    return (
+        <text
+            x={x + width / 2}
+            y={y - 8}
+            fill="var(--text-primary)"
+            textAnchor="middle"
+            fontSize={11}
+            fontWeight={700}
+        >
+            {value}
+        </text>
+    );
+};
 
 function Reportes() {
     // Por defecto, el último mes con fechas locales exactas
@@ -119,6 +173,87 @@ function Reportes() {
         return filteredFrecuentes.slice(start, start + itemsPorPagina);
     }, [filteredFrecuentes, paginaFrecuentes, itemsPorPagina]);
 
+    const totalTicketsGeneral = Number(resumen?.total_tickets || 0);
+
+    // Preparar datos para gráficos con colores, porcentajes e indicadores legibles
+    const dataEstados = useMemo(() => [
+        {
+            name: 'Pendientes',
+            valor: Number(resumen?.pendientes || 0),
+            color: ESTADO_COLORS['Pendientes'] || '#2563eb',
+            porcentaje: totalTicketsGeneral > 0 ? Math.round((Number(resumen?.pendientes || 0) / totalTicketsGeneral) * 100) : 0,
+            displayLabel: totalTicketsGeneral > 0 && Number(resumen?.pendientes || 0) > 0
+                ? `${resumen.pendientes} (${Math.round((Number(resumen.pendientes) / totalTicketsGeneral) * 100)}%)`
+                : '0',
+        },
+        {
+            name: 'En curso',
+            valor: Number(resumen?.en_curso || 0),
+            color: ESTADO_COLORS['En curso'] || '#ea580c',
+            porcentaje: totalTicketsGeneral > 0 ? Math.round((Number(resumen?.en_curso || 0) / totalTicketsGeneral) * 100) : 0,
+            displayLabel: totalTicketsGeneral > 0 && Number(resumen?.en_curso || 0) > 0
+                ? `${resumen.en_curso} (${Math.round((Number(resumen.en_curso) / totalTicketsGeneral) * 100)}%)`
+                : '0',
+        },
+        {
+            name: 'En revisión',
+            valor: Number(resumen?.en_revision || 0),
+            color: ESTADO_COLORS['En revisión'] || '#d97706',
+            porcentaje: totalTicketsGeneral > 0 ? Math.round((Number(resumen?.en_revision || 0) / totalTicketsGeneral) * 100) : 0,
+            displayLabel: totalTicketsGeneral > 0 && Number(resumen?.en_revision || 0) > 0
+                ? `${resumen.en_revision} (${Math.round((Number(resumen.en_revision) / totalTicketsGeneral) * 100)}%)`
+                : '0',
+        },
+        {
+            name: 'Resueltos',
+            valor: Number(resumen?.resueltos || 0),
+            color: ESTADO_COLORS['Resueltos'] || '#16a34a',
+            porcentaje: totalTicketsGeneral > 0 ? Math.round((Number(resumen?.resueltos || 0) / totalTicketsGeneral) * 100) : 0,
+            displayLabel: totalTicketsGeneral > 0 && Number(resumen?.resueltos || 0) > 0
+                ? `${resumen.resueltos} (${Math.round((Number(resumen.resueltos) / totalTicketsGeneral) * 100)}%)`
+                : '0',
+        },
+    ], [resumen, totalTicketsGeneral]);
+
+    const dataPrioridades = useMemo(() => [
+        {
+            name: 'Baja',
+            valor: Number(resumen?.prioridad_baja || 0),
+            color: PRIORIDAD_COLORS['Baja'] || '#16a34a',
+            porcentaje: totalTicketsGeneral > 0 ? Math.round((Number(resumen?.prioridad_baja || 0) / totalTicketsGeneral) * 100) : 0,
+            displayLabel: totalTicketsGeneral > 0 && Number(resumen?.prioridad_baja || 0) > 0
+                ? `${resumen.prioridad_baja} (${Math.round((Number(resumen.prioridad_baja) / totalTicketsGeneral) * 100)}%)`
+                : '0',
+        },
+        {
+            name: 'Media',
+            valor: Number(resumen?.prioridad_media || 0),
+            color: PRIORIDAD_COLORS['Media'] || '#ea580c',
+            porcentaje: totalTicketsGeneral > 0 ? Math.round((Number(resumen?.prioridad_media || 0) / totalTicketsGeneral) * 100) : 0,
+            displayLabel: totalTicketsGeneral > 0 && Number(resumen?.prioridad_media || 0) > 0
+                ? `${resumen.prioridad_media} (${Math.round((Number(resumen.prioridad_media) / totalTicketsGeneral) * 100)}%)`
+                : '0',
+        },
+        {
+            name: 'Alta',
+            valor: Number(resumen?.prioridad_alta || 0),
+            color: PRIORIDAD_COLORS['Alta'] || '#dc2626',
+            porcentaje: totalTicketsGeneral > 0 ? Math.round((Number(resumen?.prioridad_alta || 0) / totalTicketsGeneral) * 100) : 0,
+            displayLabel: totalTicketsGeneral > 0 && Number(resumen?.prioridad_alta || 0) > 0
+                ? `${resumen.prioridad_alta} (${Math.round((Number(resumen.prioridad_alta) / totalTicketsGeneral) * 100)}%)`
+                : '0',
+        },
+        {
+            name: 'Crítica',
+            valor: Number(resumen?.prioridad_critica || 0),
+            color: PRIORIDAD_COLORS['Crítica'] || '#9333ea',
+            porcentaje: totalTicketsGeneral > 0 ? Math.round((Number(resumen?.prioridad_critica || 0) / totalTicketsGeneral) * 100) : 0,
+            displayLabel: totalTicketsGeneral > 0 && Number(resumen?.prioridad_critica || 0) > 0
+                ? `${resumen.prioridad_critica} (${Math.round((Number(resumen.prioridad_critica) / totalTicketsGeneral) * 100)}%)`
+                : '0',
+        },
+    ], [resumen, totalTicketsGeneral]);
+
     if (loading && !resumen) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -128,23 +263,6 @@ function Reportes() {
             </div>
         );
     }
-
-    // Preparar datos para gráficos
-    const dataEstados = [
-        { name: 'Pendientes', valor: resumen?.pendientes || 0 },
-        { name: 'En curso', valor: resumen?.en_curso || 0 },
-        { name: 'En revisión', valor: resumen?.en_revision || 0 },
-        { name: 'Resueltos', valor: resumen?.resueltos || 0 },
-    ];
-
-    const dataPrioridades = [
-        { name: 'Baja', valor: resumen?.prioridad_baja || 0 },
-        { name: 'Media', valor: resumen?.prioridad_media || 0 },
-        { name: 'Alta', valor: resumen?.prioridad_alta || 0 },
-        { name: 'Crítica', valor: resumen?.prioridad_critica || 0 },
-    ];
-
-    const totalTicketsGeneral = resumen?.total_tickets || 1;
 
     return (
         <div className="space-y-6 pb-10">
@@ -257,46 +375,56 @@ function Reportes() {
                     </div>
                 </div>
 
-                {/* Gráficos Estadísticos */}
+                {/* Gráficos Estadísticos: Ambos en Barras con Métricas Directas */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="card-app p-4 sm:p-6 h-[400px] flex flex-col">
-                        <div className="flex items-center justify-between mb-4">
+                    {/* Gráfico 1: Estado de Tickets */}
+                    <div className="card-app p-4 sm:p-6 min-h-[420px] flex flex-col">
+                        <div className="flex items-center justify-between mb-2">
                             <h3 className="text-base sm:text-lg font-bold m-0" style={{ color: 'var(--text-primary)' }}>
                                 Estado de Tickets
                             </h3>
                             <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                                Distribución cuantitativa
+                                Flujo de atención
                             </span>
                         </div>
+
+                        {/* Chips de resumen cuantitativo para lectura instantánea */}
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3">
+                            {dataEstados.map((item) => (
+                                <div
+                                    key={item.name}
+                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium"
+                                    style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
+                                >
+                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }}></span>
+                                    <span style={{ color: 'var(--text-secondary)' }}>{item.name}:</span>
+                                    <strong style={{ color: 'var(--text-primary)' }}>{item.valor}</strong>
+                                    <span className="text-[10px] opacity-75">({item.porcentaje}%)</span>
+                                </div>
+                            ))}
+                        </div>
+
                         <div className="flex-1 min-h-0">
                             {resumen?.total_tickets > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={dataEstados} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
+                                    <BarChart data={dataEstados} margin={{ top: 25, right: 15, left: -15, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" strokeOpacity={0.6} />
                                         <XAxis
                                             dataKey="name"
                                             stroke="var(--text-secondary)"
-                                            tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                                            tick={{ fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 500 }}
                                         />
                                         <YAxis
                                             stroke="var(--text-secondary)"
                                             tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                                             allowDecimals={false}
+                                            domain={[0, (dataMax) => (dataMax <= 0 ? 4 : Math.ceil(dataMax * 1.3))]}
                                         />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: 'var(--bg-secondary)',
-                                                borderColor: 'var(--border-color)',
-                                                borderRadius: '12px',
-                                                color: 'var(--text-primary)',
-                                                boxShadow: 'var(--card-shadow)'
-                                            }}
-                                            itemStyle={{ color: 'var(--text-primary)' }}
-                                            cursor={{ fill: 'var(--hover-bg)' }}
-                                        />
-                                        <Bar dataKey="valor" radius={[6, 6, 0, 0]}>
+                                        <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'var(--hover-bg)', opacity: 0.4 }} />
+                                        <Bar dataKey="valor" radius={[8, 8, 0, 0]} maxBarSize={52}>
+                                            <LabelList dataKey="displayLabel" content={renderCustomBarLabel} />
                                             {dataEstados.map((entry, index) => (
-                                                <Cell key={`bar-cell-${index}`} fill={ESTADO_COLORS[entry.name] || '#2563eb'} />
+                                                <Cell key={`bar-estado-cell-${index}`} fill={entry.color} />
                                             ))}
                                         </Bar>
                                     </BarChart>
@@ -310,8 +438,9 @@ function Reportes() {
                         </div>
                     </div>
 
-                    <div className="card-app p-4 sm:p-6 h-[400px] flex flex-col">
-                        <div className="flex items-center justify-between mb-4">
+                    {/* Gráfico 2: Distribución por Prioridad (Ahora en Barras) */}
+                    <div className="card-app p-4 sm:p-6 min-h-[420px] flex flex-col">
+                        <div className="flex items-center justify-between mb-2">
                             <h3 className="text-base sm:text-lg font-bold m-0" style={{ color: 'var(--text-primary)' }}>
                                 Distribución por Prioridad
                             </h3>
@@ -319,39 +448,51 @@ function Reportes() {
                                 Nivel de criticidad
                             </span>
                         </div>
+
+                        {/* Chips de resumen cuantitativo para lectura instantánea */}
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3">
+                            {dataPrioridades.map((item) => (
+                                <div
+                                    key={item.name}
+                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-medium"
+                                    style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
+                                >
+                                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }}></span>
+                                    <span style={{ color: 'var(--text-secondary)' }}>{item.name}:</span>
+                                    <strong style={{ color: 'var(--text-primary)' }}>{item.valor}</strong>
+                                    <span className="text-[10px] opacity-75">({item.porcentaje}%)</span>
+                                </div>
+                            ))}
+                        </div>
+
                         <div className="flex-1 min-h-0">
                             {resumen?.total_tickets > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={dataPrioridades}
-                                            cx="50%"
-                                            cy="45%"
-                                            labelLine={false}
-                                            outerRadius={95}
-                                            dataKey="valor"
-                                            label={({ name, percent }) => percent > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
-                                        >
-                                            {dataPrioridades.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={PRIORIDAD_COLORS[entry.name] || '#64748b'} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: 'var(--bg-secondary)',
-                                                borderColor: 'var(--border-color)',
-                                                borderRadius: '12px',
-                                                color: 'var(--text-primary)',
-                                                boxShadow: 'var(--card-shadow)'
-                                            }}
-                                            itemStyle={{ color: 'var(--text-primary)' }}
+                                    <BarChart data={dataPrioridades} margin={{ top: 25, right: 15, left: -15, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" strokeOpacity={0.6} />
+                                        <XAxis
+                                            dataKey="name"
+                                            stroke="var(--text-secondary)"
+                                            tick={{ fill: 'var(--text-secondary)', fontSize: 12, fontWeight: 500 }}
                                         />
-                                        <Legend wrapperStyle={{ color: 'var(--text-primary)', paddingTop: '8px' }} />
-                                    </PieChart>
+                                        <YAxis
+                                            stroke="var(--text-secondary)"
+                                            tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                                            allowDecimals={false}
+                                            domain={[0, (dataMax) => (dataMax <= 0 ? 4 : Math.ceil(dataMax * 1.3))]}
+                                        />
+                                        <Tooltip content={<CustomBarTooltip />} cursor={{ fill: 'var(--hover-bg)', opacity: 0.4 }} />
+                                        <Bar dataKey="valor" radius={[8, 8, 0, 0]} maxBarSize={52}>
+                                            <LabelList dataKey="displayLabel" content={renderCustomBarLabel} />
+                                            {dataPrioridades.map((entry, index) => (
+                                                <Cell key={`bar-prioridad-cell-${index}`} fill={entry.color} />
+                                            ))}
+                                        </Bar>
+                                    </BarChart>
                                 </ResponsiveContainer>
                             ) : (
                                 <div className="h-full flex flex-col items-center justify-center text-center p-6" style={{ color: 'var(--text-secondary)' }}>
-                                    <i className="bi bi-pie-chart text-4xl mb-3 opacity-30"></i>
+                                    <i className="bi bi-bar-chart-steps text-4xl mb-3 opacity-30"></i>
                                     <p className="text-sm font-medium">No hay datos disponibles para el rango de fechas seleccionado.</p>
                                 </div>
                             )}

@@ -70,7 +70,11 @@ class TareaController {
     // POST /api/tareas
     public function store(): void {
         $auth = AuthMiddleware::require();
-        $body = $this->json();
+        
+        // Detectar si la petición viene como multipart/form-data o como JSON
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        $isMultipart = str_contains($contentType, 'multipart/form-data') || !empty($_FILES);
+        $body = $isMultipart ? $_POST : $this->json();
 
         $errors = $this->validate($body, true);
         if ($errors) Response::error('Datos inválidos.', 422, $errors);
@@ -80,8 +84,82 @@ class TareaController {
             $body['usuario_id'] = $auth['id'];
         }
 
-        $id = $this->model->create($body, (int)$auth['id']);
-        Response::success(['id' => $id], 'Tarea creada.', 201);
+        // Procesar imágenes si existen
+        $files = $this->normalizeFiles($_FILES['imagenes'] ?? null);
+        if (count($files) > 5) {
+            Response::error('Límite excedido: Solo se permite subir un máximo de 5 imágenes por ticket.', 422);
+        }
+
+        try {
+            $id = $this->model->create($body, (int)$auth['id']);
+            
+            $imagenesGuardadas = [];
+            if (!empty($files)) {
+                $imagenesGuardadas = $this->model->guardarImagenes($id, $files);
+            }
+
+            Response::success([
+                'id'       => $id,
+                'imagenes' => $imagenesGuardadas
+            ], 'Tarea creada exitosamente.', 201);
+        } catch (InvalidArgumentException $e) {
+            Response::error($e->getMessage(), 422);
+        } catch (Throwable $e) {
+            Response::error('Error interno al crear la tarea: ' . $e->getMessage(), 500);
+        }
+    }
+
+    // POST /api/tareas/:id/imagenes
+    public function uploadImagenes(array $params): void {
+        $auth  = AuthMiddleware::require();
+        $id    = (int)$params['id'];
+        $tarea = $this->model->findById($id);
+
+        if (!$tarea) Response::notFound('Tarea no encontrada.');
+
+        // Si es empleado, solo puede agregar imágenes a sus propias tareas
+        if ((int)$auth['rol_id'] !== 1 && (int)$tarea['usuario_id'] !== (int)$auth['id']) {
+            Response::forbidden('No tienes permisos para modificar imágenes de esta tarea.');
+        }
+
+        $files = $this->normalizeFiles($_FILES['imagenes'] ?? null);
+        if (empty($files)) {
+            Response::error('No se seleccionó ninguna imagen válida para subir.', 400);
+        }
+
+        try {
+            $guardadas = $this->model->guardarImagenes($id, $files);
+            Response::success($guardadas, 'Imágenes subidas correctamente.', 201);
+        } catch (InvalidArgumentException $e) {
+            Response::error($e->getMessage(), 422);
+        } catch (Throwable $e) {
+            Response::error('Error al subir imágenes: ' . $e->getMessage(), 500);
+        }
+    }
+
+    // DELETE /api/tareas/:id/imagenes/:imagenId
+    public function deleteImagen(array $params): void {
+        $auth     = AuthMiddleware::require();
+        $id       = (int)$params['id'];
+        $imagenId = (int)$params['imagenId'];
+        $tarea    = $this->model->findById($id);
+
+        if (!$tarea) Response::notFound('Tarea no encontrada.');
+
+        // Si es empleado, solo puede eliminar imágenes de sus propias tareas
+        if ((int)$auth['rol_id'] !== 1 && (int)$tarea['usuario_id'] !== (int)$auth['id']) {
+            Response::forbidden('No tienes permisos para eliminar imágenes de esta tarea.');
+        }
+
+        try {
+            $ok = $this->model->eliminarImagen($id, $imagenId);
+            if (!$ok) {
+                Response::notFound('Imagen no encontrada o no pertenece a esta tarea.');
+            }
+            Response::success(null, 'Imagen eliminada correctamente.');
+        } catch (Throwable $e) {
+            Response::error('Error al eliminar imagen: ' . $e->getMessage(), 500);
+        }
     }
 
     // PUT /api/tareas/:id
@@ -101,6 +179,15 @@ class TareaController {
         // Si es empleado, no puede modificar el estado de la tarea
         if ((int)$auth['rol_id'] !== 1 && isset($body['estado_id']) && (int)$body['estado_id'] !== (int)$tarea['estado_id']) {
             Response::forbidden('Solo los administradores pueden cambiar el estado de las tareas.');
+        }
+
+        // Control de respuesta del administrador: solo rol admin (1) puede responder
+        if (array_key_exists('respuesta_admin', $body)) {
+            if ((int)$auth['rol_id'] !== 1) {
+                Response::forbidden('Solo los administradores pueden registrar o modificar la respuesta oficial.');
+            }
+            $body['admin_id'] = (int)$auth['id'];
+            $body['fecha_respuesta'] = date('Y-m-d H:i:s');
         }
 
         $errors = $this->validate($body, false);
@@ -143,6 +230,41 @@ class TareaController {
     }
 
     // -----------------------------------------------------------------------
+    private function normalizeFiles(?array $files): array {
+        if (!$files || empty($files['name'])) {
+            return [];
+        }
+
+        $normalized = [];
+        if (is_array($files['name'])) {
+            $count = count($files['name']);
+            for ($i = 0; $i < $count; $i++) {
+                if (($files['error'][$i] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+                    continue;
+                }
+                $normalized[] = [
+                    'name'     => $files['name'][$i],
+                    'type'     => $files['type'][$i] ?? '',
+                    'tmp_name' => $files['tmp_name'][$i] ?? '',
+                    'error'    => $files['error'][$i] ?? UPLOAD_ERR_OK,
+                    'size'     => (int)($files['size'][$i] ?? 0),
+                ];
+            }
+        } else {
+            if (($files['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $normalized[] = [
+                    'name'     => $files['name'],
+                    'type'     => $files['type'] ?? '',
+                    'tmp_name' => $files['tmp_name'] ?? '',
+                    'error'    => $files['error'] ?? UPLOAD_ERR_OK,
+                    'size'     => (int)($files['size'] ?? 0),
+                ];
+            }
+        }
+
+        return $normalized;
+    }
+
     private function json(): array {
         return json_decode(file_get_contents('php://input'), true) ?? [];
     }

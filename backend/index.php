@@ -97,12 +97,14 @@ $router->delete('/usuarios/:id',        fn($p)    => (new UsuarioController())->
 $router->patch('/usuarios/:id/restaurar', fn($p)  => (new UsuarioController())->restore($p));
 
 // --- Tareas ---
-$router->get('/tareas',                 fn()      => (new TareaController())->index());
-$router->get('/tareas/:id',             fn($p)    => (new TareaController())->show($p));
-$router->post('/tareas',                fn()      => (new TareaController())->store());
-$router->put('/tareas/:id',             fn($p)    => (new TareaController())->update($p));
-$router->delete('/tareas/:id',          fn($p)    => (new TareaController())->destroy($p));
-$router->patch('/tareas/:id/restaurar', fn($p)    => (new TareaController())->restore($p));
+$router->get('/tareas',                               fn()      => (new TareaController())->index());
+$router->get('/tareas/:id',                           fn($p)    => (new TareaController())->show($p));
+$router->post('/tareas',                              fn()      => (new TareaController())->store());
+$router->post('/tareas/:id/imagenes',                 fn($p)    => (new TareaController())->uploadImagenes($p));
+$router->delete('/tareas/:id/imagenes/:imagenId',     fn($p)    => (new TareaController())->deleteImagen($p));
+$router->put('/tareas/:id',                           fn($p)    => (new TareaController())->update($p));
+$router->delete('/tareas/:id',                        fn($p)    => (new TareaController())->destroy($p));
+$router->patch('/tareas/:id/restaurar',               fn($p)    => (new TareaController())->restore($p));
 
 // --- Reportes ---
 $router->get('/reportes/resumen',       fn()      => (new ReporteController())->getResumen());

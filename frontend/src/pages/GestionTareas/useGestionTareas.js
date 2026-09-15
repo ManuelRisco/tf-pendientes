@@ -19,6 +19,23 @@ export function useGestionTareas() {
     const [editId, setEditId] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+    const [adminResponse, setAdminResponse] = useState('');
+
+    // Estados para Respuesta Directa / Rápida (Solo Admin)
+    const [showResponseModal, setShowResponseModal] = useState(false);
+    const [responseItem, setResponseItem] = useState(null);
+    const [responseText, setResponseText] = useState('');
+    const [responseStatusId, setResponseStatusId] = useState('');
+    const [savingResponse, setSavingResponse] = useState(false);
+
+    // Estados para gestión de imágenes
+    const [selectedFiles, setSelectedFiles] = useState([]);
+    const [filePreviews, setFilePreviews] = useState([]);
+    const [existingImages, setExistingImages] = useState([]);
+    const [viewItem, setViewItem] = useState(null);
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [lightboxImage, setLightboxImage] = useState(null);
 
     // Filtros
     const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +45,7 @@ export function useGestionTareas() {
     const [filtroAlcance, setFiltroAlcance] = useState('todos'); // 'todos', 'mis_tareas', 'otros', 'usuario_especifico'
     const [filtroUsuarioId, setFiltroUsuarioId] = useState('');
     const descRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     // Paginación y Totales
     const [currentPage, setCurrentPage] = useState(1);
@@ -111,6 +129,126 @@ export function useGestionTareas() {
         return formatDateTime(dateString);
     };
 
+    // =========================================================================
+    // Manejo y validación de imágenes (máx. 5 por ticket)
+    // =========================================================================
+    const handleFileSelect = (rawFiles) => {
+        const fileList = Array.from(rawFiles || []);
+        if (fileList.length === 0) return;
+
+        const maxTotal = 5;
+        const totalActual = existingImages.length + selectedFiles.length;
+        const disponibles = maxTotal - totalActual;
+
+        if (disponibles <= 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Límite alcanzado',
+                text: `Este ticket ya alcanzó el límite máximo de ${maxTotal} imágenes.`,
+                confirmButtonColor: '#2563eb'
+            });
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        if (fileList.length > disponibles) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Demasiadas imágenes',
+                text: `Solo puedes adjuntar ${disponibles} imagen(es) más. Seleccionaste ${fileList.length}.`,
+                confirmButtonColor: '#2563eb'
+            });
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+        const validNewFiles = [];
+        const newPreviews = [];
+
+        for (const file of fileList) {
+            const ext = file.name.split('.').pop()?.toLowerCase() || '';
+            const isImage = file.type.startsWith('image/') || validExtensions.includes(ext);
+
+            if (!isImage || !validExtensions.includes(ext)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Formato no permitido',
+                    text: `El archivo "${file.name}" no es una imagen válida. Formatos permitidos: JPG, PNG, WEBP, GIF.`,
+                    confirmButtonColor: '#2563eb'
+                });
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                return;
+            }
+
+            if (file.size > maxSizeBytes) {
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Imagen muy pesada',
+                    text: `La imagen "${file.name}" pesa ${sizeMB}MB. El peso máximo por imagen es de 5MB.`,
+                    confirmButtonColor: '#2563eb'
+                });
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                return;
+            }
+
+            validNewFiles.push(file);
+            newPreviews.push({
+                file,
+                previewUrl: URL.createObjectURL(file),
+                name: file.name,
+                size: file.size,
+            });
+        }
+
+        setSelectedFiles(prev => [...prev, ...validNewFiles]);
+        setFilePreviews(prev => [...prev, ...newPreviews]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleRemoveSelectedFile = (index) => {
+        if (filePreviews[index]?.previewUrl) {
+            URL.revokeObjectURL(filePreviews[index].previewUrl);
+        }
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+        setFilePreviews(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleDeleteExistingImage = (imagenId) => {
+        Swal.fire({
+            title: '¿Eliminar imagen?',
+            text: 'Esta evidencia se eliminará permanentemente del ticket.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await api.delete(`/tareas/${editId}/imagenes/${imagenId}`);
+                    setExistingImages(prev => prev.filter(img => img.id !== imagenId));
+                    fetchTareas();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Imagen eliminada',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                } catch (error) {
+                    const errorMsg = error.response?.data?.message || 'No se pudo eliminar la imagen';
+                    Swal.fire('Error', errorMsg, 'error');
+                }
+            }
+        });
+    };
+
+    // =========================================================================
+    // Envío del Formulario (Crear o Actualizar)
+    // =========================================================================
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!title.trim() || !priorityId) {
@@ -118,52 +256,100 @@ export function useGestionTareas() {
             return;
         }
 
-        const payload = {
-            titulo: title,
-            descripcion: description,
-            estado_id: 1,
-            prioridad_id: priorityId
-        };
+        const totalImagenes = existingImages.length + selectedFiles.length;
+        if (totalImagenes > 5) {
+            Swal.fire('Límite excedido', 'Un ticket no puede superar un total de 5 imágenes.', 'error');
+            return;
+        }
 
         if (editId) {
+            // Actualización de tarea existente
             Swal.fire({
-                title: '¿Estás seguro?',
-                text: "Se actualizará la tarea",
+                title: '¿Actualizar tarea?',
+                text: selectedFiles.length > 0
+                    ? `Se guardarán los datos y se subirán ${selectedFiles.length} imagen(es) adicional(es).`
+                    : "Se guardarán los cambios de la tarea.",
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#2563eb',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: 'Sí, actualizar',
+                confirmButtonText: 'Sí, guardar',
                 cancelButtonText: 'Cancelar'
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        await api.put(`/tareas/${editId}`, payload);
+                        setSubmitting(true);
+                        // 1. Actualizar datos base de la tarea
+                        const updatePayload = {
+                            titulo: title.trim(),
+                            descripcion: description.trim(),
+                            prioridad_id: priorityId
+                        };
+                        if (isAdmin) {
+                            updatePayload.respuesta_admin = adminResponse.trim();
+                        }
+                        await api.put(`/tareas/${editId}`, updatePayload);
+
+                        // 2. Si se adjuntaron nuevas imágenes, subirlas
+                        if (selectedFiles.length > 0) {
+                            const formData = new FormData();
+                            selectedFiles.forEach(file => {
+                                formData.append('imagenes[]', file);
+                            });
+                            await api.post(`/tareas/${editId}/imagenes`, formData);
+                        }
+
                         fetchTareas();
                         resetForm();
-                        Swal.fire({ icon: 'success', title: 'Actualizado', timer: 1500, showConfirmButton: false });
+                        Swal.fire({ icon: 'success', title: 'Tarea actualizada', timer: 1500, showConfirmButton: false });
                     } catch (error) {
-                        Swal.fire('Error', 'No se pudo actualizar la tarea', 'error');
+                        const errorMsg = error.response?.data?.message || 'No se pudo actualizar la tarea';
+                        Swal.fire('Error', errorMsg, 'error');
+                    } finally {
+                        setSubmitting(false);
                     }
                 }
             });
         } else {
+            // Creación de nueva tarea con imágenes
             try {
-                await api.post('/tareas', payload);
+                setSubmitting(true);
+                const formData = new FormData();
+                formData.append('titulo', title.trim());
+                formData.append('descripcion', description.trim());
+                formData.append('prioridad_id', priorityId);
+                formData.append('estado_id', 1);
+
+                selectedFiles.forEach(file => {
+                    formData.append('imagenes[]', file);
+                });
+
+                await api.post('/tareas', formData);
                 fetchTareas();
                 resetForm();
-                Swal.fire({ icon: 'success', title: 'Agregado', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Tarea creada con éxito', timer: 1500, showConfirmButton: false });
             } catch (error) {
-                Swal.fire('Error', 'No se pudo crear la tarea', 'error');
+                const errorMsg = error.response?.data?.message || 'No se pudo crear la tarea';
+                Swal.fire('Error', errorMsg, 'error');
+            } finally {
+                setSubmitting(false);
             }
         }
     };
 
     const resetForm = () => {
+        filePreviews.forEach(p => {
+            if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
+        });
+        setSelectedFiles([]);
+        setFilePreviews([]);
+        setExistingImages([]);
         setEditId(null);
         setTitle('');
         setDescription('');
         setPriorityId('');
+        setAdminResponse('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
         if (descRef.current) {
             descRef.current.style.height = 'auto';
         }
@@ -209,55 +395,22 @@ export function useGestionTareas() {
     };
 
     const handleView = (item) => {
-        const usuarioTexto = item.usuario_nombre 
-            ? `${item.usuario_nombre} (${item.usuario_email || 'Sin email'})` 
-            : (item.usuario_email || 'No asignado');
-
-        const estadoBadge = getEstadoBadge(item.estado || 'Pendiente');
-        const prioridadBadge = getPriorityBadge(item.prioridad || 'Baja');
-
-        Swal.fire({
-            title: `<div class="text-left font-bold text-lg text-slate-900 dark:text-slate-100">${item.titulo}</div>`,
-            html: `
-                <div class="text-left text-xs sm:text-sm space-y-3 pt-2">
-                    <div class="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
-                        <div class="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider mb-1">Diagnóstico / Descripción</div>
-                        <div class="text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">${item.descripcion || 'Sin descripción detallada.'}</div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-                            <span class="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-semibold">Estado Actual</span>
-                            <span class="inline-block mt-1 font-bold ${estadoBadge.color}">${estadoBadge.nombre}</span>
-                        </div>
-                        <div class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-                            <span class="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-semibold">Nivel Prioridad</span>
-                            <span class="inline-block mt-1 font-bold ${prioridadBadge.color}">${prioridadBadge.nombre}</span>
-                        </div>
-                    </div>
-                    <div class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-xs">
-                        <span class="text-slate-500 dark:text-slate-400 block text-[10px] uppercase font-semibold">Creado por</span>
-                        <span class="font-medium text-slate-800 dark:text-slate-200">${usuarioTexto}</span>
-                    </div>
-                    <div class="flex justify-between text-[11px] text-slate-400 dark:text-slate-500 pt-1 border-t border-slate-200 dark:border-slate-800">
-                        <span>Creado: ${formatDateTime(item.created_at)}</span>
-                        <span>Actualizado: ${formatDateTime(item.updated_at)}</span>
-                    </div>
-                </div>
-            `,
-            showCloseButton: true,
-            confirmButtonText: 'Cerrar',
-            confirmButtonColor: '#2563eb',
-            customClass: {
-                popup: 'rounded-2xl'
-            }
-        });
+        setViewItem(item);
+        setShowViewModal(true);
     };
 
     const handleEdit = (item) => {
+        filePreviews.forEach(p => {
+            if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
+        });
+        setSelectedFiles([]);
+        setFilePreviews([]);
         setEditId(item.id);
         setTitle(item.titulo);
         setDescription(item.descripcion || '');
         setPriorityId(item.prioridad_id);
+        setAdminResponse(item.respuesta_admin || '');
+        setExistingImages(item.imagenes || []);
         setShowModal(true);
     };
 
@@ -282,6 +435,69 @@ export function useGestionTareas() {
                 }
             }
         });
+    };
+
+    // =========================================================================
+    // Respuesta Rápida Directa (Sin abrir todo el formulario de edición)
+    // =========================================================================
+    const handleOpenQuickResponse = (item) => {
+        setResponseItem(item);
+        setResponseText(item.respuesta_admin || '');
+        setResponseStatusId(item.estado_id || 1);
+        setShowResponseModal(true);
+    };
+
+    const handleSaveQuickResponse = async (e) => {
+        if (e) e.preventDefault();
+        if (!responseItem) return;
+
+        if (!responseText.trim()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Respuesta vacía',
+                text: 'Por favor escribe la indicación o solución técnica para el usuario.',
+                confirmButtonColor: '#3b82f6'
+            });
+            return;
+        }
+
+        try {
+            setSavingResponse(true);
+            const payload = {
+                respuesta_admin: responseText.trim(),
+            };
+            if (responseStatusId) {
+                payload.estado_id = Number(responseStatusId);
+            }
+            await api.put(`/tareas/${responseItem.id}`, payload);
+
+            // Si el modal de detalles está abierto para esta misma tarea, recargar datos frescos con todo el timeline
+            if (viewItem && viewItem.id === responseItem.id) {
+                try {
+                    const resDetail = await api.get(`/tareas/${responseItem.id}`);
+                    if (resDetail.data?.data) {
+                        setViewItem(resDetail.data.data);
+                    }
+                } catch (errDetail) {
+                    console.error("Error recargando detalle de tarea", errDetail);
+                }
+            }
+
+            fetchTareas();
+            setShowResponseModal(false);
+            Swal.fire({
+                icon: 'success',
+                title: 'Respuesta guardada',
+                text: 'El usuario ya puede visualizar la solución técnica en su ticket.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || 'No se pudo guardar la respuesta';
+            Swal.fire('Error', errorMsg, 'error');
+        } finally {
+            setSavingResponse(false);
+        }
     };
 
     // Estilos unificados desde themeConstants
@@ -315,6 +531,7 @@ export function useGestionTareas() {
         showModal,
         setShowModal,
         loading,
+        submitting,
         searchQuery,
         setSearchQuery,
         filtroEstado,
@@ -328,6 +545,7 @@ export function useGestionTareas() {
         hasActiveFilters,
         handleClearFilters,
         descRef,
+        fileInputRef,
         currentPage,
         setCurrentPage,
         totalPages,
@@ -341,6 +559,34 @@ export function useGestionTareas() {
         getFormattedDate,
         getPriorityBadgeStyle,
         getStatusStyle,
-        getStatusDotColor
+        getStatusDotColor,
+        // Imágenes
+        selectedFiles,
+        filePreviews,
+        existingImages,
+        handleFileSelect,
+        handleRemoveSelectedFile,
+        handleDeleteExistingImage,
+        viewItem,
+        setViewItem,
+        showViewModal,
+        setShowViewModal,
+        lightboxImage,
+        setLightboxImage,
+        // Respuesta del Administrador
+        adminResponse,
+        setAdminResponse,
+        // Acciones Directas de Respuesta
+        showResponseModal,
+        setShowResponseModal,
+        responseItem,
+        setResponseItem,
+        responseText,
+        setResponseText,
+        responseStatusId,
+        setResponseStatusId,
+        savingResponse,
+        handleOpenQuickResponse,
+        handleSaveQuickResponse,
     };
 }
