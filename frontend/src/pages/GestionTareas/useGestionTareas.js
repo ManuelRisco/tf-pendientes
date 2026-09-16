@@ -20,21 +20,19 @@ export function useGestionTareas() {
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [adminResponse, setAdminResponse] = useState('');
-
-    // Estados para Respuesta Directa / Rápida (Solo Admin)
-    const [showResponseModal, setShowResponseModal] = useState(false);
-    const [responseItem, setResponseItem] = useState(null);
+    // Respuesta técnica (Admin)
     const [responseText, setResponseText] = useState('');
     const [responseStatusId, setResponseStatusId] = useState('');
     const [savingResponse, setSavingResponse] = useState(false);
+    const responseInputRef = useRef(null);
 
-    // Estados para gestión de imágenes
+    // Imágenes adjuntas
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [filePreviews, setFilePreviews] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
     const [viewItem, setViewItem] = useState(null);
     const [showViewModal, setShowViewModal] = useState(false);
+    const [scrollTarget, setScrollTarget] = useState(null);
     const [lightboxImage, setLightboxImage] = useState(null);
 
     // Filtros
@@ -42,18 +40,18 @@ export function useGestionTareas() {
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('');
     const [filtroPrioridad, setFiltroPrioridad] = useState('');
-    const [filtroAlcance, setFiltroAlcance] = useState('todos'); // 'todos', 'mis_tareas', 'otros', 'usuario_especifico'
+    const [filtroAlcance, setFiltroAlcance] = useState('todos'); // 'todos', 'mis_tareas', 'por_otros_usuarios'
     const [filtroUsuarioId, setFiltroUsuarioId] = useState('');
     const descRef = useRef(null);
     const fileInputRef = useRef(null);
 
-    // Paginación y Totales
+    // Paginación
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalTasksCount, setTotalTasksCount] = useState(0);
     const limit = 10;
 
-    // Debounce para la búsqueda en tiempo real (300ms)
+    // Búsqueda con debounce
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(searchQuery.trim());
@@ -129,9 +127,7 @@ export function useGestionTareas() {
         return formatDateTime(dateString);
     };
 
-    // =========================================================================
-    // Manejo y validación de imágenes (máx. 5 por ticket)
-    // =========================================================================
+    // Subida y validación de imágenes (máx. 5)
     const handleFileSelect = (rawFiles) => {
         const fileList = Array.from(rawFiles || []);
         if (fileList.length === 0) return;
@@ -246,9 +242,7 @@ export function useGestionTareas() {
         });
     };
 
-    // =========================================================================
-    // Envío del Formulario (Crear o Actualizar)
-    // =========================================================================
+    // Guardar tarea (crear o actualizar)
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!title.trim() || !priorityId) {
@@ -263,7 +257,7 @@ export function useGestionTareas() {
         }
 
         if (editId) {
-            // Actualización de tarea existente
+            // Actualizar tarea existente
             Swal.fire({
                 title: '¿Actualizar tarea?',
                 text: selectedFiles.length > 0
@@ -279,18 +273,15 @@ export function useGestionTareas() {
                 if (result.isConfirmed) {
                     try {
                         setSubmitting(true);
-                        // 1. Actualizar datos base de la tarea
+                        // 1. Guardar cambios del ticket
                         const updatePayload = {
                             titulo: title.trim(),
                             descripcion: description.trim(),
                             prioridad_id: priorityId
                         };
-                        if (isAdmin) {
-                            updatePayload.respuesta_admin = adminResponse.trim();
-                        }
                         await api.put(`/tareas/${editId}`, updatePayload);
 
-                        // 2. Si se adjuntaron nuevas imágenes, subirlas
+                        // 2. Subir imágenes nuevas si se adjuntaron
                         if (selectedFiles.length > 0) {
                             const formData = new FormData();
                             selectedFiles.forEach(file => {
@@ -348,7 +339,6 @@ export function useGestionTareas() {
         setTitle('');
         setDescription('');
         setPriorityId('');
-        setAdminResponse('');
         if (fileInputRef.current) fileInputRef.current.value = '';
         if (descRef.current) {
             descRef.current.style.height = 'auto';
@@ -378,11 +368,7 @@ export function useGestionTareas() {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    const tareaActual = items.find(i => i.id === id);
                     await api.put(`/tareas/${id}`, {
-                        titulo: tareaActual.titulo,
-                        descripcion: tareaActual.descripcion,
-                        prioridad_id: tareaActual.prioridad_id,
                         estado_id: newStatusId
                     });
                     fetchTareas();
@@ -394,12 +380,19 @@ export function useGestionTareas() {
         });
     };
 
-    const handleView = (item) => {
+    const handleView = (item, target = null) => {
         setViewItem(item);
+        setResponseText('');
+        setResponseStatusId(item.estado_id || 1);
+        setScrollTarget(target);
         setShowViewModal(true);
     };
 
     const handleEdit = (item) => {
+        if (Number(item.usuario_id) !== Number(user?.id)) {
+            Swal.fire('Acceso denegado', 'Solo el creador del ticket puede editar su contenido.', 'warning');
+            return;
+        }
         filePreviews.forEach(p => {
             if (p.previewUrl) URL.revokeObjectURL(p.previewUrl);
         });
@@ -409,7 +402,6 @@ export function useGestionTareas() {
         setTitle(item.titulo);
         setDescription(item.descripcion || '');
         setPriorityId(item.prioridad_id);
-        setAdminResponse(item.respuesta_admin || '');
         setExistingImages(item.imagenes || []);
         setShowModal(true);
     };
@@ -437,25 +429,29 @@ export function useGestionTareas() {
         });
     };
 
-    // =========================================================================
-    // Respuesta Rápida Directa (Sin abrir todo el formulario de edición)
-    // =========================================================================
+    // Responder ticket desde el modal de detalle
     const handleOpenQuickResponse = (item) => {
-        setResponseItem(item);
-        setResponseText(item.respuesta_admin || '');
+        setViewItem(item);
+        setResponseText('');
         setResponseStatusId(item.estado_id || 1);
-        setShowResponseModal(true);
+        setShowViewModal(true);
+        setTimeout(() => {
+            if (responseInputRef.current) {
+                responseInputRef.current.focus();
+                responseInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 250);
     };
 
     const handleSaveQuickResponse = async (e) => {
         if (e) e.preventDefault();
-        if (!responseItem) return;
+        if (!viewItem) return;
 
         if (!responseText.trim()) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Respuesta vacía',
-                text: 'Por favor escribe la indicación o solución técnica para el usuario.',
+                text: 'Por favor escribe una respuesta para el ticket.',
                 confirmButtonColor: '#3b82f6'
             });
             return;
@@ -469,26 +465,25 @@ export function useGestionTareas() {
             if (responseStatusId) {
                 payload.estado_id = Number(responseStatusId);
             }
-            await api.put(`/tareas/${responseItem.id}`, payload);
+            await api.put(`/tareas/${viewItem.id}`, payload);
 
-            // Si el modal de detalles está abierto para esta misma tarea, recargar datos frescos con todo el timeline
-            if (viewItem && viewItem.id === responseItem.id) {
-                try {
-                    const resDetail = await api.get(`/tareas/${responseItem.id}`);
-                    if (resDetail.data?.data) {
-                        setViewItem(resDetail.data.data);
-                    }
-                } catch (errDetail) {
-                    console.error("Error recargando detalle de tarea", errDetail);
+            // Recargar datos actualizados del ticket
+            try {
+                const resDetail = await api.get(`/tareas/${viewItem.id}`);
+                if (resDetail.data?.data) {
+                    setViewItem(resDetail.data.data);
+                    setResponseStatusId(resDetail.data.data.estado_id || 1);
                 }
+            } catch (errDetail) {
+                console.error("Error recargando detalle de tarea", errDetail);
             }
 
+            setResponseText('');
             fetchTareas();
-            setShowResponseModal(false);
             Swal.fire({
                 icon: 'success',
                 title: 'Respuesta guardada',
-                text: 'El usuario ya puede visualizar la solución técnica en su ticket.',
+                text: 'La respuesta se agregó correctamente.',
                 timer: 1500,
                 showConfirmButton: false
             });
@@ -571,21 +566,17 @@ export function useGestionTareas() {
         setViewItem,
         showViewModal,
         setShowViewModal,
+        scrollTarget,
+        setScrollTarget,
         lightboxImage,
         setLightboxImage,
-        // Respuesta del Administrador
-        adminResponse,
-        setAdminResponse,
-        // Acciones Directas de Respuesta
-        showResponseModal,
-        setShowResponseModal,
-        responseItem,
-        setResponseItem,
+        // Respuesta Integrada y Seguimiento en Detalle (Solo Admin)
         responseText,
         setResponseText,
         responseStatusId,
         setResponseStatusId,
         savingResponse,
+        responseInputRef,
         handleOpenQuickResponse,
         handleSaveQuickResponse,
     };

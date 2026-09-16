@@ -113,12 +113,12 @@ function ProfileModal({ show, onHide }) {
                     <div className="w-8 h-8 rounded-full bg-blue-600/10 text-blue-600 flex items-center justify-center font-bold text-sm border border-blue-500/20">
                         <i className="bi bi-person-gear text-base"></i>
                     </div>
-                    <span>Mi Perfil de Usuario</span>
+                    <span>Mi Perfil</span>
                 </Modal.Title>
             </Modal.Header>
 
             <Modal.Body className="p-4 sm:p-5" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-                {/* Cabecera Informativa con Rol */}
+                {/* Datos del usuario */}
                 <div 
                     className="flex items-center gap-3 p-3 mb-4 rounded-xl border"
                     style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}

@@ -26,7 +26,7 @@ class TareaController {
             $scope = $_GET['scope'] ?? 'todos';
             if ($scope === 'mis_tareas') {
                 $filters['usuario_id'] = (int)$auth['id'];
-            } elseif ($scope === 'otros') {
+            } elseif ($scope === 'otros' || $scope === 'por_otros_usuarios') {
                 $filters['excluir_usuario_id'] = (int)$auth['id'];
             } elseif (!empty($_GET['usuario_id']) && is_numeric($_GET['usuario_id'])) {
                 $filters['usuario_id'] = (int)$_GET['usuario_id'];
@@ -117,9 +117,9 @@ class TareaController {
 
         if (!$tarea) Response::notFound('Tarea no encontrada.');
 
-        // Si es empleado, solo puede agregar imágenes a sus propias tareas
-        if ((int)$auth['rol_id'] !== 1 && (int)$tarea['usuario_id'] !== (int)$auth['id']) {
-            Response::forbidden('No tienes permisos para modificar imágenes de esta tarea.');
+        // Solo el creador puede subir imágenes a su ticket
+        if ((int)$tarea['usuario_id'] !== (int)$auth['id']) {
+            Response::forbidden('Solo el creador del ticket puede subir imágenes.');
         }
 
         $files = $this->normalizeFiles($_FILES['imagenes'] ?? null);
@@ -146,9 +146,9 @@ class TareaController {
 
         if (!$tarea) Response::notFound('Tarea no encontrada.');
 
-        // Si es empleado, solo puede eliminar imágenes de sus propias tareas
-        if ((int)$auth['rol_id'] !== 1 && (int)$tarea['usuario_id'] !== (int)$auth['id']) {
-            Response::forbidden('No tienes permisos para eliminar imágenes de esta tarea.');
+        // Solo el creador puede eliminar imágenes
+        if ((int)$tarea['usuario_id'] !== (int)$auth['id']) {
+            Response::forbidden('Solo el creador del ticket puede eliminar imágenes.');
         }
 
         try {
@@ -171,19 +171,32 @@ class TareaController {
 
         if (!$tarea) Response::notFound('Tarea no encontrada.');
 
-        // Si es empleado, solo puede actualizar sus propias tareas
-        if ((int)$auth['rol_id'] !== 1 && (int)$tarea['usuario_id'] !== (int)$auth['id']) {
-            Response::forbidden('No tienes permisos para modificar esta tarea.');
+        $isOwner = ((int)$tarea['usuario_id'] === (int)$auth['id']);
+        $isAdmin = ((int)$auth['rol_id'] === 1);
+
+        // Campos del ticket
+        $ticketContentFields = ['titulo', 'descripcion', 'prioridad_id'];
+        $hasTicketContentChanges = false;
+        foreach ($ticketContentFields as $field) {
+            if (array_key_exists($field, $body)) {
+                $hasTicketContentChanges = true;
+                break;
+            }
+        }
+
+        // Solo el creador puede modificar su ticket
+        if ($hasTicketContentChanges && !$isOwner) {
+            Response::forbidden('Solo el creador puede modificar este ticket.');
         }
 
         // Si es empleado, no puede modificar el estado de la tarea
-        if ((int)$auth['rol_id'] !== 1 && isset($body['estado_id']) && (int)$body['estado_id'] !== (int)$tarea['estado_id']) {
+        if (!$isAdmin && isset($body['estado_id']) && (int)$body['estado_id'] !== (int)$tarea['estado_id']) {
             Response::forbidden('Solo los administradores pueden cambiar el estado de las tareas.');
         }
 
         // Control de respuesta del administrador: solo rol admin (1) puede responder
         if (array_key_exists('respuesta_admin', $body)) {
-            if ((int)$auth['rol_id'] !== 1) {
+            if (!$isAdmin) {
                 Response::forbidden('Solo los administradores pueden registrar o modificar la respuesta oficial.');
             }
             $body['admin_id'] = (int)$auth['id'];

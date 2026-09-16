@@ -1,9 +1,8 @@
 /**
- * Constantes y estilos unificados para Estados, Prioridades y Acciones
- * Garantiza total consistencia visual en Dashboard, Gestión de Tareas, Reportes y Bitácora
+ * Estilos y constantes para estados, prioridades y tipos de acción
  */
 
-// 1. MAPA DE COLORES HEXADECIMALES DE ESTADOS
+// Colores de estados
 export const ESTADO_COLORS = {
     'Pendiente': '#2563eb',       // Azul vibrante
     'En curso': '#ea580c',        // Naranja vibrante
@@ -16,7 +15,7 @@ export const ESTADO_COLORS = {
     'Pendientes': '#2563eb',
 };
 
-// 2. MAPA DE ESTADOS POR ID (1: Pendiente, 2: En curso, 3: En revisión, 4: Finalizado)
+// Configuración de estados por ID
 export const ESTADO_ID_MAP = {
     1: { id: 1, nombre: 'Pendiente', color: '#2563eb', bgClass: 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800/60', dotClass: 'bg-blue-500' },
     2: { id: 2, nombre: 'En curso', color: '#ea580c', bgClass: 'bg-orange-50 text-orange-800 border-orange-200 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800/60', dotClass: 'bg-orange-500' },
@@ -74,7 +73,7 @@ export const getEstadoBadge = (nombre) => {
     }
 };
 
-// 3. MAPA DE COLORES HEXADECIMALES DE PRIORIDADES
+// Colores de prioridades
 export const PRIORIDAD_COLORS = {
     'Baja': '#16a34a',           // Verde esmeralda
     'Media': '#ea580c',          // Naranja
@@ -83,7 +82,7 @@ export const PRIORIDAD_COLORS = {
     'Crítica': '#9333ea',        // Púrpura (alias)
 };
 
-// 4. MAPA DE PRIORIDADES POR ID (1: Baja, 2: Media, 3: Alta, 4: Crítico)
+// Configuración de prioridades por ID
 export const PRIORIDAD_ID_MAP = {
     1: { id: 1, nombre: 'Baja', color: '#16a34a', bgClass: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60', dotClass: 'bg-emerald-500' },
     2: { id: 2, nombre: 'Media', color: '#ea580c', bgClass: 'bg-orange-50 text-orange-800 border-orange-200 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800/60', dotClass: 'bg-orange-500' },
@@ -132,7 +131,7 @@ export const getPriorityBadge = (nombre) => {
     }
 };
 
-// 5. MAPA DE ACCIONES DE AUDITORÍA (CREAR, ACTUALIZAR, ELIMINAR_LOGICO, RESTAURAR)
+// Metadatos para tipos de movimiento (crear, actualizar, eliminar, restaurar)
 export const getActionMeta = (tipo, modulo) => {
     const isUser = modulo === 'usuarios';
     switch (tipo) {

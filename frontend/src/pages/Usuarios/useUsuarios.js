@@ -25,7 +25,7 @@ export function useUsuarios() {
     const [totalCount, setTotalCount] = useState(0);
     const limit = 10;
 
-    // Estados para el Modal CRUD
+    // Modal
     const [showModal, setShowModal] = useState(false);
     const [editId, setEditId] = useState(null);
     const [formData, setFormData] = useState({
@@ -49,7 +49,7 @@ export function useUsuarios() {
         setShowModal(true);
     }, []);
 
-    // Debounce para el input de búsqueda
+    // Búsqueda con debounce
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(search);
@@ -57,12 +57,12 @@ export function useUsuarios() {
         return () => clearTimeout(timer);
     }, [search]);
 
-    // Resetear a la página 1 cuando cambia algún filtro
+    // Volver a página 1 al filtrar
     useEffect(() => {
         setCurrentPage(1);
     }, [debouncedSearch, filtroEstado, filtroRol]);
 
-    // Cargar usuarios con filtros y paginación
+    // Obtener usuarios
     const fetchUsuarios = useCallback(async () => {
         setLoading(true);
         try {
@@ -94,7 +94,7 @@ export function useUsuarios() {
         }
     }, [currentPage, debouncedSearch, filtroEstado, filtroRol, limit]);
 
-    // Cargar catálogos de roles
+    // Cargar roles
     useEffect(() => {
         const fetchCatalogos = async () => {
             try {

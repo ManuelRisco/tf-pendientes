@@ -40,14 +40,14 @@ function Usuarios() {
                 <Row className="justify-content-center m-0">
                     <Col xs={12} className="p-0">
                         <div className="card-app p-3.5 sm:p-6 mb-5 sm:mb-6">
-                            {/* Encabezado Superior */}
+                            {/* Encabezado */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
                                 <div>
                                     <h4 className="text-xl sm:text-2xl font-bold tracking-tight m-0" style={{ color: 'var(--text-primary)' }}>
-                                        Directorio de Usuarios
+                                        Usuarios
                                     </h4>
                                     <p className="text-xs sm:text-sm mt-1 mb-0" style={{ color: 'var(--text-secondary)' }}>
-                                        Administra las cuentas de usuario, roles y estados de acceso.
+                                        Administra los usuarios, roles y accesos del sistema.
                                     </p>
                                 </div>
                                 {Number(user?.rol_id) === 1 && (
@@ -61,13 +61,12 @@ function Usuarios() {
                                 )}
                             </div>
 
-                            {/* Barra de Filtros */}
+                            {/* Filtros */}
                             <div
                                 className="rounded-2xl p-3 sm:p-4 mb-5 sm:mb-6 border"
                                 style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                             >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 sm:gap-4 items-end">
-                                    {/* Búsqueda */}
                                     <div className="col-span-1 sm:col-span-2 lg:col-span-5">
                                         <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                                             Buscar usuario
@@ -94,7 +93,6 @@ function Usuarios() {
                                         </div>
                                     </div>
 
-                                    {/* Filtro por Estado */}
                                     <div className="col-span-1 sm:col-span-1 lg:col-span-3">
                                         <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                                             Estado
@@ -111,7 +109,6 @@ function Usuarios() {
                                         </select>
                                     </div>
 
-                                    {/* Filtro por Rol */}
                                     <div className="col-span-1 sm:col-span-1 lg:col-span-3">
                                         <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                                             Rol
@@ -129,7 +126,6 @@ function Usuarios() {
                                         </select>
                                     </div>
 
-                                    {/* Botón Limpiar */}
                                     <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex items-center">
                                         {hasActiveFilters && (
                                             <button
@@ -145,7 +141,6 @@ function Usuarios() {
                                     </div>
                                 </div>
 
-                                {/* Resumen */}
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-3 pt-3 border-t text-xs" style={{ borderColor: 'var(--border-color)' }}>
                                     <span style={{ color: 'var(--text-secondary)' }}>
                                         Mostrando <strong style={{ color: 'var(--text-primary)' }}>{usuarios.length}</strong> de <strong style={{ color: 'var(--text-primary)' }}>{totalCount}</strong> usuarios
@@ -153,13 +148,13 @@ function Usuarios() {
                                 </div>
                             </div>
 
-                            {/* Tabla de Usuarios */}
+                            {/* Listado de usuarios */}
                             {loading ? (
                                 <div className="text-center py-12">
                                     <div className="spinner-border text-blue-600" role="status">
                                         <span className="visually-hidden">Cargando...</span>
                                     </div>
-                                    <p className="mt-2 mb-0 text-sm" style={{ color: 'var(--text-secondary)' }}>Cargando directorio de usuarios...</p>
+                                    <p className="mt-2 mb-0 text-sm" style={{ color: 'var(--text-secondary)' }}>Cargando usuarios...</p>
                                 </div>
                             ) : usuarios.length === 0 ? (
                                 <div className="text-center py-12">
@@ -201,7 +196,6 @@ function Usuarios() {
 
                                                 return (
                                                     <tr key={u.id} className={isInactive ? 'opacity-65' : ''}>
-                                                        {/* Avatar + Nombre */}
                                                         <td>
                                                             <div className="flex items-center gap-2.5 sm:gap-3">
                                                                 <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 border ${isInactive
@@ -226,10 +220,8 @@ function Usuarios() {
                                                             </div>
                                                         </td>
 
-                                                        {/* Email */}
                                                         <td className="text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>{u.email}</td>
 
-                                                        {/* Estado */}
                                                         <td>
                                                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs font-semibold border ${isInactive
                                                                 ? 'bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700'
@@ -240,7 +232,6 @@ function Usuarios() {
                                                             </span>
                                                         </td>
 
-                                                        {/* Rol */}
                                                         <td>
                                                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs font-semibold border ${u.rol_id === 1
                                                                 ? 'bg-blue-100 text-blue-950 border-blue-300 dark:bg-blue-950/80 dark:text-blue-200 dark:border-blue-700'
@@ -251,13 +242,11 @@ function Usuarios() {
                                                             </span>
                                                         </td>
 
-                                                        {/* Fecha de Registro */}
                                                         <td className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
                                                              <i className="bi bi-calendar3 mr-1 opacity-70"></i>
                                                              {getFormattedDate(u.created_at)}
                                                         </td>
 
-                                                        {/* Acciones */}
                                                         {(Number(user?.rol_id) === 1 || isCurrentUser) && (
                                                             <td className="text-end">
                                                                 <div className="inline-flex gap-1.5">
@@ -312,7 +301,7 @@ function Usuarios() {
                 </Row>
             </Container>
 
-            {/* Modal de Creación / Edición */}
+            {/* Modal de usuario */}
             <Modal show={showModal} onHide={resetForm} centered backdrop="static" size="lg">
                 <Modal.Header closeButton>
                     <Modal.Title className="font-bold text-base sm:text-lg">

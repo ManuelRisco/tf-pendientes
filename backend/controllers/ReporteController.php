@@ -8,8 +8,6 @@ class ReporteController {
         $this->model = new ReporteModel();
     }
 
-
-
     public function getResumen() {
         $auth = AuthMiddleware::requireAdmin();
 
@@ -18,9 +16,19 @@ class ReporteController {
 
         try {
             $data = $this->model->getResumenTickets($fechaInicio, $fechaFin);
+            $tendencia = $this->model->getTendenciaDiaria($fechaInicio, $fechaFin);
+            $mapeoUsuarios = $this->model->getMapeoUsuarios($fechaInicio, $fechaFin, 30);
+            $criticosAbiertos = $this->model->getTicketsCriticosAbiertos($fechaInicio, $fechaFin, 15);
+
+            $payload = array_merge($data ?: [], [
+                'tendencia_diaria'     => $tendencia,
+                'mapeo_usuarios'       => $mapeoUsuarios,
+                'criticos_pendientes'  => $criticosAbiertos,
+            ]);
+
             echo json_encode([
                 'success' => true,
-                'data' => $data,
+                'data' => $payload,
                 'fecha_inicio' => $fechaInicio,
                 'fecha_fin' => $fechaFin
             ]);

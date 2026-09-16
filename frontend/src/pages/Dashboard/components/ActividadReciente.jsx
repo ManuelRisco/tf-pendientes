@@ -33,7 +33,7 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
         });
     }, [actividadReciente, filtroModulo, searchQuery]);
 
-    // Helper para clases de pestañas (garantiza cero fondo blanco en modo oscuro)
+    // Clases de pestañas
     const getTabClass = (active) => {
         if (active) {
             return isDarkMode
@@ -45,13 +45,12 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
             : 'text-slate-600 hover:text-slate-900 border-0 bg-transparent';
     };
 
-    // Renderizado de cambios detallados (Diff / Metadatos compactos)
+    // Detalle de cambios
     const renderChangeDetails = (item) => {
         if (!item.detalles) return null;
         const { anterior = {}, nuevo = {} } = item.detalles;
         const isUser = item.modulo === 'usuarios';
 
-        // 1. Tarea Actualizada: Chequear cambio de estado o prioridad
         if (item.tipo_accion === 'ACTUALIZAR' && !isUser) {
             const hasEstadoChanged = anterior?.estado_id && nuevo?.estado_id && anterior.estado_id !== nuevo.estado_id;
             const hasPrioridadChanged = anterior?.prioridad_id && nuevo?.prioridad_id && anterior.prioridad_id !== nuevo.prioridad_id;
@@ -91,7 +90,6 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
             }
         }
 
-        // 2. Tarea Creada: Mostrar Estado y Prioridad Iniciales
         if (item.tipo_accion === 'CREAR' && !isUser) {
             const estado = ESTADO_ID_MAP[nuevo.estado_id];
             const prioridad = PRIORIDAD_ID_MAP[nuevo.prioridad_id];
@@ -113,7 +111,6 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
             );
         }
 
-        // 3. Usuario Actualizado: Chequear cambio de Rol
         if (item.tipo_accion === 'ACTUALIZAR' && isUser) {
             const hasRolChanged = anterior?.rol_id && nuevo?.rol_id && anterior.rol_id !== nuevo.rol_id;
             if (hasRolChanged) {
@@ -133,7 +130,7 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
 
     return (
         <div className="card-app p-3.5 sm:p-5 flex flex-col justify-between h-full relative overflow-hidden transition-all duration-200">
-            {/* Header del Componente */}
+            {/* Cabecera */}
             <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
                 <div className="flex items-center gap-2">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isDarkMode ? 'bg-blue-600/20 text-blue-400 border border-blue-900/50' : 'bg-blue-600/10 text-blue-600 border border-blue-200'}`}>
@@ -148,20 +145,19 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
                     </div>
                 </div>
 
-                {/* Acciones de Cabecera: Refresh y Link a Bitácora */}
                 <div className="flex items-center gap-1.5 self-start sm:self-auto">
                     {onRefresh && (
                         <button
                             onClick={onRefresh}
                             disabled={isUpdating}
-                            title="Actualizar actividad ahora"
+                            title="Actualizar actividad"
                             className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all active:scale-95 cursor-pointer disabled:opacity-50 ${isDarkMode
                                 ? 'bg-slate-800/90 text-slate-300 border border-slate-700/60 hover:bg-slate-700'
                                 : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
                                 }`}
                         >
                             <i className={`bi bi-arrow-clockwise text-blue-500 ${isUpdating ? 'animate-spin' : ''}`}></i>
-                            <span className="hidden sm:inline text-[11px]">Sincronizar</span>
+                            <span className="hidden sm:inline text-[11px]">Actualizar</span>
                         </button>
                     )}
 
@@ -172,15 +168,14 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
                             : 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
                             }`}
                     >
-                        <span>Bitácora</span>
+                        <span>Movimientos</span>
                         <i className="bi bi-arrow-right text-[10px]"></i>
                     </Link>
                 </div>
             </div>
 
-            {/* Barra de Filtros y Búsqueda Rápida Compacta */}
+            {/* Filtros y búsqueda */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 my-2.5">
-                {/* Tabs de Filtro por Módulo */}
                 <div className={`flex items-center gap-0.5 p-0.5 rounded-lg border w-fit ${isDarkMode ? 'border-slate-800 bg-slate-900/70' : 'border-slate-200 bg-slate-100/90'}`}>
                     <button
                         onClick={() => setFiltroModulo('todos')}
@@ -206,7 +201,6 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
                     )}
                 </div>
 
-                {/* Input de Búsqueda Rápida */}
                 <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs w-full sm:w-48 transition-all ${isDarkMode
                     ? 'bg-slate-900/70 border-slate-800 text-slate-200 focus-within:border-blue-500'
                     : 'bg-slate-50 border-slate-200 text-slate-800 focus-within:border-blue-500'
@@ -230,7 +224,7 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
                 </div>
             </div>
 
-            {/* Contenedor del Feed de Actividad Comprimido */}
+            {/* Lista de actividad */}
             <div className="flex-1 overflow-y-auto pr-1 max-h-[380px] min-h-[240px] space-y-2">
                 {filteredList.length > 0 ? (
                     filteredList.map((mov, index) => {

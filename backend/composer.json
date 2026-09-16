@@ -1,5 +1,6 @@
 {
     "require": {
-        "illuminate/database": "^12.64"
+        "illuminate/database": "^12.64",
+        "resend/resend-php": "^1.15"
     }
 }

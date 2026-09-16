@@ -35,7 +35,7 @@ function Movimientos() {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="spinner-border text-blue-600 mr-3" role="status"></div>
-                <span className="font-medium text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>Cargando bitácora de auditoría...</span>
+                <span className="font-medium text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>Cargando movimientos...</span>
             </div>
         );
     }
@@ -45,12 +45,12 @@ function Movimientos() {
             <Container fluid className="p-0">
                 <Row className="justify-content-center m-0">
                     <Col xs={12} className="p-0">
-                        {/* Encabezado Superior */}
+                        {/* Encabezado */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
                             <div>
                                 <div className="flex items-center gap-2.5 flex-wrap">
                                     <h2 className="text-xl sm:text-2xl font-bold tracking-tight m-0" style={{ color: 'var(--text-primary)' }}>
-                                        Movimientos del Sistema
+                                        Movimientos
                                     </h2>
                                     {!isAdmin && (
                                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
@@ -60,22 +60,21 @@ function Movimientos() {
                                 </div>
                                 <p className="text-xs sm:text-sm mt-1 mb-0" style={{ color: 'var(--text-secondary)' }}>
                                     {isAdmin 
-                                        ? 'Registro de auditoría y bitácora de cambios realizados por todos los usuarios.'
-                                        : 'Historial de acciones y cambios realizados en tus tareas asignadas.'}
+                                        ? 'Registro de acciones y cambios realizados por los usuarios.'
+                                        : 'Historial de acciones realizadas en tus tareas.'}
                                 </p>
                             </div>
                         </div>
 
                         <div className="card-app p-3.5 sm:p-6 mb-5 sm:mb-6">
-                            {/* Filtros superiores */}
+                            {/* Filtros */}
                             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 sm:gap-4 mb-6 pb-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
                                 <h5 className="text-sm sm:text-base font-bold m-0 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                                     <i className="bi bi-clock-history text-blue-600"></i>
-                                    <span>Historial de Acciones</span>
+                                    <span>Historial de movimientos</span>
                                 </h5>
 
                                 <div className="flex flex-wrap items-center gap-2.5 w-full xl:w-auto">
-                                    {/* Filtro de Alcance / Usuario (Admin) */}
                                     {isAdmin && (
                                         <>
                                             <div 
@@ -126,7 +125,6 @@ function Movimientos() {
                                         </>
                                     )}
 
-                                    {/* Filtro Acción */}
                                     <div 
                                         className="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs"
                                         style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
@@ -145,7 +143,6 @@ function Movimientos() {
                                         </select>
                                     </div>
 
-                                    {/* Filtro Módulo */}
                                     <div 
                                         className="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs"
                                         style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
@@ -178,9 +175,9 @@ function Movimientos() {
                                     <Table hover className="table-movimientos min-w-[650px]">
                                         <thead>
                                             <tr>
-                                                <th className="w-1/4">Usuario Responsable</th>
+                                                <th className="w-1/4">Usuario</th>
                                                 <th className="w-1/6">Acción</th>
-                                                <th className="w-5/12">Descripción del Cambio</th>
+                                                <th className="w-5/12">Descripción</th>
                                                 <th className="w-1/6">Fecha y Hora</th>
                                             </tr>
                                         </thead>
@@ -195,16 +192,16 @@ function Movimientos() {
                                                 return (
                                                     <tr key={mov.id}>
                                                         <td>
-                                                            <div className="flex items-center gap-2">
+                                                            <div className="flex items-center gap-2.5">
                                                                 <div className="w-7 h-7 rounded-full bg-blue-600/10 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
                                                                     {initial}
                                                                 </div>
-                                                                <div className="min-w-0">
-                                                                    <div className="font-semibold text-xs sm:text-sm truncate max-w-[160px]" style={{ color: 'var(--text-primary)' }}>
+                                                                <div>
+                                                                    <div className="font-semibold text-xs sm:text-sm whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
                                                                         {nombreCompleto}
                                                                     </div>
                                                                     {mov.email && (
-                                                                        <div className="text-[11px] truncate max-w-[160px] opacity-70" style={{ color: 'var(--text-secondary)' }}>
+                                                                        <div className="text-[11px] whitespace-nowrap opacity-70 mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                                                                             {mov.email}
                                                                         </div>
                                                                     )}

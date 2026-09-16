@@ -23,7 +23,7 @@ function Sidebar({ isOpen, onOpenProfile }) {
             style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
             aria-label="Menú lateral"
         >
-            {/* Header Brand */}
+            {/* Logo */}
             <div className="p-6 flex items-center border-b shrink-0" style={{ borderColor: 'var(--border-color)' }}>
                 <Link
                     to="/"
@@ -35,7 +35,7 @@ function Sidebar({ isOpen, onOpenProfile }) {
                 </Link>
             </div>
 
-            {/* Navigation */}
+            {/* Navegación */}
             <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Navegación principal">
                 {navItems.map((item) => {
                     const active = isActive(item.path);
@@ -60,13 +60,13 @@ function Sidebar({ isOpen, onOpenProfile }) {
                 })}
             </nav>
 
-            {/* Footer / User Profile (Clickeable para editar) */}
+            {/* Perfil */}
             <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-1.5" style={{ backgroundColor: 'var(--bg-primary)' }}>
                 <button
                     onClick={onOpenProfile}
                     type="button"
                     className="w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all hover:bg-blue-50 dark:hover:bg-slate-800/80 border-0 group cursor-pointer"
-                    title="Hacer clic para ver y editar tu perfil"
+                    title="Ver y editar perfil"
                     aria-label="Editar mi perfil"
                 >
                     <div className="w-10 h-10 rounded-full bg-blue-600/10 text-blue-600 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center font-bold text-sm shrink-0 border border-blue-500/20 transition-colors">

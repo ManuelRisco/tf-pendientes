@@ -42,12 +42,12 @@ function Dashboard() {
 
     return (
         <div className="py-1 sm:py-4 px-0 sm:px-2 max-w-7xl mx-auto space-y-5 sm:space-y-6">
-            {/* Encabezado con Filtro de Alcance/Usuario */}
+            {/* Encabezado */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
                     <div className="flex items-center gap-2.5 flex-wrap">
                         <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight m-0" style={{ color: 'var(--text-primary)' }}>
-                            Bienvenido, {user?.nombre || 'Usuario'}, {user?.apellido || 'Apellido'}
+                            Bienvenido, {user?.nombre || 'Usuario'} {user?.apellido || ''}
                         </h1>
                         {!isAdmin && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
@@ -57,18 +57,16 @@ function Dashboard() {
                     </div>
                     <p className="text-xs sm:text-sm mt-1 mb-0" style={{ color: 'var(--text-secondary)' }}>
                         {isAdmin
-                            ? 'Métricas consolidadas, auditoría de cambios.'
-                            : 'Resumen actualizado de tus inconvenientes.'}
+                            ? 'Resumen de métricas y tareas del sistema.'
+                            : 'Resumen y estado de tus tareas.'}
                     </p>
                 </div>
 
-                {/* Filtro de Alcance / Usuario (Solo Administrador) */}
                 {isAdmin && (
                     <div
                         className="w-full lg:w-auto flex flex-wrap items-center gap-2 p-1.5 sm:p-2 rounded-xl border border-slate-200 dark:border-slate-800"
                         style={{ backgroundColor: 'var(--bg-secondary)', boxShadow: 'var(--card-shadow)' }}
                     >
-                        {/* Selector de Alcance */}
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-xs">
                             <i className="bi bi-people-fill text-indigo-500 text-xs"></i>
                             <select
@@ -89,7 +87,6 @@ function Dashboard() {
                             </select>
                         </div>
 
-                        {/* Selector de Usuario Específico */}
                         {filtroAlcance === 'usuario_especifico' && (
                             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-xs animate-fade-in">
                                 <i className="bi bi-person-badge text-blue-500 text-xs"></i>
@@ -111,9 +108,8 @@ function Dashboard() {
                 )}
             </div>
 
-            {/* Grid Superior de 4 Métricas KPI */}
+            {/* Tarjetas de métricas */}
             <div className="grid gap-3.5 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                {/* Card 1: Total Tareas */}
                 <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-700 text-white shadow-lg shadow-indigo-500/20 flex flex-col justify-between min-h-[115px] relative overflow-hidden group hover:scale-[1.01] transition-transform">
                     <div className="flex justify-between items-center opacity-90">
                         <span className="text-xs font-bold tracking-wide uppercase">
@@ -131,7 +127,6 @@ function Dashboard() {
                     </div>
                 </div>
 
-                {/* Card 2: En Progreso / Pendientes */}
                 <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-amber-500 via-orange-600 to-amber-600 text-white shadow-lg shadow-orange-500/20 flex flex-col justify-between min-h-[115px] relative overflow-hidden group hover:scale-[1.01] transition-transform">
                     <div className="flex justify-between items-center opacity-90">
                         <span className="text-xs font-bold tracking-wide uppercase">En Progreso</span>
@@ -145,7 +140,6 @@ function Dashboard() {
                     </div>
                 </div>
 
-                {/* Card 3: Finalizadas */}
                 <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-700 text-white shadow-lg shadow-emerald-500/20 flex flex-col justify-between min-h-[115px] relative overflow-hidden group hover:scale-[1.01] transition-transform">
                     <div className="flex justify-between items-center opacity-90">
                         <span className="text-xs font-bold tracking-wide uppercase">Finalizadas</span>
@@ -161,7 +155,6 @@ function Dashboard() {
                     </div>
                 </div>
 
-                {/* Card 4: Usuarios Activos (Admin) o Efectividad (Empleado) */}
                 {isAdmin ? (
                     <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 text-white shadow-lg shadow-purple-500/20 flex flex-col justify-between min-h-[115px] relative overflow-hidden group hover:scale-[1.01] transition-transform">
                         <div className="flex justify-between items-center opacity-90">
@@ -191,12 +184,8 @@ function Dashboard() {
                 )}
             </div>
 
-            {/* Layout Principal: Actividad Reciente (Col 7) + Métricas y Distribución (Col 5) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
-
-                {/* Columna Izquierda: Tareas por Estado y Prioridad (5 Columnas en Desktop) */}
                 <div className="lg:col-span-5 xl:col-span-5 space-y-5 sm:space-y-6">
-                    {/* Tareas por Estado */}
                     <div className="card-app p-4 sm:p-6 flex flex-col justify-between">
                         <div className="flex items-center justify-between mb-4 sm:mb-5 pb-2.5 border-b border-slate-200 dark:border-slate-800">
                             <h3 className="text-sm sm:text-base font-bold flex items-center gap-2 m-0 text-slate-900 dark:text-slate-100">
@@ -220,7 +209,6 @@ function Dashboard() {
                                                 <strong className="text-sm text-slate-800 dark:text-slate-100">{estado.cantidad}</strong> ({p}%)
                                             </span>
                                         </div>
-                                        {/* Track suave sin bordes blancos */}
                                         <div className="w-full h-2.5 rounded-full overflow-hidden bg-slate-200/80 dark:bg-slate-800/80">
                                             <div
                                                 className="h-full rounded-full transition-all duration-700 ease-out shadow-xs"
@@ -233,7 +221,6 @@ function Dashboard() {
                         </div>
                     </div>
 
-                    {/* Tareas por Prioridad */}
                     <div className="card-app p-4 sm:p-6 flex flex-col justify-between">
                         <div className="flex items-center justify-between mb-4 sm:mb-5 pb-2.5 border-b border-slate-200 dark:border-slate-800">
                             <h3 className="text-sm sm:text-base font-bold flex items-center gap-2 m-0 text-slate-900 dark:text-slate-100">
@@ -257,7 +244,6 @@ function Dashboard() {
                                                 <strong className="text-sm text-slate-800 dark:text-slate-100">{prioridad.cantidad}</strong> ({p}%)
                                             </span>
                                         </div>
-                                        {/* Track suave sin bordes blancos */}
                                         <div className="w-full h-2.5 rounded-full overflow-hidden bg-slate-200/80 dark:bg-slate-800/80">
                                             <div
                                                 className="h-full rounded-full transition-all duration-700 ease-out shadow-xs"
@@ -271,7 +257,6 @@ function Dashboard() {
                     </div>
                 </div>
 
-                {/* Columna Derecha: Actividad Reciente del Sistema (7 Columnas en Desktop) */}
                 <div className="lg:col-span-7 xl:col-span-7">
                     <ActividadReciente
                         actividadReciente={actividadReciente}
