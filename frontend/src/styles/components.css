@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Componentes (Cards, Modales, etc.)
+   Componentes (Cards, Modales, Dropdowns, etc.)
    ========================================================================== */
 
 /* Clases de Componentes */
@@ -17,18 +17,29 @@
     background-color: var(--bg-secondary) !important;
     color: var(--text-primary) !important;
     border: 1px solid var(--border-color) !important;
-    border-radius: 16px !important;
+    border-radius: 18px !important;
     box-shadow: var(--card-shadow) !important;
 }
 
 .modal-header {
     border-bottom: 1px solid var(--border-color) !important;
     background-color: transparent !important;
+    color: var(--text-primary) !important;
+}
+
+.modal-title {
+    color: var(--text-primary) !important;
+}
+
+.modal-body {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
 }
 
 .modal-footer {
     border-top: 1px solid var(--border-color) !important;
     background-color: transparent !important;
+    color: var(--text-primary) !important;
 }
 
 .modal-dialog {
@@ -50,11 +61,36 @@
 }
 
 .dark .modal-header .btn-close,
-body.dark-mode .modal-header .btn-close {
+.dark-mode .modal-header .btn-close,
+[data-bs-theme="dark"] .modal-header .btn-close {
     filter: invert(1) grayscale(100%) brightness(200%) !important;
 }
 
-/* Fix text colors and tooltips for Recharts SVG in Dark Mode */
+/* Dropdowns en Bootstrap */
+.dropdown-menu {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    box-shadow: var(--card-shadow) !important;
+    border-radius: 12px !important;
+}
+
+.dropdown-item {
+    color: var(--text-primary) !important;
+    transition: background-color 0.15s ease;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--hover-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.dropdown-divider {
+    border-color: var(--border-color) !important;
+}
+
+/* Tooltips Recharts en Modo Oscuro */
 .dark .recharts-text,
 body.dark-mode .recharts-text {
     fill: var(--text-primary) !important;
@@ -70,4 +106,152 @@ body.dark-mode .recharts-text {
 
 .recharts-legend-item-text {
     color: var(--text-primary) !important;
+}
+
+/* ==========================================================================
+   Sistema de Botones Unificado y Adaptable al Modo Oscuro
+   ========================================================================== */
+
+/* Botón Primario */
+.btn-app-primary,
+button.btn-primary {
+    background-color: #2563eb !important;
+    border: 1px solid #2563eb !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-radius: 0.75rem !important; /* 12px */
+    transition: all 0.15s ease-in-out !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
+    cursor: pointer !important;
+}
+
+.btn-app-primary:hover,
+button.btn-primary:hover {
+    background-color: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35) !important;
+}
+
+.btn-app-primary:active,
+button.btn-primary:active {
+    transform: scale(0.98);
+}
+
+/* Botón Secundario / Contorno */
+.btn-app-secondary,
+button.btn-secondary {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    border-radius: 0.75rem !important;
+    transition: all 0.15s ease-in-out !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    cursor: pointer !important;
+}
+
+.btn-app-secondary:hover,
+button.btn-secondary:hover {
+    background-color: var(--hover-bg) !important;
+    border-color: var(--border-strong) !important;
+}
+
+.btn-app-secondary:active,
+button.btn-secondary:active {
+    transform: scale(0.98);
+}
+
+/* Botones Cuadrados de Acción en Tablas (32x32px) */
+.btn-action-icon {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 0.5rem !important; /* 8px */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.8125rem !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease-in-out !important;
+    border: 1px solid transparent !important;
+    text-decoration: none !important;
+}
+
+.btn-action-icon:active {
+    transform: scale(0.94);
+}
+
+/* 1. Ver / Detalle */
+.btn-action-view {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border-color: #e2e8f0 !important;
+}
+.dark .btn-action-view,
+body.dark-mode .btn-action-view {
+    background-color: rgba(30, 41, 59, 0.85) !important;
+    color: #cbd5e1 !important;
+    border-color: #334155 !important;
+}
+.btn-action-view:hover {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+.dark .btn-action-view:hover,
+body.dark-mode .btn-action-view:hover {
+    background-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+/* 2. Editar */
+.btn-action-edit {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
+    border-color: #bfdbfe !important;
+}
+.dark .btn-action-edit,
+body.dark-mode .btn-action-edit {
+    background-color: rgba(30, 58, 138, 0.35) !important;
+    color: #60a5fa !important;
+    border-color: rgba(37, 99, 235, 0.4) !important;
+}
+.btn-action-edit:hover {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+}
+
+/* 3. Éxito / Responder / Reactivar */
+.btn-action-success {
+    background-color: #ecfdf5 !important;
+    color: #059669 !important;
+    border-color: #a7f3d0 !important;
+}
+.dark .btn-action-success,
+body.dark-mode .btn-action-success {
+    background-color: rgba(6, 78, 59, 0.35) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.4) !important;
+}
+.btn-action-success:hover {
+    background-color: #059669 !important;
+    color: #ffffff !important;
+    border-color: #059669 !important;
+}
+
+/* 4. Peligro / Eliminar / Desactivar */
+.btn-action-danger {
+    background-color: #fff1f2 !important;
+    color: #e11d48 !important;
+    border-color: #fecdd3 !important;
+}
+.dark .btn-action-danger,
+body.dark-mode .btn-action-danger {
+    background-color: rgba(136, 19, 55, 0.35) !important;
+    color: #fb7185 !important;
+    border-color: rgba(225, 29, 72, 0.4) !important;
+}
+.btn-action-danger:hover {
+    background-color: #e11d48 !important;
+    color: #ffffff !important;
+    border-color: #e11d48 !important;
 }

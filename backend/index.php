@@ -108,7 +108,6 @@ $router->patch('/tareas/:id/restaurar',               fn($p)    => (new TareaCon
 
 // --- Reportes ---
 $router->get('/reportes/resumen',       fn()      => (new ReporteController())->getResumen());
-$router->get('/reportes/frecuentes',    fn()      => (new ReporteController())->getFrecuentes());
 
 // ==============================================================================
 // Despachar

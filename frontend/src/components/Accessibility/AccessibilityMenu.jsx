@@ -19,7 +19,7 @@ function AccessibilityMenu() {
     return (
         <div className="relative" ref={menuRef}>
             <button
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors relative ${hasCustomSettings ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400' : 'hover:bg-slate-500/10'}`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 relative ${hasCustomSettings ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400' : 'hover:bg-slate-500/10'}`}
                 style={{ color: hasCustomSettings ? '#2563eb' : 'var(--text-secondary)' }}
                 onClick={() => setIsOpen(!isOpen)}
                 title="Opciones de Accesibilidad"
@@ -146,7 +146,7 @@ function AccessibilityMenu() {
                             type="button"
                             onClick={resetAccessibility}
                             disabled={!hasCustomSettings}
-                            className="w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed border hover:bg-red-500/10 text-red-500"
+                            className="w-full py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed border hover:bg-rose-500/10 text-rose-500 active:scale-95 cursor-pointer"
                             style={{ borderColor: 'var(--border-color)' }}
                         >
                             <i className="bi bi-arrow-counterclockwise"></i>

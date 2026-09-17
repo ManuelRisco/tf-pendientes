@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDateTime } from '../../../lib/dateUtils';
 import { useTheme } from '../../../context/ThemeContext';
@@ -151,7 +151,7 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
                             onClick={onRefresh}
                             disabled={isUpdating}
                             title="Actualizar actividad"
-                            className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all active:scale-95 cursor-pointer disabled:opacity-50 ${isDarkMode
+                            className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer disabled:opacity-50 ${isDarkMode
                                 ? 'bg-slate-800/90 text-slate-300 border border-slate-700/60 hover:bg-slate-700'
                                 : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
                                 }`}
@@ -163,7 +163,7 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
 
                     <Link
                         to="/movimientos"
-                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all no-underline cursor-pointer ${isDarkMode
+                        className={`px-2.5 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-1 transition-all no-underline cursor-pointer active:scale-95 ${isDarkMode
                             ? 'bg-blue-950/50 text-blue-300 border border-blue-900/60 hover:bg-blue-900/70'
                             : 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'
                             }`}

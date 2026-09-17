@@ -29,11 +29,13 @@ function Layout({ children }) {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    useEffect(() => {
+    const [prevPath, setPrevPath] = useState(location.pathname);
+    if (location.pathname !== prevPath) {
+        setPrevPath(location.pathname);
         if (isMobile) {
             setIsSidebarOpen(false);
         }
-    }, [location.pathname, isMobile]);
+    }
 
     const toggleSidebar = () => {
         setIsSidebarOpen(prev => {

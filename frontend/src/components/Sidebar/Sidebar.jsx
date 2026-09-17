@@ -87,7 +87,7 @@ function Sidebar({ isOpen, onOpenProfile }) {
 
                 <button
                     onClick={logout}
-                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors border-0 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-rose-500 hover:bg-rose-500/10 transition-all border-0 cursor-pointer active:scale-95"
                     aria-label="Cerrar sesión"
                 >
                     <i className="bi bi-box-arrow-right"></i>

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const api = axios.create({
     baseURL: 'http://localhost/tf-pendientes/backend',
@@ -30,16 +31,14 @@ api.interceptors.response.use(
             const msg = error.response?.data?.message || 'Tu sesión ha expirado.';
             // Solo redirigir si no estamos ya en login
             if (window.location.pathname !== '/login') {
-                import('sweetalert2').then(({ default: Swal }) => {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Sesión terminada',
-                        text: msg,
-                        confirmButtonText: 'Entendido',
-                        confirmButtonColor: '#0d6efd'
-                    }).then(() => {
-                        window.location.href = '/login';
-                    });
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sesión terminada',
+                    text: msg,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#0d6efd'
+                }).then(() => {
+                    window.location.href = '/login';
                 });
             }
         }

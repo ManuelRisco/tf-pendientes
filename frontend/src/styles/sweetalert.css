@@ -1,21 +1,127 @@
 /* ==========================================================================
-   SweetAlert2 Integración con Temas
+   SweetAlert2 Integración con Temas (Claro y Oscuro)
    ========================================================================== */
 
-div.swal2-container.swal2-backdrop-show {
-    backdrop-filter: blur(5px) !important;
+/* Fondo difuminado SOLO para modales normales, NUNCA para toasts flotantes */
+div.swal2-container.swal2-backdrop-show:not(.swal2-top-end):not(.swal2-top-start):not(.swal2-top):not(.swal2-bottom-end):not(.swal2-bottom-start):not(.swal2-bottom) {
+    backdrop-filter: blur(6px) !important;
     background: var(--swal-backdrop) !important;
+}
+
+/* Los toasts no deben oscurecer la pantalla */
+body.swal2-toast-shown .swal2-container,
+div.swal2-container.swal2-top-end,
+div.swal2-container.swal2-top-start,
+div.swal2-container.swal2-top,
+div.swal2-container.swal2-bottom-end,
+div.swal2-container.swal2-bottom-start,
+div.swal2-container.swal2-bottom,
+div.swal2-container.swal2-no-backdrop {
+    background: transparent !important;
+    backdrop-filter: none !important;
+}
+
+.swal2-popup.swal2-toast {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2) !important;
 }
 
 .swal2-popup {
     background: var(--swal-bg) !important;
     color: var(--swal-text) !important;
     border: 1px solid var(--border-color) !important;
-    border-radius: 16px !important;
+    border-radius: 18px !important;
     box-shadow: var(--card-shadow) !important;
 }
 
 .swal2-title,
-.swal2-html-container {
+.swal2-html-container,
+.swal2-content {
     color: var(--swal-text) !important;
+}
+
+.swal2-input,
+.swal2-textarea,
+.swal2-select {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 10px !important;
+}
+
+.swal2-close {
+    color: var(--text-secondary) !important;
+    transition: color 0.2s ease;
+}
+
+.swal2-close:hover {
+    color: var(--text-primary) !important;
+}
+
+.swal2-confirm {
+    border-radius: 0.75rem !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    padding: 0.625rem 1.25rem !important;
+    transition: all 0.15s ease-in-out !important;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25) !important;
+}
+
+.swal2-confirm:active {
+    transform: scale(0.98);
+}
+
+.swal2-cancel {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 0.75rem !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    padding: 0.625rem 1.25rem !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+.swal2-cancel:hover {
+    background-color: var(--hover-bg) !important;
+    border-color: var(--border-strong) !important;
+}
+
+.swal2-cancel:active {
+    transform: scale(0.98);
+}
+
+.swal2-validation-message {
+    background-color: var(--bg-primary) !important;
+    color: #ef4444 !important;
+}
+
+/* Modo oscuro específico para alertas y toasts */
+.dark .swal2-icon.swal2-warning,
+.dark-mode .swal2-icon.swal2-warning {
+    border-color: #f59e0b !important;
+    color: #f59e0b !important;
+}
+
+.dark .swal2-icon.swal2-error,
+.dark-mode .swal2-icon.swal2-error {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+.dark .swal2-icon.swal2-success,
+.dark-mode .swal2-icon.swal2-success {
+    border-color: #10b981 !important;
+    color: #10b981 !important;
+}
+
+.dark .swal2-icon.swal2-info,
+.dark-mode .swal2-icon.swal2-info {
+    border-color: #3b82f6 !important;
+    color: #3b82f6 !important;
+}
+
+.dark .swal2-icon.swal2-question,
+.dark-mode .swal2-icon.swal2-question {
+    border-color: #8b5cf6 !important;
+    color: #8b5cf6 !important;
 }

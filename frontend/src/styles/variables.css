@@ -4,7 +4,7 @@
 
 :root,
 [data-bs-theme="light"] {
-    /* Modo Claro - Máximo Contraste y Claridad */
+    /* Modo Claro */
     --bg-primary: #f1f5f9;
     --bg-secondary: #ffffff;
     --text-primary: #0f172a;
@@ -17,7 +17,7 @@
     --glass-bg: rgba(255, 255, 255, 0.95);
     --calendar-filter: none;
     
-    /* Bootstrap Theme Variables */
+    /* Bootstrap */
     --bs-border-color: #cbd5e1 !important;
     --bs-border-color-translucent: rgba(203, 213, 225, 0.5) !important;
     --bs-body-bg: #f1f5f9 !important;
@@ -27,6 +27,8 @@
     --swal-backdrop: rgba(15, 23, 42, 0.5);
     --swal-bg: #ffffff;
     --swal-text: #0f172a;
+
+    color-scheme: light;
 }
 
 html.dark,
@@ -34,7 +36,7 @@ html.dark-mode,
 body.dark-mode,
 .dark,
 [data-bs-theme="dark"] {
-    /* Modo Oscuro - Suave, Elegante y sin bordes blancos molestos */
+    /* Modo Oscuro */
     --bg-primary: #090e1a;
     --bg-secondary: #0f172a;
     --text-primary: #f1f5f9;
@@ -47,11 +49,16 @@ body.dark-mode,
     --glass-bg: rgba(15, 23, 42, 0.95);
     --calendar-filter: invert(1) brightness(150%);
     
-    /* Bootstrap Theme Variables en Modo Oscuro */
+    /* Bootstrap */
     --bs-border-color: #1e293b !important;
     --bs-border-color-translucent: rgba(30, 41, 59, 0.5) !important;
     --bs-body-bg: #090e1a !important;
     --bs-body-color: #f1f5f9 !important;
+
+    /* SweetAlert Modo Oscuro */
+    --swal-backdrop: rgba(0, 0, 0, 0.75);
+    --swal-bg: #0f172a;
+    --swal-text: #f1f5f9;
     
     color-scheme: dark;
 }

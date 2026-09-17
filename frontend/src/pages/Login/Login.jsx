@@ -124,7 +124,7 @@ function Login() {
                     <div className="pt-1">
                         <button
                             type="submit"
-                            className="w-full py-2.5 px-4 rounded-lg text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 focus:outline-none transition-all"
+                            className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 focus:outline-none transition-all active:scale-95 cursor-pointer"
                         >
                             {isRegistering ? "Registrarse" : "Ingresar"}
                         </button>

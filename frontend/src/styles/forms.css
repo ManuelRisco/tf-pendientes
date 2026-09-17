@@ -17,6 +17,18 @@ select:not(.border-0),
     border-radius: 8px !important;
 }
 
+input:disabled,
+select:disabled,
+textarea:disabled,
+.form-control:disabled,
+.form-select:disabled {
+    background-color: var(--track-bg) !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-color) !important;
+    opacity: 0.65 !important;
+    cursor: not-allowed !important;
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator {
     filter: var(--calendar-filter, none);
     cursor: pointer;

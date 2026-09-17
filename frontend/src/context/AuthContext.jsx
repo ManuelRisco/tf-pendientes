@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../lib/axios';
 
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(() => Boolean(localStorage.getItem('token')));
 
     // Al iniciar la app, verifica si hay un token guardado y obtiene el usuario
     const checkAuth = async () => {
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
             // Ruta: GET /auth/me — devuelve { success, data: { id, email, nombre, ... } }
             const res = await api.get('/auth/me');
             setUser(res.data.data);
-        } catch (error) {
+        } catch {
             // Token inválido o expirado
             localStorage.removeItem('token');
             setUser(null);
@@ -30,7 +30,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        checkAuth();
+        if (localStorage.getItem('token')) {
+            checkAuth();
+        }
     }, []);
 
     // Polling en tiempo real: verificar cada 5 segundos si el usuario sigue activo

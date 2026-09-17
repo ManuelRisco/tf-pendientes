@@ -1,29 +1,29 @@
 import { useEffect, useState, useMemo } from "react";
 import api from "../../lib/axios";
 import { useAuth } from "../../context/AuthContext";
+import { formatDateTime, getTodayISO } from "../../lib/dateUtils";
 
 export function useMovimientos() {
     const { user } = useAuth();
     const [movimientos, setMovimientos] = useState([]);
+    const [totalRegistros, setTotalRegistros] = useState(0);
     const [loading, setLoading] = useState(true);
 
     const [filtroAlcance, setFiltroAlcance] = useState('todos'); // 'todos', 'mis_movimientos', 'otros', 'usuario_especifico'
     const [filtroUsuarioId, setFiltroUsuarioId] = useState('');
     const [usuariosList, setUsuariosList] = useState([]);
 
-    const [filtroUsuario, setFiltroUsuario] = useState('');
     const [filtroAccion, setFiltroAccion] = useState('');
     const [filtroModulo, setFiltroModulo] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
-    // Paginación
+    // Modal de detalle de auditoría
+    const [selectedMovimiento, setSelectedMovimiento] = useState(null);
+
+    // Paginación y límite configurable
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const limit = 10;
-
-    const usuariosUnicos = useMemo(() => {
-        const users = (Array.isArray(movimientos) ? movimientos : []).map(m => m.email).filter(Boolean);
-        return [...new Set(users)];
-    }, [movimientos]);
+    const [limit, setLimit] = useState(10);
 
     const accionesUnicas = useMemo(() => {
         const actions = (Array.isArray(movimientos) ? movimientos : []).map(m => m.tipo_accion).filter(Boolean);
@@ -35,14 +35,64 @@ export function useMovimientos() {
         return [...new Set(mods)];
     }, [movimientos]);
 
+    // Filtrado interactivo en tiempo real
     const movimientosFiltrados = useMemo(() => {
         return (Array.isArray(movimientos) ? movimientos : []).filter(mov => {
-            const matchUsuario = filtroUsuario === '' || mov.email === filtroUsuario;
             const matchAccion = filtroAccion === '' || mov.tipo_accion === filtroAccion;
             const matchModulo = filtroModulo === '' || mov.modulo === filtroModulo;
-            return matchUsuario && matchAccion && matchModulo;
+
+            if (!matchAccion || !matchModulo) return false;
+
+            if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase().trim();
+                const userName = `${mov.persona_nombre || ''} ${mov.persona_apellido || ''}`.toLowerCase();
+                const email = (mov.email || '').toLowerCase();
+                const accion = (mov.tipo_accion || '').toLowerCase();
+                const modulo = (mov.modulo || '').toLowerCase();
+                const idStr = String(mov.id || '');
+                const regIdStr = String(mov.registro_id || '');
+                const title = (mov.detalles?.nuevo?.titulo || mov.detalles?.anterior?.titulo || '').toLowerCase();
+                const emailTarget = (mov.detalles?.nuevo?.email || mov.detalles?.anterior?.email || '').toLowerCase();
+
+                return userName.includes(q) ||
+                    email.includes(q) ||
+                    accion.includes(q) ||
+                    modulo.includes(q) ||
+                    idStr.includes(q) ||
+                    regIdStr.includes(q) ||
+                    title.includes(q) ||
+                    emailTarget.includes(q);
+            }
+
+            return true;
         });
-    }, [movimientos, filtroUsuario, filtroAccion, filtroModulo]);
+    }, [movimientos, filtroAccion, filtroModulo, searchQuery]);
+
+    // Métricas KPI
+    const metrics = useMemo(() => {
+        const items = Array.isArray(movimientos) ? movimientos : [];
+        const total = totalRegistros || items.length;
+        const tareas = items.filter(m => m.modulo === 'tareas').length;
+        const usuarios = items.filter(m => m.modulo === 'usuarios').length;
+        const todayIso = getTodayISO();
+        const hoy = items.filter(m => (m.created_at || '').startsWith(todayIso)).length;
+        return { total, tareas, usuarios, hoy };
+    }, [movimientos, totalRegistros]);
+
+    const setFiltroAlcanceAndResetPage = (val) => {
+        setFiltroAlcance(val);
+        setCurrentPage(1);
+    };
+
+    const setFiltroUsuarioIdAndResetPage = (val) => {
+        setFiltroUsuarioId(val);
+        setCurrentPage(1);
+    };
+
+    const setLimitAndResetPage = (val) => {
+        setLimit(val);
+        setCurrentPage(1);
+    };
 
     useEffect(() => {
         const fetchMovimientos = async () => {
@@ -59,8 +109,11 @@ export function useMovimientos() {
                 const results = await Promise.all(promises);
                 const res = results[0];
                 const items = Array.isArray(res.data.data) ? res.data.data : (res.data.data?.items || []);
+                const meta = res.data.data?.meta || {};
+
                 setMovimientos(items);
-                setTotalPages(res.data.data?.meta?.totalPages || 1);
+                setTotalRegistros(meta.total || items.length);
+                setTotalPages(meta.totalPages || 1);
 
                 if (results[1] && results[1].data.success) {
                     const uData = results[1].data.data;
@@ -70,15 +123,16 @@ export function useMovimientos() {
             } catch (error) {
                 console.error("Error fetching movimientos", error);
                 setMovimientos([]);
+                setTotalRegistros(0);
             } finally {
                 setLoading(false);
             }
         };
-        
+
         if (user) {
             fetchMovimientos();
         }
-    }, [currentPage, user, filtroAlcance, filtroUsuarioId]);
+    }, [currentPage, user, filtroAlcance, filtroUsuarioId, limit, usuariosList.length]);
 
     const getActionText = (mov) => {
         const isUser = mov.modulo === 'usuarios';
@@ -89,7 +143,7 @@ export function useMovimientos() {
             const data = mov.detalles.nuevo || mov.detalles.anterior || {};
             let name = data.email || data.titulo;
             if (name) {
-                if (name.length > 35) name = name.substring(0, 35) + '...';
+                if (name.length > 40) name = name.substring(0, 40) + '...';
                 targetInfo = ` (${name})`;
             }
         }
@@ -103,27 +157,83 @@ export function useMovimientos() {
         }
     };
 
+    // Exportación rápida a CSV
+    const exportToCSV = () => {
+        if (movimientosFiltrados.length === 0) return;
+        const headers = ['#ID', 'Usuario', 'Correo', 'Accion', 'Modulo', 'Registro ID', 'Fecha y Hora', 'Descripcion'];
+        const rows = movimientosFiltrados.map(m => {
+            const userName = m.persona_nombre ? `${m.persona_nombre} ${m.persona_apellido || ''}`.trim() : (m.email || 'Sistema');
+            const desc = getActionText(m);
+            return [
+                m.id,
+                `"${userName.replace(/"/g, '""')}"`,
+                `"${(m.email || '').replace(/"/g, '""')}"`,
+                `"${(m.tipo_accion || '').replace(/"/g, '""')}"`,
+                `"${(m.modulo || '').replace(/"/g, '""')}"`,
+                m.registro_id || '',
+                `"${formatDateTime(m.created_at)}"`,
+                `"${desc.replace(/"/g, '""')}"`
+            ].join(',');
+        });
+
+        const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `bitacora_movimientos_${getTodayISO()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    const setFiltroModuloAndResetPage = (val) => {
+        setFiltroModulo(val);
+        setCurrentPage(1);
+    };
+
+    const handleClearFilters = () => {
+        setFiltroAlcance('todos');
+        setFiltroAccion('');
+        setFiltroModulo('');
+        setFiltroUsuarioId('');
+        setSearchQuery('');
+        setCurrentPage(1);
+    };
+
+    const hasActiveFilters = filtroAlcance !== 'todos' || filtroAccion !== '' || filtroModulo !== '' || filtroUsuarioId !== '' || searchQuery.trim() !== '';
+
     return {
         user,
         loading,
         filtroAlcance,
-        setFiltroAlcance,
+        setFiltroAlcance: setFiltroAlcanceAndResetPage,
         filtroUsuarioId,
-        setFiltroUsuarioId,
+        setFiltroUsuarioId: setFiltroUsuarioIdAndResetPage,
         usuariosList,
-        filtroUsuario,
-        setFiltroUsuario,
         filtroAccion,
         setFiltroAccion,
         filtroModulo,
-        setFiltroModulo,
+        setFiltroModulo: setFiltroModuloAndResetPage,
+        searchQuery,
+        setSearchQuery,
+        selectedMovimiento,
+        setSelectedMovimiento,
         currentPage,
         setCurrentPage,
         totalPages,
-        usuariosUnicos,
+        limit,
+        setLimit: setLimitAndResetPage,
+        totalRegistros,
         accionesUnicas,
         modulosUnicos,
         movimientosFiltrados,
-        getActionText
+        metrics,
+        getActionText,
+        exportToCSV,
+        handleClearFilters,
+        hasActiveFilters
     };
 }
+

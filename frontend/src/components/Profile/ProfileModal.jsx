@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Modal, Form, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
@@ -19,7 +19,9 @@ function ProfileModal({ show, onHide }) {
     const [showPassword, setShowPassword] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
+    const [prevShow, setPrevShow] = useState(show);
+    if (show !== prevShow) {
+        setPrevShow(show);
         if (show && user) {
             setFormData({
                 nombre: user.nombre || '',
@@ -29,7 +31,7 @@ function ProfileModal({ show, onHide }) {
             });
             setShowPassword(false);
         }
-    }, [show, user]);
+    }
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -235,7 +237,7 @@ function ProfileModal({ show, onHide }) {
                             type="button"
                             onClick={onHide}
                             disabled={saving}
-                            className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm rounded-lg opacity-80 hover:opacity-100 font-medium transition-all"
+                            className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm rounded-xl opacity-80 hover:opacity-100 font-semibold transition-all active:scale-95 cursor-pointer"
                             style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
                         >
                             Cancelar
@@ -243,7 +245,7 @@ function ProfileModal({ show, onHide }) {
                         <button
                             type="submit"
                             disabled={saving}
-                            className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2"
+                            className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
                         >
                             {saving ? (
                                 <>

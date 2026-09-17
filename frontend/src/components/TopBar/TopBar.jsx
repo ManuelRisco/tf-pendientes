@@ -11,7 +11,7 @@ function TopBar({ toggleSidebar, isSidebarOpen }) {
         >
             <div className="flex items-center gap-3">
                 <button 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-500/10 transition-colors border-0 cursor-pointer" 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-500/10 transition-all active:scale-95 border-0 cursor-pointer" 
                     style={{ color: 'var(--text-primary)' }}
                     onClick={toggleSidebar}
                     title={isSidebarOpen ? "Ocultar menú" : "Mostrar menú"}
@@ -24,7 +24,7 @@ function TopBar({ toggleSidebar, isSidebarOpen }) {
             
             <div className="flex items-center gap-2 sm:gap-3">
                 <button 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-500/10 transition-colors border-0 cursor-pointer" 
+                    className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-500/10 transition-all active:scale-95 border-0 cursor-pointer" 
                     style={{ color: 'var(--text-primary)' }}
                     onClick={toggleTheme}
                     title={isDarkMode ? "Cambiar a Modo Claro" : "Cambiar a Modo Oscuro"}

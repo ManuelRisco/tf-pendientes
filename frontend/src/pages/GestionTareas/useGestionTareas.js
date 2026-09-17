@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../../lib/axios';
 import { useAuth } from '../../context/AuthContext';
@@ -8,6 +9,10 @@ import { getEstadoBadge, getPriorityBadge } from '../../lib/themeConstants';
 export function useGestionTareas() {
     const { user } = useAuth();
     const isAdmin = Number(user?.rol_id) === 1;
+
+    const [searchParams] = useSearchParams();
+    const location = useLocation();
+    const [highlightedTaskId, setHighlightedTaskId] = useState(null);
 
     const [items, setItems] = useState([]);
     const [estados, setEstados] = useState([]);
@@ -97,14 +102,40 @@ export function useGestionTareas() {
         }
     };
 
-    useEffect(() => {
-        fetchTareas();
-    }, [currentPage, filtroEstado, filtroPrioridad, filtroAlcance, filtroUsuarioId, debouncedSearch]);
+    const prevFiltersRef = useRef({
+        filtroEstado,
+        filtroPrioridad,
+        filtroAlcance,
+        filtroUsuarioId,
+        debouncedSearch
+    });
 
-    // Resetear a página 1 cuando cambian los filtros o la búsqueda
     useEffect(() => {
-        setCurrentPage(1);
-    }, [filtroEstado, filtroPrioridad, filtroAlcance, filtroUsuarioId, debouncedSearch]);
+        const prev = prevFiltersRef.current;
+        const filtersChanged = (
+            prev.filtroEstado !== filtroEstado ||
+            prev.filtroPrioridad !== filtroPrioridad ||
+            prev.filtroAlcance !== filtroAlcance ||
+            prev.filtroUsuarioId !== filtroUsuarioId ||
+            prev.debouncedSearch !== debouncedSearch
+        );
+
+        prevFiltersRef.current = {
+            filtroEstado,
+            filtroPrioridad,
+            filtroAlcance,
+            filtroUsuarioId,
+            debouncedSearch
+        };
+
+        if (filtersChanged && currentPage !== 1) {
+            setCurrentPage(1);
+            return;
+        }
+
+        fetchTareas();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, filtroEstado, filtroPrioridad, filtroAlcance, filtroUsuarioId, debouncedSearch]);
 
     const handleClearFilters = () => {
         setSearchQuery('');
@@ -373,7 +404,7 @@ export function useGestionTareas() {
                     });
                     fetchTareas();
                     Swal.fire({ icon: 'success', title: 'Estado actualizado', timer: 1500, showConfirmButton: false });
-                } catch (error) {
+                } catch {
                     Swal.fire('Error', 'No se pudo cambiar el estado', 'error');
                 }
             }
@@ -387,6 +418,89 @@ export function useGestionTareas() {
         setScrollTarget(target);
         setShowViewModal(true);
     };
+
+    // Abrir directamente y enfocar la tarea si se navega con ?id=... o location.state?.viewTaskId
+    useEffect(() => {
+        const targetId = searchParams.get('id') || searchParams.get('tareaId') || location.state?.viewTaskId;
+        if (!targetId) return;
+
+        const numId = Number(targetId);
+        if (isNaN(numId)) return;
+
+        let isCancelled = false;
+        const timerInit = setTimeout(() => {
+            if (isCancelled) return;
+            setHighlightedTaskId(numId);
+            setFiltroAlcance('todos');
+            setFiltroEstado('');
+            setFiltroPrioridad('');
+            setSearchQuery(String(numId));
+            setDebouncedSearch(String(numId));
+        }, 0);
+
+        const loadTargetTask = async () => {
+            try {
+                const res = await api.get(`/tareas/${numId}`);
+                if (!isCancelled && res.data.success && res.data.data) {
+                    handleView(res.data.data);
+                }
+            } catch (err) {
+                console.error('Error al cargar la tarea solicitada:', err);
+            }
+        };
+
+        loadTargetTask();
+
+        return () => {
+            isCancelled = true;
+            clearTimeout(timerInit);
+        };
+    }, [searchParams, location.state]);
+
+    const imagesSectionRef = useRef(null);
+    const [highlightImages, setHighlightImages] = useState(false);
+
+    // Auto-scroll a la fila de la tarea si viene referenciada directamente
+    useEffect(() => {
+        if (highlightedTaskId) {
+            const timer = setTimeout(() => {
+                const el = document.getElementById(`tarea-row-${highlightedTaskId}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 400);
+            return () => clearTimeout(timer);
+        }
+    }, [highlightedTaskId, items]);
+
+    // Scroll automático a la sección de imágenes si se abrió desde el indicador de imagen
+    useEffect(() => {
+        if (showViewModal && scrollTarget === 'imagenes') {
+            const timer0 = setTimeout(() => setHighlightImages(true), 0);
+            const scrollToImages = () => {
+                if (imagesSectionRef.current) {
+                    imagesSectionRef.current.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            };
+
+            const timer1 = setTimeout(scrollToImages, 150);
+            const timer2 = setTimeout(scrollToImages, 350);
+            const timerHighlight = setTimeout(() => setHighlightImages(false), 2200);
+
+            return () => {
+                clearTimeout(timer0);
+                clearTimeout(timer1);
+                clearTimeout(timer2);
+                clearTimeout(timerHighlight);
+            };
+        } else {
+            const timerReset = setTimeout(() => setHighlightImages(false), 0);
+            return () => clearTimeout(timerReset);
+        }
+    }, [showViewModal, scrollTarget]);
 
     const handleEdit = (item) => {
         if (Number(item.usuario_id) !== Number(user?.id)) {
@@ -422,7 +536,7 @@ export function useGestionTareas() {
                     await api.delete(`/tareas/${id}`);
                     fetchTareas();
                     Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1500, showConfirmButton: false });
-                } catch (error) {
+                } catch {
                     Swal.fire('Error', 'No se pudo eliminar la tarea', 'error');
                 }
             }
@@ -579,5 +693,8 @@ export function useGestionTareas() {
         responseInputRef,
         handleOpenQuickResponse,
         handleSaveQuickResponse,
+        highlightedTaskId,
+        imagesSectionRef,
+        highlightImages,
     };
 }

@@ -99,8 +99,8 @@ class ReporteModel {
         $diffDays = (strtotime($fechaFin) - strtotime($fechaInicio)) / 86400;
         $tendencia = [];
 
-        // Rellenar días continuos si el rango es de 90 días o menos
-        if ($diffDays >= 0 && $diffDays <= 90) {
+        // Rellenar días continuos si el rango es de 365 días (1 año) o menos
+        if ($diffDays >= 0 && $diffDays <= 365) {
             try {
                 $periodo = new DatePeriod(
                     new DateTime($fechaInicio),
@@ -238,51 +238,6 @@ class ReporteModel {
                 'solicitante'      => $nombreCompleto,
                 'email'            => $row['email'],
                 'dias_abierto'     => (int)$row['dias_abierto'],
-            ];
-        }, $result ?: []);
-    }
-
-    /**
-     * Obtiene los problemas / títulos más frecuentes en un rango de fechas.
-     */
-    public function getProblemasFrecuentes(string $fechaInicio, string $fechaFin, int $limite = 10): array {
-        $pdo = Database::getConnection();
-        
-        if ($limite <= 0) {
-            $limite = 10;
-        }
-
-        $sql = "SELECT 
-                    titulo,
-                    COUNT(id) AS frecuencia,
-                    COALESCE(SUM(CASE WHEN estado_id = 4 THEN 1 ELSE 0 END), 0) AS resueltos,
-                    COALESCE(SUM(CASE WHEN estado_id IN (1, 2, 3) THEN 1 ELSE 0 END), 0) AS pendientes,
-                    MIN(created_at) AS primera_ocurrencia,
-                    MAX(created_at) AS ultima_ocurrencia
-                FROM tareas
-                WHERE DATE(created_at) >= :inicio 
-                  AND DATE(created_at) <= :fin
-                  AND deleted_at IS NULL
-                GROUP BY titulo
-                ORDER BY frecuencia DESC, ultima_ocurrencia DESC
-                LIMIT :limite";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':inicio', $fechaInicio);
-        $stmt->bindParam(':fin', $fechaFin);
-        $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        return array_map(function($row) {
-            return [
-                'titulo'             => $row['titulo'],
-                'frecuencia'         => (int)$row['frecuencia'],
-                'resueltos'          => (int)$row['resueltos'],
-                'pendientes'         => (int)$row['pendientes'],
-                'primera_ocurrencia' => $row['primera_ocurrencia'],
-                'ultima_ocurrencia'  => $row['ultima_ocurrencia'],
             ];
         }, $result ?: []);
     }

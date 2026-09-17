@@ -123,3 +123,26 @@ export function getMonthsAgoISO(months = 1) {
     return `${y}-${m}-${day}`;
 }
 
+/**
+ * Retorna una representación en tiempo relativo amigable ('Justo ahora', 'Hace 5 min', 'Ayer', etc.)
+ * @param {string|Date} dateStr
+ * @returns {string}
+ */
+export function getTimeAgo(dateStr) {
+    if (!dateStr) return '—';
+    const now = new Date();
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '—';
+    
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    if (diffInSeconds < 10) return 'Justo ahora';
+    if (diffInSeconds < 60) return `Hace ${diffInSeconds} s`;
+    if (diffInSeconds < 3600) return `Hace ${Math.floor(diffInSeconds / 60)} min`;
+    if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)} h`;
+    
+    const days = Math.floor(diffInSeconds / 86400);
+    if (days === 1) return 'Ayer';
+    if (days < 7) return `Hace ${days} días`;
+    return formatDate(dateStr);
+}
+

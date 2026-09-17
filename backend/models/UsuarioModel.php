@@ -237,15 +237,4 @@ class UsuarioModel {
         }
         return false;
     }
-
-    // ------------------------------------------------------------------
-    // Validar si un email ya existe (ignorando un id)
-    // ------------------------------------------------------------------
-    public function emailExists(string $email, ?int $excludeId = null): bool {
-        $query = Usuario::withTrashed()->where('email', $email);
-        if ($excludeId !== null) {
-            $query->where('id', '!=', $excludeId);
-        }
-        return $query->exists();
-    }
 }

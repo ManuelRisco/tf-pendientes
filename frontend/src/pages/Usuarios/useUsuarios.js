@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../../lib/axios';
@@ -57,10 +57,6 @@ export function useUsuarios() {
         return () => clearTimeout(timer);
     }, [search]);
 
-    // Volver a página 1 al filtrar
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [debouncedSearch, filtroEstado, filtroRol]);
 
     // Obtener usuarios
     const fetchUsuarios = useCallback(async () => {
@@ -109,9 +105,33 @@ export function useUsuarios() {
         fetchCatalogos();
     }, []);
 
+    const prevFiltersRef = useRef({
+        debouncedSearch,
+        filtroEstado,
+        filtroRol
+    });
+
     useEffect(() => {
+        const prev = prevFiltersRef.current;
+        const filtersChanged = (
+            prev.debouncedSearch !== debouncedSearch ||
+            prev.filtroEstado !== filtroEstado ||
+            prev.filtroRol !== filtroRol
+        );
+
+        prevFiltersRef.current = {
+            debouncedSearch,
+            filtroEstado,
+            filtroRol
+        };
+
+        if (filtersChanged && currentPage !== 1) {
+            setCurrentPage(1);
+            return;
+        }
+
         fetchUsuarios();
-    }, [fetchUsuarios]);
+    }, [currentPage, debouncedSearch, filtroEstado, filtroRol, fetchUsuarios]);
 
     const handleClearFilters = () => {
         setSearch('');

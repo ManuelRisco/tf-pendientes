@@ -1,249 +1,99 @@
-import { Container, Row, Col, Table } from "react-bootstrap";
+import { Container, Row, Col } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import { useMovimientos } from "./useMovimientos";
-import CustomPagination from "../../components/Pagination/CustomPagination";
-import { formatDateTime } from "../../lib/dateUtils";
-import { getActionMeta } from "../../lib/themeConstants";
+import MovimientosMetrics from "./components/MovimientosMetrics";
+import MovimientosFilters from "./components/MovimientosFilters";
+import MovimientosTable from "./components/MovimientosTable";
+import MovimientoDetailModal from "./components/MovimientoDetailModal";
 
-function Movimientos() {
-    const {
-        user,
-        loading,
-        filtroAlcance,
-        setFiltroAlcance,
-        filtroUsuarioId,
-        setFiltroUsuarioId,
-        usuariosList,
-        filtroUsuario,
-        setFiltroUsuario,
-        filtroAccion,
-        setFiltroAccion,
-        filtroModulo,
-        setFiltroModulo,
-        currentPage,
-        setCurrentPage,
-        totalPages,
-        usuariosUnicos,
-        accionesUnicas,
-        modulosUnicos,
-        movimientosFiltrados,
-        getActionText
-    } = useMovimientos();
-
+export default function Movimientos() {
+    const navigate = useNavigate();
+    const movHook = useMovimientos();
+    const { user, loading, movimientosFiltrados, metrics, exportToCSV, selectedMovimiento, setSelectedMovimiento, getActionText } = movHook;
     const isAdmin = Number(user?.rol_id) === 1;
 
-    if (loading) {
+    if (loading && movimientosFiltrados.length === 0) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="spinner-border text-blue-600 mr-3" role="status"></div>
-                <span className="font-medium text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>Cargando movimientos...</span>
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <div className="spinner-border text-blue-600 mb-3" role="status"></div>
+                <span className="font-semibold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>Cargando bitácora de movimientos...</span>
+                <span className="text-xs mt-1 opacity-70" style={{ color: 'var(--text-secondary)' }}>Sincronizando auditoría en tiempo real</span>
             </div>
         );
     }
 
     return (
-        <div className="py-1 sm:py-4 px-0 sm:px-2 max-w-7xl mx-auto">
-            <Container fluid className="p-0">
+        <div className="py-2 sm:py-4 animate-fade-in">
+            <Container fluid className="px-2 sm:px-4">
                 <Row className="justify-content-center m-0">
                     <Col xs={12} className="p-0">
-                        {/* Encabezado */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
-                            <div>
-                                <div className="flex items-center gap-2.5 flex-wrap">
-                                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight m-0" style={{ color: 'var(--text-primary)' }}>
-                                        Movimientos
-                                    </h2>
-                                    {!isAdmin && (
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
-                                            <i className="bi bi-person-fill"></i> Mis movimientos
-                                        </span>
-                                    )}
-                                </div>
-                                <p className="text-xs sm:text-sm mt-1 mb-0" style={{ color: 'var(--text-secondary)' }}>
-                                    {isAdmin 
-                                        ? 'Registro de acciones y cambios realizados por los usuarios.'
-                                        : 'Historial de acciones realizadas en tus tareas.'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="card-app p-3.5 sm:p-6 mb-5 sm:mb-6">
-                            {/* Filtros */}
-                            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 sm:gap-4 mb-6 pb-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                                <h5 className="text-sm sm:text-base font-bold m-0 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                                    <i className="bi bi-clock-history text-blue-600"></i>
-                                    <span>Historial de movimientos</span>
-                                </h5>
-
-                                <div className="flex flex-wrap items-center gap-2.5 w-full xl:w-auto">
-                                    {isAdmin && (
-                                        <>
-                                            <div 
-                                                className="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs"
-                                                style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
-                                            >
-                                                <i className="bi bi-people-fill text-indigo-500 text-xs"></i>
-                                                <select
-                                                    value={filtroAlcance}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        setFiltroAlcance(val);
-                                                        if (val !== 'usuario_especifico') {
-                                                            setFiltroUsuarioId('');
-                                                        }
-                                                    }}
-                                                    className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
-                                                    style={{ color: 'var(--text-primary)' }}
-                                                >
-                                                    <option value="todos">Todos los movimientos</option>
-                                                    <option value="mis_movimientos">Mis movimientos</option>
-                                                    <option value="otros">Movimientos de otros</option>
-                                                    <option value="usuario_especifico">Buscar por usuario...</option>
-                                                </select>
-                                            </div>
-
-                                            {filtroAlcance === 'usuario_especifico' && (
-                                                <div 
-                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs animate-fade-in"
-                                                    style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
-                                                >
-                                                    <i className="bi bi-person-badge text-blue-500 text-xs"></i>
-                                                    <select
-                                                        value={filtroUsuarioId}
-                                                        onChange={(e) => setFiltroUsuarioId(e.target.value)}
-                                                        className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer max-w-[200px]"
-                                                        style={{ color: 'var(--text-primary)' }}
-                                                    >
-                                                        <option value="">Seleccionar usuario...</option>
-                                                        {(Array.isArray(usuariosList) ? usuariosList : []).map(u => (
-                                                            <option key={u.id} value={u.id}>
-                                                                {u.persona_nombre ? `${u.persona_nombre} ${u.persona_apellido}` : u.email}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-
-                                    <div 
-                                        className="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs"
-                                        style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
-                                    >
-                                        <i className="bi bi-activity text-xs opacity-60"></i>
-                                        <select
-                                            value={filtroAccion}
-                                            onChange={(e) => setFiltroAccion(e.target.value)}
-                                            className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
-                                            style={{ color: 'var(--text-primary)' }}
-                                        >
-                                            <option value="">Todas las Acciones</option>
-                                            {accionesUnicas.map(a => (
-                                                <option key={a} value={a}>{a}</option>
-                                            ))}
-                                        </select>
+                        {/* Cabecera Principal y Métricas */}
+                        <div className="card-app p-4 sm:p-6 mb-4 sm:mb-6">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                <div>
+                                    <div className="flex items-center gap-2.5 flex-wrap">
+                                        <div className="w-9 h-9 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200 dark:border-blue-900/50 shrink-0">
+                                            <i className="bi bi-clock-history text-lg"></i>
+                                        </div>
+                                        <h2 className="text-xl sm:text-2xl font-black tracking-tight m-0" style={{ color: 'var(--text-primary)' }}>
+                                            Historial de Movimientos
+                                        </h2>
+                                        {!isAdmin && (
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
+                                                <i className="bi bi-person-fill"></i> Mis movimientos
+                                            </span>
+                                        )}
                                     </div>
-
-                                    <div 
-                                        className="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-xs"
-                                        style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
-                                    >
-                                        <i className="bi bi-box text-xs opacity-60"></i>
-                                        <select
-                                            value={filtroModulo}
-                                            onChange={(e) => setFiltroModulo(e.target.value)}
-                                            className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer capitalize"
-                                            style={{ color: 'var(--text-primary)' }}
-                                        >
-                                            <option value="">Todos los Módulos</option>
-                                            {modulosUnicos.map(m => (
-                                                <option key={m} value={m}>{m}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {movimientosFiltrados.length === 0 ? (
-                                <div className="text-center py-12 rounded-xl border" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
-                                    <i className="bi bi-clock-history text-3xl opacity-40 mb-2 block" style={{ color: 'var(--text-secondary)' }}></i>
-                                    <p className="text-sm m-0 font-medium" style={{ color: 'var(--text-secondary)' }}>
-                                        No se encontraron movimientos que coincidan con los filtros seleccionados.
+                                    <p className="text-xs sm:text-sm mt-1.5 mb-0" style={{ color: 'var(--text-secondary)' }}>
+                                        {isAdmin
+                                            ? 'Auditoría cronológica de cambios, creación de tareas y acciones de usuarios.'
+                                            : 'Registro de todas las acciones y modificaciones realizadas en tus tareas.'}
                                     </p>
                                 </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <Table hover className="table-movimientos min-w-[650px]">
-                                        <thead>
-                                            <tr>
-                                                <th className="w-1/4">Usuario</th>
-                                                <th className="w-1/6">Acción</th>
-                                                <th className="w-5/12">Descripción</th>
-                                                <th className="w-1/6">Fecha y Hora</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {movimientosFiltrados.map(mov => {
-                                                const meta = getActionMeta(mov.tipo_accion, mov.modulo);
-                                                const nombreCompleto = mov.persona_nombre 
-                                                    ? `${mov.persona_nombre} ${mov.persona_apellido || ''}`.trim() 
-                                                    : (mov.email || 'Sistema / Automático');
-                                                const initial = (nombreCompleto || 'S').charAt(0).toUpperCase();
 
-                                                return (
-                                                    <tr key={mov.id}>
-                                                        <td>
-                                                            <div className="flex items-center gap-2.5">
-                                                                <div className="w-7 h-7 rounded-full bg-blue-600/10 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
-                                                                    {initial}
-                                                                </div>
-                                                                <div>
-                                                                    <div className="font-semibold text-xs sm:text-sm whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
-                                                                        {nombreCompleto}
-                                                                    </div>
-                                                                    {mov.email && (
-                                                                        <div className="text-[11px] whitespace-nowrap opacity-70 mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-                                                                            {mov.email}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td>
-                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${meta.badgeBg}`}>
-                                                                <i className={`bi ${meta.icon} text-[10px]`}></i>
-                                                                <span>{meta.label}</span>
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <span className="text-xs sm:text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                                                                {getActionText(mov)}
-                                                            </span>
-                                                        </td>
-                                                        <td className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                                                            <i className="bi bi-calendar3 mr-1 opacity-70"></i>
-                                                            {formatDateTime(mov.created_at)}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </Table>
-                                </div>
-                            )}
-                            
-                            {totalPages > 1 && (
-                                <CustomPagination 
-                                    currentPage={currentPage}
-                                    totalPages={totalPages}
-                                    onPageChange={setCurrentPage}
-                                />
-                            )}
+                                <button
+                                    type="button"
+                                    onClick={exportToCSV}
+                                    disabled={movimientosFiltrados.length === 0}
+                                    className="w-full sm:w-auto px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs disabled:opacity-50 hover:bg-slate-500/10 active:scale-95"
+                                    style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
+                                    title="Descargar historial filtrado en archivo CSV"
+                                >
+                                    <i className="bi bi-file-earmark-arrow-down text-emerald-600 dark:text-emerald-400 text-base"></i>
+                                    <span>Exportar CSV</span>
+                                </button>
+                            </div>
+
+                            <MovimientosMetrics metrics={metrics} />
+                        </div>
+
+                        {/* Contenedor Principal: Filtros y Tabla */}
+                        <div className="card-app p-4 sm:p-6 mb-5 sm:mb-6">
+                            <MovimientosFilters
+                                {...movHook}
+                                isAdmin={isAdmin}
+                                totalFiltrados={movimientosFiltrados.length}
+                                totalRegistros={metrics.total}
+                            />
+
+                            <MovimientosTable
+                                {...movHook}
+                                movimientos={movimientosFiltrados}
+                                onSelectMovimiento={setSelectedMovimiento}
+                                onNavigateToTask={(taskId) => navigate(`/gestion-tareas?id=${taskId}`)}
+                            />
                         </div>
                     </Col>
                 </Row>
             </Container>
+
+            <MovimientoDetailModal
+                movimiento={selectedMovimiento}
+                show={!!selectedMovimiento}
+                onClose={() => setSelectedMovimiento(null)}
+                onNavigateToTask={(taskId) => navigate(`/gestion-tareas?id=${taskId}`)}
+                getActionText={getActionText}
+            />
         </div>
     );
 }
-
-export default Movimientos;

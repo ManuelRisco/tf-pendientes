@@ -34,6 +34,7 @@ export default function DateInput({
     style = {}
 }) {
     const [displayVal, setDisplayVal] = useState(() => isoToDisplayDate(value));
+    const [prevValue, setPrevValue] = useState(value);
     const [isOpen, setIsOpen] = useState(false);
     
     // Vista del calendario (año y mes seleccionados para navegar)
@@ -50,8 +51,9 @@ export default function DateInput({
     const [viewMode, setViewMode] = useState('days'); // 'days' | 'months' | 'years'
     const containerRef = useRef(null);
 
-    // Sincronizar texto cuando cambia el value exterior
-    useEffect(() => {
+    // Sincronizar texto cuando cambia el value exterior sin efecto en cascada
+    if (value !== prevValue) {
+        setPrevValue(value);
         setDisplayVal(isoToDisplayDate(value));
         if (value) {
             const parts = value.split('-');
@@ -59,7 +61,7 @@ export default function DateInput({
                 setViewDate(new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1));
             }
         }
-    }, [value]);
+    }
 
     // Cerrar al hacer clic afuera o presionar Escape
     useEffect(() => {
@@ -104,7 +106,7 @@ export default function DateInput({
         
         // Mantener solo dígitos y barras
         const digits = text.replace(/\D/g, '').slice(0, 8);
-        let formatted = '';
+        let formatted;
         if (digits.length <= 2) {
             formatted = digits;
         } else if (digits.length <= 4) {
@@ -266,7 +268,7 @@ export default function DateInput({
         <div ref={containerRef} className={`relative inline-block ${className}`} style={style}>
             {/* Input contenedor */}
             <div 
-                className="flex items-center rounded-lg border transition-all overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500"
+                className="flex items-center rounded-xl border transition-all overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500"
                 style={{
                     backgroundColor: 'var(--bg-primary)',
                     borderColor: 'var(--border-color)',
@@ -315,7 +317,7 @@ export default function DateInput({
                         <button
                             type="button"
                             onClick={handlePrevMonth}
-                            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-500/10 text-slate-500 hover:text-blue-600 transition-all cursor-pointer"
+                            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-500/10 text-slate-500 hover:text-blue-600 transition-all cursor-pointer active:scale-95"
                             title="Mes anterior"
                         >
                             <i className="bi bi-chevron-left text-xs font-bold"></i>
@@ -325,14 +327,14 @@ export default function DateInput({
                             <button
                                 type="button"
                                 onClick={() => setViewMode(prev => prev === 'months' ? 'days' : 'months')}
-                                className="px-2 py-1 text-xs font-bold rounded-md hover:bg-blue-500/10 hover:text-blue-600 transition-all"
+                                className="px-2 py-1 text-xs font-bold rounded-md hover:bg-blue-500/10 hover:text-blue-600 transition-all active:scale-95"
                             >
                                 {MONTH_NAMES[viewDate.getMonth()]}
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setViewMode(prev => prev === 'years' ? 'days' : 'years')}
-                                className="px-2 py-1 text-xs font-bold rounded-md hover:bg-blue-500/10 hover:text-blue-600 transition-all"
+                                className="px-2 py-1 text-xs font-bold rounded-md hover:bg-blue-500/10 hover:text-blue-600 transition-all active:scale-95"
                             >
                                 {viewDate.getFullYear()}
                             </button>
@@ -341,7 +343,7 @@ export default function DateInput({
                         <button
                             type="button"
                             onClick={handleNextMonth}
-                            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-500/10 text-slate-500 hover:text-blue-600 transition-all cursor-pointer"
+                            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-blue-500/10 text-slate-500 hover:text-blue-600 transition-all cursor-pointer active:scale-95"
                             title="Mes siguiente"
                         >
                             <i className="bi bi-chevron-right text-xs font-bold"></i>
