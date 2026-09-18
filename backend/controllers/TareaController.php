@@ -40,7 +40,7 @@ class TareaController {
 
         $items = $this->model->getAll($filters, null, $limit, $offset);
         $total = $this->model->countAll($filters, null);
-        $totalPages = ceil($total / $limit);
+        $totalPages = max(1, (int)ceil($total / $limit));
 
         Response::success([
             'items' => $items,

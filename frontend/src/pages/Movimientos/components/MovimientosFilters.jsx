@@ -18,9 +18,12 @@ export default function MovimientosFilters({
     hasActiveFilters,
     handleClearFilters,
     isAdmin,
-    totalFiltrados,
-    totalRegistros
+    currentPage = 1,
+    totalRegistros = 0,
+    totalGeneral = 0
 }) {
+    const startItem = totalRegistros === 0 ? 0 : (currentPage - 1) * limit + 1;
+    const endItem = Math.min(currentPage * limit, totalRegistros);
     return (
         <div className="mb-4 pb-4 border-b space-y-3" style={{ borderColor: 'var(--border-color)' }}>
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
@@ -202,8 +205,22 @@ export default function MovimientosFilters({
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
                 <span>
-                    Mostrando <strong style={{ color: 'var(--text-primary)' }}>{totalFiltrados}</strong> de <strong style={{ color: 'var(--text-primary)' }}>{totalRegistros}</strong> movimientos registrados
+                    {totalRegistros === 0 ? (
+                        <span>No se encontraron movimientos registrados</span>
+                    ) : (
+                        <>
+                            Mostrando <strong style={{ color: 'var(--text-primary)' }}>{startItem} - {endItem}</strong> de <strong style={{ color: 'var(--text-primary)' }}>{totalRegistros}</strong> {hasActiveFilters ? 'movimientos filtrados' : 'movimientos registrados'}
+                            {hasActiveFilters && totalGeneral > totalRegistros && (
+                                <span className="opacity-70 ml-1">({totalGeneral} en total en la bitácora)</span>
+                            )}
+                        </>
+                    )}
                 </span>
+                {hasActiveFilters && (
+                    <span className="italic text-blue-600 dark:text-blue-400">
+                        Filtros activos aplicados
+                    </span>
+                )}
             </div>
         </div>
     );
@@ -227,6 +244,7 @@ MovimientosFilters.propTypes = {
     hasActiveFilters: PropTypes.bool,
     handleClearFilters: PropTypes.func.isRequired,
     isAdmin: PropTypes.bool,
-    totalFiltrados: PropTypes.number.isRequired,
-    totalRegistros: PropTypes.number.isRequired
+    currentPage: PropTypes.number,
+    totalRegistros: PropTypes.number.isRequired,
+    totalGeneral: PropTypes.number
 };

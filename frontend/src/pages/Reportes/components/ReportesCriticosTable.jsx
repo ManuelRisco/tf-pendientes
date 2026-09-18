@@ -13,9 +13,15 @@ export default function ReportesCriticosTable({
     paginaCriticos,
     setPaginaCriticos,
     totalPagesCriticos,
-    onNavigateToTask
+    onNavigateToTask,
+    itemsPorPaginaCriticos,
+    setItemsPorPaginaCriticos
 }) {
     if (criticosPendientes.length === 0) return null;
+
+    const pageSize = itemsPorPaginaCriticos || 5;
+    const startCriticos = filteredCriticos.length === 0 ? 0 : (paginaCriticos - 1) * pageSize + 1;
+    const endCriticos = Math.min(paginaCriticos * pageSize, filteredCriticos.length);
 
     return (
         <div className="card-app p-0 overflow-hidden border-rose-500/30">
@@ -29,7 +35,7 @@ export default function ReportesCriticosTable({
                             Incidentes Críticos y de Alta Prioridad Abiertos
                         </h3>
                         <p className="text-xs m-0 opacity-75" style={{ color: 'var(--text-secondary)' }}>
-                            Tickets prioritarios que requieren atención ({filteredCriticos.length} de {criticosPendientes.length} casos)
+                            Tickets prioritarios que requieren atención (Mostrando {filteredCriticos.length === 0 ? 0 : `${startCriticos} - ${endCriticos}`} de {filteredCriticos.length} casos filtrados • {criticosPendientes.length} casos totales)
                         </p>
                     </div>
                 </div>
@@ -93,6 +99,26 @@ export default function ReportesCriticosTable({
                             <i className="bi bi-arrow-counterclockwise"></i>
                             <span>Limpiar</span>
                         </button>
+                    )}
+
+                    {itemsPorPaginaCriticos !== undefined && setItemsPorPaginaCriticos && (
+                        <div
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border shadow-xs shrink-0"
+                            style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
+                            title="Filas por página"
+                        >
+                            <span className="text-[11px] opacity-60 font-semibold" style={{ color: 'var(--text-secondary)' }}>Filas:</span>
+                            <select
+                                value={itemsPorPaginaCriticos}
+                                onChange={(e) => setItemsPorPaginaCriticos(Number(e.target.value))}
+                                className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
+                                style={{ color: 'var(--text-primary)' }}
+                            >
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={25}>25</option>
+                            </select>
+                        </div>
                     )}
                 </div>
             </div>
@@ -206,5 +232,7 @@ ReportesCriticosTable.propTypes = {
     paginaCriticos: PropTypes.number.isRequired,
     setPaginaCriticos: PropTypes.func.isRequired,
     totalPagesCriticos: PropTypes.number.isRequired,
-    onNavigateToTask: PropTypes.func.isRequired
+    onNavigateToTask: PropTypes.func.isRequired,
+    itemsPorPaginaCriticos: PropTypes.number,
+    setItemsPorPaginaCriticos: PropTypes.func
 };

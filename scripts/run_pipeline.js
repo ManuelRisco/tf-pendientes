@@ -46,7 +46,8 @@ function runCommand(name, command, args, cwd) {
         const start = Date.now();
         console.log(`${colors.bold}${colors.blue}▶ EXECUTING:${colors.reset} ${name} ${colors.dim}(${command} ${args.join(' ')})${colors.reset}`);
         
-        const proc = spawn(command, args, {
+        const fullCommand = args && args.length > 0 ? `${command} ${args.join(' ')}` : command;
+        const proc = spawn(fullCommand, {
             cwd,
             shell: true,
             stdio: 'inherit',

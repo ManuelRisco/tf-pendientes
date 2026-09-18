@@ -18,8 +18,12 @@ export default function GestionTareasFilters({
     hasActiveFilters,
     handleClearFilters,
     totalTasksCount,
-    itemsCount
+    limit,
+    setLimit,
+    currentPage = 1
 }) {
+    const startItem = totalTasksCount === 0 ? 0 : (currentPage - 1) * limit + 1;
+    const endItem = Math.min(currentPage * limit, totalTasksCount);
     return (
         <div className="mb-4 pb-3 border-b space-y-3" style={{ borderColor: 'var(--border-color)' }}>
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
@@ -130,6 +134,26 @@ export default function GestionTareasFilters({
                         </select>
                     </div>
 
+                    {limit !== undefined && setLimit && (
+                        <div
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs shrink-0"
+                            style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
+                            title="Tareas por página"
+                        >
+                            <span className="text-[11px] opacity-60 font-semibold" style={{ color: 'var(--text-secondary)' }}>Filas:</span>
+                            <select
+                                value={limit}
+                                onChange={(e) => setLimit(Number(e.target.value))}
+                                className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
+                                style={{ color: 'var(--text-primary)' }}
+                            >
+                                <option value={10}>10</option>
+                                <option value={25}>25</option>
+                                <option value={50}>50</option>
+                            </select>
+                        </div>
+                    )}
+
                     {hasActiveFilters && (
                         <button
                             type="button"
@@ -147,7 +171,13 @@ export default function GestionTareasFilters({
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
                 <span>
-                    Mostrando <strong style={{ color: 'var(--text-primary)' }}>{itemsCount}</strong> de <strong style={{ color: 'var(--text-primary)' }}>{totalTasksCount}</strong> tareas encontradas
+                    {totalTasksCount === 0 ? (
+                        <span>No se encontraron tareas registradas</span>
+                    ) : (
+                        <>
+                            Mostrando <strong style={{ color: 'var(--text-primary)' }}>{startItem} - {endItem}</strong> de <strong style={{ color: 'var(--text-primary)' }}>{totalTasksCount}</strong> tareas encontradas
+                        </>
+                    )}
                 </span>
                 {hasActiveFilters && (
                     <span className="italic text-blue-600 dark:text-blue-400">
@@ -177,5 +207,7 @@ GestionTareasFilters.propTypes = {
     hasActiveFilters: PropTypes.bool,
     handleClearFilters: PropTypes.func.isRequired,
     totalTasksCount: PropTypes.number.isRequired,
-    itemsCount: PropTypes.number.isRequired
+    limit: PropTypes.number,
+    setLimit: PropTypes.func,
+    currentPage: PropTypes.number
 };

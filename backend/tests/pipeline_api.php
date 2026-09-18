@@ -321,6 +321,40 @@ try {
         return true;
     });
 
+    $pipeline->assert("GET /movimientos?modulo=usuarios filters only user audit items", function() use ($pipeline, $adminToken) {
+        $res = $pipeline->request('GET', '/movimientos?modulo=usuarios&limit=10&page=1', null, $adminToken);
+        if ($res['status'] !== 200) {
+            return "Expected HTTP status 200, got " . $res['status'];
+        }
+        $data = $res['body']['data'] ?? [];
+        $items = $data['items'] ?? [];
+        $meta = $data['meta'] ?? [];
+        if (($meta['total'] ?? 0) === 0) {
+            return "Expected user audit records, got 0";
+        }
+        foreach ($items as $item) {
+            if (($item['modulo'] ?? '') !== 'usuarios') {
+                return "Item has unexpected modulo: " . ($item['modulo'] ?? 'null');
+            }
+        }
+        return true;
+    });
+
+    $pipeline->assert("GET /movimientos?accion=ACTUALIZAR filters by action type", function() use ($pipeline, $adminToken) {
+        $res = $pipeline->request('GET', '/movimientos?accion=ACTUALIZAR&limit=10&page=1', null, $adminToken);
+        if ($res['status'] !== 200) {
+            return "Expected HTTP status 200, got " . $res['status'];
+        }
+        $data = $res['body']['data'] ?? [];
+        $items = $data['items'] ?? [];
+        foreach ($items as $item) {
+            if (($item['tipo_accion'] ?? '') !== 'ACTUALIZAR') {
+                return "Item has unexpected action: " . ($item['tipo_accion'] ?? 'null');
+            }
+        }
+        return true;
+    });
+
     // =========================================================================
     // STAGE 4: REPORTING & ROLE-BASED ACCESS CONTROL (RBAC)
     // =========================================================================

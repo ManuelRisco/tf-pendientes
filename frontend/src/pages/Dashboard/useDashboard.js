@@ -68,7 +68,9 @@ export function useDashboard() {
         let isMounted = true;
 
         if (user) {
-            fetchDashboard();
+            queueMicrotask(() => {
+                if (isMounted) fetchDashboard();
+            });
             
             const interval = setInterval(() => {
                 if (isMounted) {

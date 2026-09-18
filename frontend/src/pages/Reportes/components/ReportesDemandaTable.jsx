@@ -12,8 +12,14 @@ export default function ReportesDemandaTable({
     paginaUsuarios,
     setPaginaUsuarios,
     totalPagesUsuarios,
-    totalTicketsGeneral
+    totalTicketsGeneral,
+    itemsPorPaginaUsuarios,
+    setItemsPorPaginaUsuarios
 }) {
+    const pageSize = itemsPorPaginaUsuarios || 5;
+    const startUsuarios = filteredUsuarios.length === 0 ? 0 : (paginaUsuarios - 1) * pageSize + 1;
+    const endUsuarios = Math.min(paginaUsuarios * pageSize, filteredUsuarios.length);
+
     return (
         <div className="card-app p-0 overflow-hidden">
             <div className="p-4 sm:p-5 border-b flex flex-col md:flex-row md:items-center justify-between gap-3" style={{ borderColor: 'var(--border-color)' }}>
@@ -23,7 +29,7 @@ export default function ReportesDemandaTable({
                             Mapeo de Demanda por Solicitante
                         </h3>
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">
-                            {filteredUsuarios.length} {filteredUsuarios.length === 1 ? 'solicitante' : 'solicitantes'}
+                            Mostrando {filteredUsuarios.length === 0 ? 0 : `${startUsuarios} - ${endUsuarios}`} de {filteredUsuarios.length} {filteredUsuarios.length === 1 ? 'solicitante' : 'solicitantes'}
                         </span>
                     </div>
                     <p className="text-xs mt-1 mb-0 opacity-70" style={{ color: 'var(--text-secondary)' }}>
@@ -91,6 +97,26 @@ export default function ReportesDemandaTable({
                             </button>
                         )}
                     </div>
+
+                    {itemsPorPaginaUsuarios !== undefined && setItemsPorPaginaUsuarios && (
+                        <div
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs shrink-0"
+                            style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
+                            title="Filas por página"
+                        >
+                            <span className="text-[11px] opacity-60 font-semibold" style={{ color: 'var(--text-secondary)' }}>Filas:</span>
+                            <select
+                                value={itemsPorPaginaUsuarios}
+                                onChange={(e) => setItemsPorPaginaUsuarios(Number(e.target.value))}
+                                className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
+                                style={{ color: 'var(--text-primary)' }}
+                            >
+                                <option value={5}>5</option>
+                                <option value={10}>10</option>
+                                <option value={25}>25</option>
+                            </select>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -109,77 +135,85 @@ export default function ReportesDemandaTable({
                         {paginatedUsuarios.length > 0 ? (
                             paginatedUsuarios.map((u, idx) => {
                                 const inicial = (u.nombre_completo || u.email || 'U').charAt(0).toUpperCase();
+                                const pct = totalTicketsGeneral > 0 ? ((u.total_tickets / totalTicketsGeneral) * 100).toFixed(1) : 0;
+                                const resolucionPct = u.porcentaje_exito ?? (u.total_tickets > 0 ? Math.round(((u.resueltos || 0) / u.total_tickets) * 100) : 0);
+                                const tienePendientes = (u.pendientes || 0) > 0;
+
                                 return (
                                     <tr
                                         key={u.usuario_id || idx}
-                                        className="border-b transition-colors hover:bg-slate-100/50 dark:hover:bg-slate-800/60"
+                                        className="hover:bg-slate-500/5 transition-colors border-b"
                                         style={{ borderColor: 'var(--border-color)' }}
                                     >
                                         <td className="px-5 sm:px-6 py-3.5">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-blue-600/15 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center text-xs shrink-0 border border-blue-500/20">
+                                                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-xs shrink-0 border border-indigo-200 dark:border-indigo-800">
                                                     {inicial}
                                                 </div>
-                                                <div>
-                                                    <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                                                        {u.nombre_completo}
+                                                <div className="min-w-0">
+                                                    <div className="font-semibold text-xs sm:text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                                                        {u.nombre_completo || 'Usuario sin nombre'}
                                                     </div>
-                                                    <div className="text-[11px] opacity-70" style={{ color: 'var(--text-secondary)' }}>
+                                                    <div className="text-[11px] opacity-70 truncate" style={{ color: 'var(--text-secondary)' }}>
                                                         {u.email}
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-5 sm:px-6 py-3.5 text-center">
-                                            <span className="font-extrabold text-sm" style={{ color: 'var(--text-primary)' }}>
+                                            <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                                                 {u.total_tickets}
                                             </span>
-                                            <span className="text-[11px] block opacity-70" style={{ color: 'var(--text-secondary)' }}>
-                                                {totalTicketsGeneral > 0 ? `${((u.total_tickets / totalTicketsGeneral) * 100).toFixed(1)}% de la demanda` : '0%'}
+                                            <span className="text-[11px] opacity-60 block" style={{ color: 'var(--text-secondary)' }}>
+                                                {pct}% del total
                                             </span>
                                         </td>
                                         <td className="px-5 sm:px-6 py-3.5 text-center">
-                                            <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                                                    <i className="bi bi-check2"></i>
-                                                    {u.resueltos} resuelto{u.resueltos !== 1 ? 's' : ''}
+                                            <div className="inline-flex items-center gap-2">
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                                    {u.resueltos || 0} resueltos
                                                 </span>
-                                                {u.pendientes > 0 && (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
-                                                        <i className="bi bi-hourglass-split"></i>
-                                                        {u.pendientes} pendiente{u.pendientes !== 1 ? 's' : ''}
+                                                {tienePendientes && (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                                                        {u.pendientes} pendientes
                                                     </span>
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-5 sm:px-6 py-3.5 text-center min-w-[130px]">
-                                            <div className="inline-flex flex-col items-center">
-                                                <span className="font-bold text-xs" style={{ color: 'var(--text-primary)' }}>
-                                                    {u.porcentaje_exito}%
-                                                </span>
-                                                <div className="w-24 h-1.5 rounded-full overflow-hidden mt-1" style={{ backgroundColor: 'var(--border-color)' }}>
+                                        <td className="px-5 sm:px-6 py-3.5 text-center">
+                                            <div className="flex flex-col items-center gap-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
+                                                        {resolucionPct}%
+                                                    </span>
+                                                </div>
+                                                <div className="w-24 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                                                     <div
-                                                        className="h-full rounded-full bg-emerald-500"
-                                                        style={{ width: `${u.porcentaje_exito}%` }}
-                                                    ></div>
+                                                        className={`h-full rounded-full transition-all ${
+                                                            resolucionPct >= 80 ? 'bg-emerald-500' :
+                                                            resolucionPct >= 50 ? 'bg-blue-500' :
+                                                            resolucionPct >= 25 ? 'bg-amber-500' : 'bg-rose-500'
+                                                        }`}
+                                                        style={{ width: `${resolucionPct}%` }}
+                                                    />
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-5 sm:px-6 py-3.5 text-end font-medium" style={{ color: 'var(--text-secondary)' }}>
-                                            <div className="inline-flex items-center gap-1 text-xs">
-                                                <i className="bi bi-calendar3 opacity-70"></i>
-                                                <span>{formatDate(u.ultimo_ticket)}</span>
-                                            </div>
+                                        <td className="px-5 sm:px-6 py-3.5 text-end text-xs opacity-75" style={{ color: 'var(--text-secondary)' }}>
+                                            {u.ultimo_ticket ? formatDate(u.ultimo_ticket) : 'Sin fecha'}
                                         </td>
                                     </tr>
                                 );
                             })
                         ) : (
                             <tr>
-                                <td colSpan="5" className="px-6 py-10 text-center" style={{ color: 'var(--text-secondary)' }}>
-                                    <i className="bi bi-people text-3xl mb-2 opacity-40"></i>
-                                    <p className="font-semibold text-sm m-0">No se encontraron solicitantes</p>
-                                    <p className="text-xs mt-1 opacity-75">No hay requerimientos que coincidan con el criterio ingresado.</p>
+                                <td colSpan="5" className="px-6 py-12 text-center" style={{ color: 'var(--text-secondary)' }}>
+                                    <div className="flex flex-col items-center justify-center gap-2">
+                                        <i className="bi bi-person-x text-3xl opacity-40"></i>
+                                        <span className="text-xs font-medium">
+                                            {searchUsuario ? 'No se encontraron solicitantes que coincidan con la búsqueda.' : 'No hay datos de solicitantes en el período seleccionado.'}
+                                        </span>
+                                    </div>
                                 </td>
                             </tr>
                         )}
@@ -210,5 +244,7 @@ ReportesDemandaTable.propTypes = {
     paginaUsuarios: PropTypes.number.isRequired,
     setPaginaUsuarios: PropTypes.func.isRequired,
     totalPagesUsuarios: PropTypes.number.isRequired,
-    totalTicketsGeneral: PropTypes.number.isRequired
+    totalTicketsGeneral: PropTypes.number.isRequired,
+    itemsPorPaginaUsuarios: PropTypes.number,
+    setItemsPorPaginaUsuarios: PropTypes.func
 };

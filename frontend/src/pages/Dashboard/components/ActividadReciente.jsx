@@ -330,10 +330,6 @@ export default function ActividadReciente({ actividadReciente = [], isUpdating =
 
             {/* Pie de Actividad */}
             <div className={`pt-2 mt-1.5 border-t flex items-center justify-between text-[10px] ${isDarkMode ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'}`}>
-                <span className="flex items-center gap-1">
-                    <i className="bi bi-shield-check text-emerald-500 text-[10px]"></i>
-                    <span>Sincronizado</span>
-                </span>
                 <span>
                     <strong>{filteredList.length}</strong> de <strong>{actividadReciente.length}</strong> eventos
                 </span>

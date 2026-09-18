@@ -3,8 +3,9 @@ import PropTypes from 'prop-types';
 const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
     if (totalPages <= 1) return null;
 
+    const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
     const maxVisiblePages = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let startPage = Math.max(1, safeCurrentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage + 1 < maxVisiblePages) {
@@ -19,13 +20,13 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
     return (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
             <span className="text-xs order-2 sm:order-1" style={{ color: 'var(--text-secondary)' }}>
-                Página <strong style={{ color: 'var(--text-primary)' }}>{currentPage}</strong> de <strong style={{ color: 'var(--text-primary)' }}>{totalPages}</strong>
+                Página <strong style={{ color: 'var(--text-primary)' }}>{safeCurrentPage}</strong> de <strong style={{ color: 'var(--text-primary)' }}>{totalPages}</strong>
             </span>
 
             <div className="flex items-center gap-1 sm:gap-1.5 order-1 sm:order-2 flex-wrap justify-center">
                 {/* Primera página */}
                 <button
-                    disabled={currentPage === 1}
+                    disabled={safeCurrentPage === 1}
                     onClick={() => onPageChange(1)}
                     className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-all shrink-0 cursor-pointer active:scale-95 disabled:active:scale-100"
                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
@@ -37,8 +38,8 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
 
                 {/* Anterior */}
                 <button
-                    disabled={currentPage === 1}
-                    onClick={() => onPageChange(currentPage - 1)}
+                    disabled={safeCurrentPage === 1}
+                    onClick={() => onPageChange(safeCurrentPage - 1)}
                     className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-all shrink-0 cursor-pointer active:scale-95 disabled:active:scale-100"
                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
                     title="Página anterior"
@@ -53,7 +54,7 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
 
                 {/* Páginas */}
                 {pages.map((p) => {
-                    const isActive = p === currentPage;
+                    const isActive = p === safeCurrentPage;
                     return (
                         <button
                             key={p}
@@ -80,8 +81,8 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
 
                 {/* Siguiente */}
                 <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => onPageChange(currentPage + 1)}
+                    disabled={safeCurrentPage === totalPages}
+                    onClick={() => onPageChange(safeCurrentPage + 1)}
                     className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-all shrink-0 cursor-pointer active:scale-95 disabled:active:scale-100"
                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
                     title="Página siguiente"
@@ -92,7 +93,7 @@ const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
 
                 {/* Última página */}
                 <button
-                    disabled={currentPage === totalPages}
+                    disabled={safeCurrentPage === totalPages}
                     onClick={() => onPageChange(totalPages)}
                     className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-500/10 transition-all shrink-0 cursor-pointer active:scale-95 disabled:active:scale-100"
                     style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}

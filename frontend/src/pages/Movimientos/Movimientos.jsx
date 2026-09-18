@@ -81,8 +81,8 @@ export default function Movimientos() {
                             <MovimientosFilters
                                 {...movHook}
                                 isAdmin={isAdmin}
-                                totalFiltrados={movimientosFiltrados.length}
-                                totalRegistros={metrics.total}
+                                totalRegistros={movHook.totalRegistros}
+                                totalGeneral={metrics.total}
                             />
 
                             <MovimientosTable

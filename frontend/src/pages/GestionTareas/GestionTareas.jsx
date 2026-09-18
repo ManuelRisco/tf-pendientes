@@ -47,7 +47,7 @@ export default function GestionTareas() {
 
                         {/* Listado principal */}
                         <div className="card-app p-4 sm:p-6">
-                            <GestionTareasFilters {...taskState} isAdmin={isAdmin} itemsCount={taskState.items.length} />
+                            <GestionTareasFilters {...taskState} isAdmin={isAdmin} />
                             <GestionTareasTable {...taskState} isAdmin={isAdmin} user={user} />
                         </div>
 

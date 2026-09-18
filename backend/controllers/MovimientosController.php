@@ -30,21 +30,32 @@ class MovimientosController {
             }
         }
 
+        $filters = [
+            'modulo' => !empty($_GET['modulo']) ? trim((string)$_GET['modulo']) : null,
+            'accion' => !empty($_GET['accion']) ? trim((string)$_GET['accion']) : null,
+            'search' => !empty($_GET['search']) ? trim((string)$_GET['search']) : null,
+        ];
+
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
         $limit = isset($_GET['limit']) ? max(1, (int)$_GET['limit']) : 10;
         $offset = ($page - 1) * $limit;
 
-        $items = $this->model->getMovimientos($limit, $offset, $usuarioId, $excluirUsuarioId);
-        $total = $this->model->countMovimientos($usuarioId, $excluirUsuarioId);
+        $items = $this->model->getMovimientos($limit, $offset, $usuarioId, $excluirUsuarioId, $filters);
+        $total = $this->model->countMovimientos($usuarioId, $excluirUsuarioId, $filters);
         $totalPages = max(1, ceil($total / $limit));
+
+        $metrics = $this->model->getMovimientosMetrics($usuarioId, $excluirUsuarioId);
+        $acciones = $this->model->getTiposAcciones();
 
         Response::success([
             'items' => $items,
             'meta' => [
-                'total' => $total,
-                'page' => $page,
-                'limit' => $limit,
-                'totalPages' => $totalPages
+                'total'      => $total,
+                'page'       => $page,
+                'limit'      => $limit,
+                'totalPages' => $totalPages,
+                'metrics'    => $metrics,
+                'acciones'   => $acciones
             ]
         ]);
     }

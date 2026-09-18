@@ -269,6 +269,7 @@ export default function TaskViewModal({
                                             <label className="text-xs font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5 m-0">
                                                 <i className="bi bi-chat-left-dots-fill text-emerald-600"></i>
                                                 <span>Nueva respuesta</span>
+                                                <span className="text-[11px] font-normal opacity-70">(Opcional)</span>
                                             </label>
                                         </div>
 
@@ -276,11 +277,10 @@ export default function TaskViewModal({
                                             as="textarea"
                                             rows={3}
                                             ref={responseInputRef}
-                                            placeholder="Escribe una respuesta o solución para este ticket..."
+                                            placeholder="Escribe una respuesta o solución para este ticket (opcional)..."
                                             value={responseText}
                                             onChange={(e) => setResponseText(e.target.value)}
                                             className="text-xs sm:text-sm border-emerald-300 dark:border-emerald-800 focus:border-emerald-500"
-                                            required
                                         />
 
                                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
@@ -307,8 +307,8 @@ export default function TaskViewModal({
                                                 className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
                                             >
                                                 {savingResponse && <div className="spinner-border spinner-border-sm" role="status"></div>}
-                                                <i className="bi bi-send-fill"></i>
-                                                <span>Guardar respuesta</span>
+                                                <i className={responseText.trim() ? "bi bi-send-fill" : "bi bi-check2-circle"}></i>
+                                                <span>{responseText.trim() ? 'Guardar respuesta' : 'Actualizar ticket'}</span>
                                             </button>
                                         </div>
                                     </Form>

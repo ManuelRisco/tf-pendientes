@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import api from "../../lib/axios";
 import { useAuth } from "../../context/AuthContext";
-import { getTodayISO } from "../../lib/dateUtils";
 import { exportarMovimientosExcel } from "../../lib/excelExportHelper";
 
 export function useMovimientos() {
@@ -18,6 +17,7 @@ export function useMovimientos() {
     const [filtroAccion, setFiltroAccion] = useState('');
     const [filtroModulo, setFiltroModulo] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
     // Modal de detalle de auditoría
     const [selectedMovimiento, setSelectedMovimiento] = useState(null);
@@ -27,65 +27,33 @@ export function useMovimientos() {
     const [totalPages, setTotalPages] = useState(1);
     const [limit, setLimit] = useState(10);
 
-    const accionesUnicas = useMemo(() => {
-        const actions = (Array.isArray(movimientos) ? movimientos : []).map(m => m.tipo_accion).filter(Boolean);
-        return [...new Set(actions)];
-    }, [movimientos]);
+    const [accionesUnicas, setAccionesUnicas] = useState(['CREAR', 'ACTUALIZAR', 'ELIMINAR_LOGICO', 'RESTAURAR']);
+    const modulosUnicos = useMemo(() => ['tareas', 'usuarios'], []);
 
-    const modulosUnicos = useMemo(() => {
-        const mods = (Array.isArray(movimientos) ? movimientos : []).map(m => m.modulo).filter(Boolean);
-        return [...new Set(mods)];
-    }, [movimientos]);
+    const [serverMetrics, setServerMetrics] = useState({
+        total: 0,
+        tareas: 0,
+        usuarios: 0,
+        hoy: 0
+    });
 
-    // Filtrado interactivo en tiempo real
+    // Debounce para el buscador de texto / #ID
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Movimientos actuales ya filtrados y paginados desde el servidor
     const movimientosFiltrados = useMemo(() => {
-        return (Array.isArray(movimientos) ? movimientos : []).filter(mov => {
-            const matchAccion = filtroAccion === '' || mov.tipo_accion === filtroAccion;
-            const matchModulo = filtroModulo === '' || mov.modulo === filtroModulo;
+        return Array.isArray(movimientos) ? movimientos : [];
+    }, [movimientos]);
 
-            if (!matchAccion || !matchModulo) return false;
-
-            if (searchQuery.trim()) {
-                const q = searchQuery.toLowerCase().trim();
-                const cleanId = q.replace(/^[#\s]*(?:id\s*[:\s]*)?/i, '').trim();
-                const isIdSearch = cleanId !== '' && !isNaN(cleanId);
-
-                const userName = `${mov.persona_nombre || ''} ${mov.persona_apellido || ''}`.toLowerCase();
-                const email = (mov.email || '').toLowerCase();
-                const accion = (mov.tipo_accion || '').toLowerCase();
-                const modulo = (mov.modulo || '').toLowerCase();
-                const idStr = String(mov.id || '');
-                const regIdStr = String(mov.registro_id || '');
-                const title = (mov.detalles?.nuevo?.titulo || mov.detalles?.anterior?.titulo || '').toLowerCase();
-                const emailTarget = (mov.detalles?.nuevo?.email || mov.detalles?.anterior?.email || '').toLowerCase();
-
-                const matchId = isIdSearch && (idStr === cleanId || regIdStr === cleanId);
-
-                return matchId ||
-                    userName.includes(q) ||
-                    email.includes(q) ||
-                    accion.includes(q) ||
-                    modulo.includes(q) ||
-                    idStr.includes(q) ||
-                    regIdStr.includes(q) ||
-                    title.includes(q) ||
-                    emailTarget.includes(q);
-            }
-
-            return true;
-        });
-    }, [movimientos, filtroAccion, filtroModulo, searchQuery]);
-
-    // Métricas KPI
+    // Métricas KPI reales desde el servidor
     const metrics = useMemo(() => {
-        const items = Array.isArray(movimientos) ? movimientos : [];
-        const total = totalRegistros || items.length;
-        const tareas = items.filter(m => m.modulo === 'tareas').length;
-        const usuarios = items.filter(m => m.modulo === 'usuarios').length;
-        const todayIso = getTodayISO();
-        const hoy = items.filter(m => (m.created_at || '').startsWith(todayIso)).length;
-        return { total, tareas, usuarios, hoy };
-    }, [movimientos, totalRegistros]);
+        return serverMetrics;
+    }, [serverMetrics]);
 
     const setFiltroAlcanceAndResetPage = (val) => {
         setFiltroAlcance(val);
@@ -94,6 +62,21 @@ export function useMovimientos() {
 
     const setFiltroUsuarioIdAndResetPage = (val) => {
         setFiltroUsuarioId(val);
+        setCurrentPage(1);
+    };
+
+    const setFiltroModuloAndResetPage = (val) => {
+        setFiltroModulo(val);
+        setCurrentPage(1);
+    };
+
+    const setFiltroAccionAndResetPage = (val) => {
+        setFiltroAccion(val);
+        setCurrentPage(1);
+    };
+
+    const handleSearchQueryChange = (val) => {
+        setSearchQuery(val);
         setCurrentPage(1);
     };
 
@@ -106,8 +89,19 @@ export function useMovimientos() {
         const fetchMovimientos = async () => {
             setLoading(true);
             try {
+                let url = `/movimientos?page=${currentPage}&limit=${limit}&scope=${filtroAlcance}&usuario_id=${filtroUsuarioId}`;
+                if (filtroModulo) {
+                    url += `&modulo=${encodeURIComponent(filtroModulo)}`;
+                }
+                if (filtroAccion) {
+                    url += `&accion=${encodeURIComponent(filtroAccion)}`;
+                }
+                if (debouncedSearchQuery.trim()) {
+                    url += `&search=${encodeURIComponent(debouncedSearchQuery.trim())}`;
+                }
+
                 const promises = [
-                    api.get(`/movimientos?page=${currentPage}&limit=${limit}&scope=${filtroAlcance}&usuario_id=${filtroUsuarioId}`)
+                    api.get(url)
                 ];
 
                 if (user && Number(user.rol_id) === 1 && usuariosList.length === 0) {
@@ -120,8 +114,15 @@ export function useMovimientos() {
                 const meta = res.data.data?.meta || {};
 
                 setMovimientos(items);
-                setTotalRegistros(meta.total || items.length);
+                setTotalRegistros(meta.total ?? items.length);
                 setTotalPages(meta.totalPages || 1);
+
+                if (meta.metrics) {
+                    setServerMetrics(meta.metrics);
+                }
+                if (Array.isArray(meta.acciones) && meta.acciones.length > 0) {
+                    setAccionesUnicas(meta.acciones);
+                }
 
                 if (results[1] && results[1].data.success) {
                     const uData = results[1].data.data;
@@ -140,7 +141,7 @@ export function useMovimientos() {
         if (user) {
             fetchMovimientos();
         }
-    }, [currentPage, user, filtroAlcance, filtroUsuarioId, limit, usuariosList.length]);
+    }, [currentPage, user, filtroAlcance, filtroUsuarioId, limit, filtroModulo, filtroAccion, debouncedSearchQuery, usuariosList.length]);
 
     const getActionText = (mov) => {
         const isUser = mov.modulo === 'usuarios';
@@ -167,46 +168,26 @@ export function useMovimientos() {
 
     // Exportación avanzada a Excel (.xlsx) estandarizada idéntica a Reportes
     const handleExportExcel = async () => {
-        if (movimientosFiltrados.length === 0 || isExporting) return;
+        if (totalRegistros === 0 || isExporting) return;
         setIsExporting(true);
         try {
-            let dataToExport = movimientosFiltrados;
+            let dataToExport = movimientos;
 
             // Si hay más registros en la base de datos que los cargados en la página actual,
-            // obtenemos la lista completa para que el archivo Excel contenga todos los movimientos
+            // obtenemos la lista completa filtrada desde el servidor
             if (totalRegistros > movimientos.length) {
                 try {
-                    const res = await api.get(`/movimientos?page=1&limit=5000&scope=${filtroAlcance}&usuario_id=${filtroUsuarioId}`);
+                    let exportUrl = `/movimientos?page=1&limit=5000&scope=${filtroAlcance}&usuario_id=${filtroUsuarioId}`;
+                    if (filtroModulo) exportUrl += `&modulo=${encodeURIComponent(filtroModulo)}`;
+                    if (filtroAccion) exportUrl += `&accion=${encodeURIComponent(filtroAccion)}`;
+                    if (debouncedSearchQuery.trim()) exportUrl += `&search=${encodeURIComponent(debouncedSearchQuery.trim())}`;
+
+                    const res = await api.get(exportUrl);
                     const allItems = Array.isArray(res.data.data) ? res.data.data : (res.data.data?.items || []);
-
-                    // Aplicamos los filtros activos en cliente sobre el lote completo
-                    dataToExport = allItems.filter(mov => {
-                        const matchAccion = filtroAccion === '' || mov.tipo_accion === filtroAccion;
-                        const matchModulo = filtroModulo === '' || mov.modulo === filtroModulo;
-                        if (!matchAccion || !matchModulo) return false;
-
-                        if (searchQuery.trim()) {
-                            const q = searchQuery.toLowerCase().trim();
-                            const cleanId = q.replace(/^[#\s]*(?:id\s*[:\s]*)?/i, '').trim();
-                            const isIdSearch = cleanId !== '' && !isNaN(cleanId);
-
-                            const userName = `${mov.persona_nombre || ''} ${mov.persona_apellido || ''}`.toLowerCase();
-                            const email = (mov.email || '').toLowerCase();
-                            const accion = (mov.tipo_accion || '').toLowerCase();
-                            const modulo = (mov.modulo || '').toLowerCase();
-                            const idStr = String(mov.id || '');
-                            const regIdStr = String(mov.registro_id || '');
-                            const title = (mov.detalles?.nuevo?.titulo || mov.detalles?.anterior?.titulo || '').toLowerCase();
-                            const emailTarget = (mov.detalles?.nuevo?.email || mov.detalles?.anterior?.email || '').toLowerCase();
-
-                            const matchId = isIdSearch && (idStr === cleanId || regIdStr === cleanId);
-                            return matchId || userName.includes(q) || email.includes(q) || accion.includes(q) || modulo.includes(q) || idStr.includes(q) || regIdStr.includes(q) || title.includes(q) || emailTarget.includes(q);
-                        }
-                        return true;
-                    });
+                    dataToExport = allItems;
                 } catch (fetchErr) {
                     console.warn("No se pudo obtener el lote completo para exportación, usando página actual:", fetchErr);
-                    dataToExport = movimientosFiltrados;
+                    dataToExport = movimientos;
                 }
             }
 
@@ -217,7 +198,7 @@ export function useMovimientos() {
                     filtroAlcance,
                     filtroModulo,
                     filtroAccion,
-                    searchQuery
+                    searchQuery: debouncedSearchQuery
                 },
                 user
             });
@@ -228,17 +209,13 @@ export function useMovimientos() {
         }
     };
 
-    const setFiltroModuloAndResetPage = (val) => {
-        setFiltroModulo(val);
-        setCurrentPage(1);
-    };
-
     const handleClearFilters = () => {
         setFiltroAlcance('todos');
         setFiltroAccion('');
         setFiltroModulo('');
         setFiltroUsuarioId('');
         setSearchQuery('');
+        setDebouncedSearchQuery('');
         setCurrentPage(1);
     };
 
@@ -253,11 +230,11 @@ export function useMovimientos() {
         setFiltroUsuarioId: setFiltroUsuarioIdAndResetPage,
         usuariosList,
         filtroAccion,
-        setFiltroAccion,
+        setFiltroAccion: setFiltroAccionAndResetPage,
         filtroModulo,
         setFiltroModulo: setFiltroModuloAndResetPage,
         searchQuery,
-        setSearchQuery,
+        setSearchQuery: handleSearchQueryChange,
         selectedMovimiento,
         setSelectedMovimiento,
         currentPage,
@@ -278,4 +255,5 @@ export function useMovimientos() {
         hasActiveFilters
     };
 }
+
 

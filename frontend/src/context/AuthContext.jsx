@@ -30,9 +30,23 @@ export const AuthProvider = ({ children }) => {
     };
 
     useEffect(() => {
+        let isMounted = true;
         if (localStorage.getItem('token')) {
-            checkAuth();
+            api.get('/auth/me')
+                .then(res => {
+                    if (isMounted) setUser(res.data.data);
+                })
+                .catch(() => {
+                    localStorage.removeItem('token');
+                    if (isMounted) setUser(null);
+                })
+                .finally(() => {
+                    if (isMounted) setLoading(false);
+                });
         }
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     // Polling en tiempo real: verificar cada 5 segundos si el usuario sigue activo
@@ -85,4 +99,5 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext);

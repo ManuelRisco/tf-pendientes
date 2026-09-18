@@ -6,7 +6,7 @@ import UsuariosModal from './components/UsuariosModal';
 
 export default function Usuarios() {
     const userHook = useUsuarios();
-    const { user, usuarios, totalCount, handleCreateClick } = userHook;
+    const { user, totalCount, handleCreateClick } = userHook;
     const isAdmin = Number(user?.rol_id) === 1;
 
     return (
@@ -38,7 +38,6 @@ export default function Usuarios() {
 
                             <UsuariosFilters
                                 {...userHook}
-                                totalFiltrados={usuarios.length}
                                 totalCount={totalCount}
                             />
 

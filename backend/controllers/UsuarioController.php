@@ -28,7 +28,7 @@ class UsuarioController {
 
         $items = $this->model->getAll($filters, $limit, $offset);
         $total = $this->model->countAll($filters);
-        $totalPages = ceil($total / $limit);
+        $totalPages = max(1, (int)ceil($total / $limit));
 
         Response::success([
             'items' => $items,

@@ -10,9 +10,13 @@ export default function UsuariosFilters({
     roles,
     hasActiveFilters,
     handleClearFilters,
-    totalFiltrados,
-    totalCount
+    totalCount,
+    limit,
+    setLimit,
+    currentPage = 1
 }) {
+    const startItem = totalCount === 0 ? 0 : (currentPage - 1) * limit + 1;
+    const endItem = Math.min(currentPage * limit, totalCount);
     return (
         <div
             className="rounded-2xl p-3 sm:p-4 mb-5 sm:mb-6 border"
@@ -95,8 +99,34 @@ export default function UsuariosFilters({
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-3 pt-3 border-t text-xs" style={{ borderColor: 'var(--border-color)' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>
-                    Mostrando <strong style={{ color: 'var(--text-primary)' }}>{totalFiltrados}</strong> de <strong style={{ color: 'var(--text-primary)' }}>{totalCount}</strong> usuarios
+                    {totalCount === 0 ? (
+                        <span>No se encontraron usuarios</span>
+                    ) : (
+                        <>
+                            Mostrando <strong style={{ color: 'var(--text-primary)' }}>{startItem} - {endItem}</strong> de <strong style={{ color: 'var(--text-primary)' }}>{totalCount}</strong> usuarios
+                        </>
+                    )}
                 </span>
+
+                {limit !== undefined && setLimit && (
+                    <div
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-xl border shadow-xs shrink-0 self-start sm:self-auto"
+                        style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
+                        title="Usuarios por página"
+                    >
+                        <span className="text-[11px] opacity-60 font-semibold" style={{ color: 'var(--text-secondary)' }}>Filas:</span>
+                        <select
+                            value={limit}
+                            onChange={(e) => setLimit(Number(e.target.value))}
+                            className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
+                            style={{ color: 'var(--text-primary)' }}
+                        >
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                        </select>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -112,6 +142,8 @@ UsuariosFilters.propTypes = {
     roles: PropTypes.array.isRequired,
     hasActiveFilters: PropTypes.bool,
     handleClearFilters: PropTypes.func.isRequired,
-    totalFiltrados: PropTypes.number.isRequired,
-    totalCount: PropTypes.number.isRequired
+    totalCount: PropTypes.number.isRequired,
+    limit: PropTypes.number,
+    setLimit: PropTypes.func,
+    currentPage: PropTypes.number
 };

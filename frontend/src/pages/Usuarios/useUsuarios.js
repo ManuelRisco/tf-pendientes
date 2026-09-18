@@ -23,7 +23,12 @@ export function useUsuarios() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
-    const limit = 10;
+    const [limit, setLimit] = useState(10);
+
+    const setLimitAndResetPage = (val) => {
+        setLimit(val);
+        setCurrentPage(1);
+    };
 
     // Modal
     const [showModal, setShowModal] = useState(false);
@@ -110,7 +115,8 @@ export function useUsuarios() {
     const prevFiltersRef = useRef({
         debouncedSearch,
         filtroEstado,
-        filtroRol
+        filtroRol,
+        limit
     });
 
     useEffect(() => {
@@ -118,13 +124,15 @@ export function useUsuarios() {
         const filtersChanged = (
             prev.debouncedSearch !== debouncedSearch ||
             prev.filtroEstado !== filtroEstado ||
-            prev.filtroRol !== filtroRol
+            prev.filtroRol !== filtroRol ||
+            prev.limit !== limit
         );
 
         prevFiltersRef.current = {
             debouncedSearch,
             filtroEstado,
-            filtroRol
+            filtroRol,
+            limit
         };
 
         if (filtersChanged && currentPage !== 1) {
@@ -133,7 +141,7 @@ export function useUsuarios() {
         }
 
         fetchUsuarios();
-    }, [currentPage, debouncedSearch, filtroEstado, filtroRol, fetchUsuarios]);
+    }, [currentPage, debouncedSearch, filtroEstado, filtroRol, limit, fetchUsuarios]);
 
     const handleClearFilters = () => {
         setSearch('');
@@ -306,6 +314,8 @@ export function useUsuarios() {
         setCurrentPage,
         totalPages,
         totalCount,
+        limit,
+        setLimit: setLimitAndResetPage,
         showModal,
         editId,
         formData,

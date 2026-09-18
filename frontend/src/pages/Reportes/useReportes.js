@@ -25,13 +25,23 @@ export function useReportes() {
     const [filtroPrioridadCriticos, setFiltroPrioridadCriticos] = useState('todas');
     const [filtroEstadoCriticos, setFiltroEstadoCriticos] = useState('todos');
     const [paginaCriticos, setPaginaCriticos] = useState(1);
-    const itemsPorPaginaCriticos = 5;
+    const [itemsPorPaginaCriticos, setItemsPorPaginaCriticos] = useState(5);
 
     // Filtro y paginación para Demanda por Solicitante
     const [searchUsuario, setSearchUsuario] = useState('');
     const [tipoBusquedaUsuario, setTipoBusquedaUsuario] = useState('todos'); // 'todos', 'nombre', 'email'
     const [paginaUsuarios, setPaginaUsuarios] = useState(1);
-    const itemsPorPaginaUsuarios = 5;
+    const [itemsPorPaginaUsuarios, setItemsPorPaginaUsuarios] = useState(5);
+
+    const setLimitCriticosAndResetPage = (val) => {
+        setItemsPorPaginaCriticos(val);
+        setPaginaCriticos(1);
+    };
+
+    const setLimitUsuariosAndResetPage = (val) => {
+        setItemsPorPaginaUsuarios(val);
+        setPaginaUsuarios(1);
+    };
 
     const cargarReportes = useCallback(async () => {
         if (fechaInicio > fechaFin) {
@@ -60,7 +70,9 @@ export function useReportes() {
     }, [fechaInicio, fechaFin]);
 
     useEffect(() => {
-        cargarReportes();
+        queueMicrotask(() => {
+            cargarReportes();
+        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -362,9 +374,13 @@ export function useReportes() {
         filteredCriticos,
         totalPagesCriticos,
         paginatedCriticos,
+        itemsPorPaginaCriticos,
+        setItemsPorPaginaCriticos: setLimitCriticosAndResetPage,
         filteredUsuarios,
         totalPagesUsuarios,
         paginatedUsuarios,
+        itemsPorPaginaUsuarios,
+        setItemsPorPaginaUsuarios: setLimitUsuariosAndResetPage,
         dataEstados,
         dataPrioridades,
         criticosPendientes,

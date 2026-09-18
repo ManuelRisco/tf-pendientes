@@ -55,7 +55,12 @@ export function useGestionTareas() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalTasksCount, setTotalTasksCount] = useState(0);
-    const limit = 10;
+    const [limit, setLimit] = useState(10);
+
+    const setLimitAndResetPage = (val) => {
+        setLimit(val);
+        setCurrentPage(1);
+    };
 
     // Búsqueda con debounce
     useEffect(() => {
@@ -109,7 +114,8 @@ export function useGestionTareas() {
         filtroAlcance,
         filtroUsuarioId,
         filtroAtencion,
-        debouncedSearch
+        debouncedSearch,
+        limit
     });
 
     useEffect(() => {
@@ -120,7 +126,8 @@ export function useGestionTareas() {
             prev.filtroAlcance !== filtroAlcance ||
             prev.filtroUsuarioId !== filtroUsuarioId ||
             prev.filtroAtencion !== filtroAtencion ||
-            prev.debouncedSearch !== debouncedSearch
+            prev.debouncedSearch !== debouncedSearch ||
+            prev.limit !== limit
         );
 
         prevFiltersRef.current = {
@@ -129,7 +136,8 @@ export function useGestionTareas() {
             filtroAlcance,
             filtroUsuarioId,
             filtroAtencion,
-            debouncedSearch
+            debouncedSearch,
+            limit
         };
 
         if (filtersChanged && currentPage !== 1) {
@@ -139,7 +147,7 @@ export function useGestionTareas() {
 
         fetchTareas();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage, filtroEstado, filtroPrioridad, filtroAlcance, filtroUsuarioId, filtroAtencion, debouncedSearch]);
+    }, [currentPage, filtroEstado, filtroPrioridad, filtroAlcance, filtroUsuarioId, filtroAtencion, debouncedSearch, limit]);
 
     const handleClearFilters = () => {
         setSearchQuery('');
@@ -567,11 +575,18 @@ export function useGestionTareas() {
         if (e) e.preventDefault();
         if (!viewItem) return;
 
-        if (!responseText.trim()) {
+        const trimmedResponse = responseText.trim();
+        const currentStatus = Number(viewItem.estado_id || 1);
+        const newStatus = responseStatusId ? Number(responseStatusId) : currentStatus;
+
+        const hasStatusChange = newStatus !== currentStatus;
+        const hasNewResponse = Boolean(trimmedResponse);
+
+        if (!hasStatusChange && !hasNewResponse) {
             Swal.fire({
-                icon: 'warning',
-                title: 'Respuesta vacía',
-                text: 'Por favor escribe una respuesta para el ticket.',
+                icon: 'info',
+                title: 'Sin cambios',
+                text: 'No has modificado el estado ni ingresado una respuesta.',
                 confirmButtonColor: '#3b82f6'
             });
             return;
@@ -579,12 +594,14 @@ export function useGestionTareas() {
 
         try {
             setSavingResponse(true);
-            const payload = {
-                respuesta_admin: responseText.trim(),
-            };
-            if (responseStatusId) {
-                payload.estado_id = Number(responseStatusId);
+            const payload = {};
+            if (hasNewResponse) {
+                payload.respuesta_admin = trimmedResponse;
             }
+            if (hasStatusChange) {
+                payload.estado_id = newStatus;
+            }
+
             await api.put(`/tareas/${viewItem.id}`, payload);
 
             // Recargar datos actualizados del ticket
@@ -602,13 +619,15 @@ export function useGestionTareas() {
             fetchTareas();
             Swal.fire({
                 icon: 'success',
-                title: 'Respuesta guardada',
-                text: 'La respuesta se agregó correctamente.',
+                title: hasNewResponse ? 'Respuesta guardada' : 'Estado actualizado',
+                text: hasNewResponse
+                    ? (hasStatusChange ? 'Se guardó la respuesta y se actualizó el estado.' : 'La respuesta se agregó correctamente.')
+                    : 'El estado del ticket se actualizó correctamente.',
                 timer: 1500,
                 showConfirmButton: false
             });
         } catch (error) {
-            const errorMsg = error.response?.data?.message || 'No se pudo guardar la respuesta';
+            const errorMsg = error.response?.data?.message || 'No se pudo guardar la actualización';
             Swal.fire('Error', errorMsg, 'error');
         } finally {
             setSavingResponse(false);
@@ -667,6 +686,8 @@ export function useGestionTareas() {
         setCurrentPage,
         totalPages,
         totalTasksCount,
+        limit,
+        setLimit: setLimitAndResetPage,
         handleSubmit,
         resetForm,
         handleChangeStatus,
