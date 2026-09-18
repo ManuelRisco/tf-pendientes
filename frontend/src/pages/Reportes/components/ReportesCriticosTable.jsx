@@ -97,7 +97,7 @@ export default function ReportesCriticosTable({
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-h-[260px]">
                 <table className="w-full text-xs sm:text-sm text-left">
                     <thead className="text-xs font-semibold uppercase tracking-wider" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>
                         <tr>

@@ -49,20 +49,20 @@ function Layout({ children }) {
 
     return (
         <div className="flex h-screen w-full overflow-hidden transition-colors duration-300" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-            {/* Mobile Backdrop */}
-            {isSidebarOpen && isMobile && (
-                <div 
-                    className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden transition-opacity duration-300"
-                    onClick={() => setIsSidebarOpen(false)}
-                    aria-hidden="true"
-                ></div>
-            )}
+            {/* Mobile Backdrop con transición suave */}
+            <div 
+                className={`fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden backdrop-animated ${
+                    isSidebarOpen && isMobile ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                }`}
+                onClick={() => setIsSidebarOpen(false)}
+                aria-hidden="true"
+            />
             
             {/* Sidebar Fijo Independiente */}
             <Sidebar isOpen={isSidebarOpen} onOpenProfile={() => setIsProfileModalOpen(true)} />
 
-            {/* Contenedor Principal Derecho con Scroll Independiente */}
-            <div className={`flex-1 flex flex-col h-screen overflow-y-auto min-w-0 transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'ml-0'}`}>
+            {/* Contenedor Principal Derecho con Scroll Independiente y Animación Fluida */}
+            <div className={`main-content-animated flex-1 flex flex-col h-screen overflow-y-auto min-w-0 ${isSidebarOpen ? 'md:ml-64' : 'ml-0'}`}>
                 <TopBar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
                 <main className="flex-1 p-3 sm:p-5 lg:p-6 max-w-full">
                     {children}

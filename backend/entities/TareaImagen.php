@@ -13,7 +13,7 @@ class TareaImagen extends Model {
         'peso_bytes'
     ];
 
-    public $timestamps = false; // Solo tiene created_at por defecto en BD
+    public $timestamps = false; 
 
     public function tarea() {
         return $this->belongsTo(Tarea::class, 'tarea_id');

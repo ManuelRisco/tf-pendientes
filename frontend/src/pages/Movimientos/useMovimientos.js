@@ -1,13 +1,15 @@
 import { useEffect, useState, useMemo } from "react";
 import api from "../../lib/axios";
 import { useAuth } from "../../context/AuthContext";
-import { formatDateTime, getTodayISO } from "../../lib/dateUtils";
+import { getTodayISO } from "../../lib/dateUtils";
+import { exportarMovimientosExcel } from "../../lib/excelExportHelper";
 
 export function useMovimientos() {
     const { user } = useAuth();
     const [movimientos, setMovimientos] = useState([]);
     const [totalRegistros, setTotalRegistros] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [isExporting, setIsExporting] = useState(false);
 
     const [filtroAlcance, setFiltroAlcance] = useState('todos'); // 'todos', 'mis_movimientos', 'otros', 'usuario_especifico'
     const [filtroUsuarioId, setFiltroUsuarioId] = useState('');
@@ -45,6 +47,9 @@ export function useMovimientos() {
 
             if (searchQuery.trim()) {
                 const q = searchQuery.toLowerCase().trim();
+                const cleanId = q.replace(/^[#\s]*(?:id\s*[:\s]*)?/i, '').trim();
+                const isIdSearch = cleanId !== '' && !isNaN(cleanId);
+
                 const userName = `${mov.persona_nombre || ''} ${mov.persona_apellido || ''}`.toLowerCase();
                 const email = (mov.email || '').toLowerCase();
                 const accion = (mov.tipo_accion || '').toLowerCase();
@@ -54,7 +59,10 @@ export function useMovimientos() {
                 const title = (mov.detalles?.nuevo?.titulo || mov.detalles?.anterior?.titulo || '').toLowerCase();
                 const emailTarget = (mov.detalles?.nuevo?.email || mov.detalles?.anterior?.email || '').toLowerCase();
 
-                return userName.includes(q) ||
+                const matchId = isIdSearch && (idStr === cleanId || regIdStr === cleanId);
+
+                return matchId ||
+                    userName.includes(q) ||
                     email.includes(q) ||
                     accion.includes(q) ||
                     modulo.includes(q) ||
@@ -157,35 +165,67 @@ export function useMovimientos() {
         }
     };
 
-    // Exportación rápida a CSV
-    const exportToCSV = () => {
-        if (movimientosFiltrados.length === 0) return;
-        const headers = ['#ID', 'Usuario', 'Correo', 'Accion', 'Modulo', 'Registro ID', 'Fecha y Hora', 'Descripcion'];
-        const rows = movimientosFiltrados.map(m => {
-            const userName = m.persona_nombre ? `${m.persona_nombre} ${m.persona_apellido || ''}`.trim() : (m.email || 'Sistema');
-            const desc = getActionText(m);
-            return [
-                m.id,
-                `"${userName.replace(/"/g, '""')}"`,
-                `"${(m.email || '').replace(/"/g, '""')}"`,
-                `"${(m.tipo_accion || '').replace(/"/g, '""')}"`,
-                `"${(m.modulo || '').replace(/"/g, '""')}"`,
-                m.registro_id || '',
-                `"${formatDateTime(m.created_at)}"`,
-                `"${desc.replace(/"/g, '""')}"`
-            ].join(',');
-        });
+    // Exportación avanzada a Excel (.xlsx) estandarizada idéntica a Reportes
+    const handleExportExcel = async () => {
+        if (movimientosFiltrados.length === 0 || isExporting) return;
+        setIsExporting(true);
+        try {
+            let dataToExport = movimientosFiltrados;
 
-        const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `bitacora_movimientos_${getTodayISO()}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+            // Si hay más registros en la base de datos que los cargados en la página actual,
+            // obtenemos la lista completa para que el archivo Excel contenga todos los movimientos
+            if (totalRegistros > movimientos.length) {
+                try {
+                    const res = await api.get(`/movimientos?page=1&limit=5000&scope=${filtroAlcance}&usuario_id=${filtroUsuarioId}`);
+                    const allItems = Array.isArray(res.data.data) ? res.data.data : (res.data.data?.items || []);
+
+                    // Aplicamos los filtros activos en cliente sobre el lote completo
+                    dataToExport = allItems.filter(mov => {
+                        const matchAccion = filtroAccion === '' || mov.tipo_accion === filtroAccion;
+                        const matchModulo = filtroModulo === '' || mov.modulo === filtroModulo;
+                        if (!matchAccion || !matchModulo) return false;
+
+                        if (searchQuery.trim()) {
+                            const q = searchQuery.toLowerCase().trim();
+                            const cleanId = q.replace(/^[#\s]*(?:id\s*[:\s]*)?/i, '').trim();
+                            const isIdSearch = cleanId !== '' && !isNaN(cleanId);
+
+                            const userName = `${mov.persona_nombre || ''} ${mov.persona_apellido || ''}`.toLowerCase();
+                            const email = (mov.email || '').toLowerCase();
+                            const accion = (mov.tipo_accion || '').toLowerCase();
+                            const modulo = (mov.modulo || '').toLowerCase();
+                            const idStr = String(mov.id || '');
+                            const regIdStr = String(mov.registro_id || '');
+                            const title = (mov.detalles?.nuevo?.titulo || mov.detalles?.anterior?.titulo || '').toLowerCase();
+                            const emailTarget = (mov.detalles?.nuevo?.email || mov.detalles?.anterior?.email || '').toLowerCase();
+
+                            const matchId = isIdSearch && (idStr === cleanId || regIdStr === cleanId);
+                            return matchId || userName.includes(q) || email.includes(q) || accion.includes(q) || modulo.includes(q) || idStr.includes(q) || regIdStr.includes(q) || title.includes(q) || emailTarget.includes(q);
+                        }
+                        return true;
+                    });
+                } catch (fetchErr) {
+                    console.warn("No se pudo obtener el lote completo para exportación, usando página actual:", fetchErr);
+                    dataToExport = movimientosFiltrados;
+                }
+            }
+
+            await exportarMovimientosExcel({
+                movimientos: dataToExport,
+                metrics,
+                filtros: {
+                    filtroAlcance,
+                    filtroModulo,
+                    filtroAccion,
+                    searchQuery
+                },
+                user
+            });
+        } catch (error) {
+            console.error("Error al exportar bitácora a Excel:", error);
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const setFiltroModuloAndResetPage = (val) => {
@@ -231,7 +271,9 @@ export function useMovimientos() {
         movimientosFiltrados,
         metrics,
         getActionText,
-        exportToCSV,
+        handleExportExcel,
+        exportToCSV: handleExportExcel,
+        isExporting,
         handleClearFilters,
         hasActiveFilters
     };

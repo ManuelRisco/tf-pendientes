@@ -23,16 +23,16 @@ export default function MovimientosFilters({
 }) {
     return (
         <div className="mb-4 pb-4 border-b space-y-3" style={{ borderColor: 'var(--border-color)' }}>
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
                 {/* Pestañas de Módulo Rápido */}
                 <div
-                    className="inline-flex p-0.5 rounded-xl border text-xs font-semibold shrink-0"
+                    className="inline-flex p-0.5 rounded-xl border text-xs font-semibold shrink-0 w-full sm:w-auto justify-between sm:justify-start"
                     style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                 >
                     <button
                         type="button"
                         onClick={() => setFiltroModulo('')}
-                        className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer active:scale-95 ${filtroModulo === ''
+                        className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer active:scale-95 flex-1 sm:flex-initial text-center ${filtroModulo === ''
                             ? 'bg-blue-600 text-white shadow-xs'
                             : 'opacity-70 hover:opacity-100'
                             }`}
@@ -43,7 +43,7 @@ export default function MovimientosFilters({
                     <button
                         type="button"
                         onClick={() => setFiltroModulo('tareas')}
-                        className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 ${filtroModulo === 'tareas'
+                        className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 flex-1 sm:flex-initial text-center ${filtroModulo === 'tareas'
                             ? 'bg-blue-600 text-white shadow-xs'
                             : 'opacity-70 hover:opacity-100'
                             }`}
@@ -56,7 +56,7 @@ export default function MovimientosFilters({
                         <button
                             type="button"
                             onClick={() => setFiltroModulo('usuarios')}
-                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer active:scale-95 flex items-center gap-1.5 ${filtroModulo === 'usuarios'
+                            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 flex-1 sm:flex-initial text-center ${filtroModulo === 'usuarios'
                                 ? 'bg-blue-600 text-white shadow-xs'
                                 : 'opacity-70 hover:opacity-100'
                                 }`}
@@ -69,26 +69,26 @@ export default function MovimientosFilters({
                 </div>
 
                 {/* Filtros desplegables y buscador */}
-                <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
                     {/* Buscador en tiempo real */}
                     <div
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-xs w-full sm:w-64 md:w-72 focus-within:border-blue-500 transition-all"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-xs w-full sm:w-80 md:w-96 lg:w-[380px] xl:w-[410px] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all shrink-0"
                         style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                     >
-                        <i className="bi bi-search text-xs opacity-60" style={{ color: 'var(--text-secondary)' }}></i>
+                        <i className="bi bi-search text-xs opacity-60 shrink-0" style={{ color: 'var(--text-secondary)' }}></i>
                         <input
                             type="text"
                             placeholder="Buscar por usuario, tarea, email o #ID..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="bg-transparent border-0 outline-none shadow-none text-xs w-full font-medium"
+                            className="bg-transparent border-0 outline-none shadow-none text-xs w-full font-medium placeholder:text-[11px] sm:placeholder:text-xs"
                             style={{ color: 'var(--text-primary)' }}
                         />
                         {searchQuery && (
                             <button
                                 type="button"
                                 onClick={() => setSearchQuery('')}
-                                className="text-xs opacity-60 hover:opacity-100 cursor-pointer border-0 bg-transparent p-0"
+                                className="text-xs opacity-60 hover:opacity-100 cursor-pointer border-0 bg-transparent p-0 shrink-0 transition-opacity"
                                 style={{ color: 'var(--text-secondary)' }}
                                 title="Limpiar búsqueda"
                             >
@@ -100,10 +100,10 @@ export default function MovimientosFilters({
                     {isAdmin && (
                         <>
                             <div
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-xs"
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-xs w-full sm:w-auto"
                                 style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                             >
-                                <i className="bi bi-people-fill text-indigo-500 text-xs"></i>
+                                <i className="bi bi-people-fill text-indigo-500 text-xs shrink-0"></i>
                                 <select
                                     value={filtroAlcance}
                                     onChange={(e) => {
@@ -113,7 +113,7 @@ export default function MovimientosFilters({
                                             setFiltroUsuarioId('');
                                         }
                                     }}
-                                    className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
+                                    className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer w-full sm:w-auto"
                                     style={{ color: 'var(--text-primary)' }}
                                 >
                                     <option value="todos">Todos los movimientos</option>
@@ -125,14 +125,14 @@ export default function MovimientosFilters({
 
                             {filtroAlcance === 'usuario_especifico' && (
                                 <div
-                                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-xs animate-fade-in"
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-xs animate-fade-in w-full sm:w-auto"
                                     style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                                 >
-                                    <i className="bi bi-person-badge text-blue-500 text-xs"></i>
+                                    <i className="bi bi-person-badge text-blue-500 text-xs shrink-0"></i>
                                     <select
                                         value={filtroUsuarioId}
                                         onChange={(e) => setFiltroUsuarioId(e.target.value)}
-                                        className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer max-w-[200px]"
+                                        className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer w-full sm:max-w-[200px]"
                                         style={{ color: 'var(--text-primary)' }}
                                     >
                                         <option value="">Seleccionar usuario...</option>
@@ -149,14 +149,14 @@ export default function MovimientosFilters({
 
                     {/* Filtro Tipo de Acción */}
                     <div
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-xs"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-xs flex-1 sm:flex-initial min-w-[140px]"
                         style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                     >
-                        <i className="bi bi-activity text-xs opacity-60"></i>
+                        <i className="bi bi-activity text-xs opacity-60 shrink-0"></i>
                         <select
                             value={filtroAccion}
                             onChange={(e) => setFiltroAccion(e.target.value)}
-                            className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
+                            className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer w-full sm:w-auto"
                             style={{ color: 'var(--text-primary)' }}
                         >
                             <option value="">Todas las Acciones</option>
@@ -168,7 +168,7 @@ export default function MovimientosFilters({
 
                     {/* Selector de límite por página */}
                     <div
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs shrink-0"
                         style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                         title="Elementos por página"
                     >
@@ -189,12 +189,12 @@ export default function MovimientosFilters({
                         <button
                             type="button"
                             onClick={handleClearFilters}
-                            className="px-3 py-1.5 text-xs rounded-xl font-semibold border text-rose-500 hover:bg-rose-500/10 transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                            className="px-3 py-1.5 text-xs rounded-xl font-semibold border text-rose-500 hover:bg-rose-500/10 transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 shrink-0"
                             style={{ borderColor: 'var(--border-color)' }}
                             title="Restablecer todos los filtros"
                         >
                             <i className="bi bi-arrow-counterclockwise"></i>
-                            <span className="hidden sm:inline">Limpiar</span>
+                            <span className="inline">Limpiar</span>
                         </button>
                     )}
                 </div>
@@ -204,11 +204,6 @@ export default function MovimientosFilters({
                 <span>
                     Mostrando <strong style={{ color: 'var(--text-primary)' }}>{totalFiltrados}</strong> de <strong style={{ color: 'var(--text-primary)' }}>{totalRegistros}</strong> movimientos registrados
                 </span>
-                {hasActiveFilters && (
-                    <span className="italic text-blue-600 dark:text-blue-400">
-                        Filtros activos aplicados
-                    </span>
-                )}
             </div>
         </div>
     );

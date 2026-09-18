@@ -43,6 +43,25 @@ hr {
     transition-timing-function: ease-out, ease !important;
 }
 
-.sidebar {
-    transition-property: transform, background-color, border-color !important;
+/* Animaciones suaves para Sidebar y Contenedor Principal */
+.sidebar,
+.sidebar-animated {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                translate 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.25s ease,
+                border-color 0.25s ease !important;
+    will-change: transform, translate;
 }
+
+.main-content-layout,
+.main-content-animated {
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    will-change: margin-left;
+}
+
+.backdrop-animated {
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+

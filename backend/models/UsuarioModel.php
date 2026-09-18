@@ -46,16 +46,25 @@ class UsuarioModel {
             $query->where('rol_id', (int)$filters['rol_id']);
         }
 
-        // Filtro por Búsqueda (nombre, apellido, email)
+        // Filtro por Búsqueda (nombre, apellido, email, o #ID)
         if (!empty($filters['search'])) {
-            $search = '%' . trim($filters['search']) . '%';
-            $query->where(function($q) use ($search) {
-                $q->where('email', 'LIKE', $search)
-                  ->orWhereHas('persona', function($pq) use ($search) {
-                      $pq->where('nombre', 'LIKE', $search)
-                         ->orWhere('apellido', 'LIKE', $search)
-                         ->orWhereRaw("CONCAT(nombre, ' ', apellido) LIKE ?", [$search]);
-                  });
+            $rawSearch = trim($filters['search']);
+            $cleanId = preg_replace('/^[#\s]*(?:id\s*[:\s]*)?/i', '', $rawSearch);
+            $cleanId = trim($cleanId);
+            $isIdSearch = is_numeric($cleanId) && (int)$cleanId > 0;
+            $search = '%' . $rawSearch . '%';
+
+            $query->where(function($q) use ($search, $cleanId, $isIdSearch) {
+                if ($isIdSearch) {
+                    $q->where('id', (int)$cleanId);
+                } else {
+                    $q->where('email', 'LIKE', $search);
+                }
+                $q->orWhereHas('persona', function($pq) use ($search) {
+                    $pq->where('nombre', 'LIKE', $search)
+                       ->orWhere('apellido', 'LIKE', $search)
+                       ->orWhereRaw("CONCAT(nombre, ' ', apellido) LIKE ?", [$search]);
+                });
             });
         }
 
@@ -103,14 +112,23 @@ class UsuarioModel {
         }
 
         if (!empty($filters['search'])) {
-            $search = '%' . trim($filters['search']) . '%';
-            $query->where(function($q) use ($search) {
-                $q->where('email', 'LIKE', $search)
-                  ->orWhereHas('persona', function($pq) use ($search) {
-                      $pq->where('nombre', 'LIKE', $search)
-                         ->orWhere('apellido', 'LIKE', $search)
-                         ->orWhereRaw("CONCAT(nombre, ' ', apellido) LIKE ?", [$search]);
-                  });
+            $rawSearch = trim($filters['search']);
+            $cleanId = preg_replace('/^[#\s]*(?:id\s*[:\s]*)?/i', '', $rawSearch);
+            $cleanId = trim($cleanId);
+            $isIdSearch = is_numeric($cleanId) && (int)$cleanId > 0;
+            $search = '%' . $rawSearch . '%';
+
+            $query->where(function($q) use ($search, $cleanId, $isIdSearch) {
+                if ($isIdSearch) {
+                    $q->where('id', (int)$cleanId);
+                } else {
+                    $q->where('email', 'LIKE', $search);
+                }
+                $q->orWhereHas('persona', function($pq) use ($search) {
+                    $pq->where('nombre', 'LIKE', $search)
+                       ->orWhere('apellido', 'LIKE', $search)
+                       ->orWhereRaw("CONCAT(nombre, ' ', apellido) LIKE ?", [$search]);
+                });
             });
         }
 

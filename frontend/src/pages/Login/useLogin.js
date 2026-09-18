@@ -8,13 +8,28 @@ export function useLogin() {
     const [apellido, setApellido] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const { login, register } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+
+        if (isRegistering) {
+            if (password !== confirmPassword) {
+                setError("Las contraseñas no coinciden.");
+                return;
+            }
+            if (password.length < 6) {
+                setError("La contraseña debe tener al menos 6 caracteres.");
+                return;
+            }
+        }
+
+        setLoading(true);
         try {
             if (isRegistering) {
                 await register({ nombre, apellido, email, password, rol_id: 2 });
@@ -29,6 +44,8 @@ export function useLogin() {
                 ? (err.response?.data?.message || "Error al registrar. Verifica los datos.") 
                 : "Credenciales incorrectas o error de conexión."
             );
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -37,6 +54,7 @@ export function useLogin() {
         setError("");
         setEmail("");
         setPassword("");
+        setConfirmPassword("");
         setNombre("");
         setApellido("");
     };
@@ -51,7 +69,10 @@ export function useLogin() {
         setEmail,
         password,
         setPassword,
+        confirmPassword,
+        setConfirmPassword,
         error,
+        loading,
         handleSubmit,
         handleSwitchMode
     };

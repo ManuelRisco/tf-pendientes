@@ -1,0 +1,93 @@
+[185] (Normal): 10. Manual de Usuario y Catálogo de Pantallas del Sistema
+[186] (Normal): Esta sección describe de forma detallada cada una de las pantallas, modales e interfaces funcionales que componen la solución TF-Pendientes. Cada sección incluye su propósito operativo, los elementos que la integran y el recuadro correspondiente para insertar la captura de pantalla oficial tomada del entorno en ejecución:
+[187] (Normal): 10.1. Pantalla de Inicio de Sesión (Login)
+[188] (Normal): Permite a los colaboradores y personal de TI autenticarse de manera segura en el sistema. Cuenta con validación de formato de correo corporativo, visualizador/ocultador interactivo de contraseña, retroalimentación visual de errores mediante alertas SweetAlert2 y protección contra accesos concurrentes.
+[189] (Normal): •  Ruta de Acceso: http://localhost:5173/login
+[190] (Normal): •  Campos Requeridos: Correo Electrónico (@tecnofilm.com.pe) y Contraseña.
+[191] (Normal): Figura 2. Pantalla de Inicio de Sesión (Login) del sistema TF-Pendientes.
+[192] (Normal): 10.2. Modal de Perfil de Usuario y Cambio de Contraseña (ProfileModal)
+[193] (Normal): Permite al colaborador autenticado consultar sus datos de identidad, rol asignado, correo institucional y actualizar su contraseña de forma segura validando la contraseña actual y la confirmación de la nueva clave con indicador de fortaleza.
+[194] (Normal): •  Ubicación: Accesible desde el menú desplegable del usuario en la barra superior de navegación.
+[195] (Normal): •  Funcionalidad: Edición de nombre, apellido y actualización criptográfica de contraseña.
+[196] (Normal): Figura 3. Modal de Perfil de Usuario y Cambio de Contraseña (ProfileModal).
+[197] (Normal): 10.3. Tablero Principal de Control (Dashboard)
+[198] (Normal): Centro neurálgico de información en tiempo real. Presenta tarjetas de resumen con contadores dinámicos (Total de Tareas, Pendientes, En Proceso, Finalizadas y Críticas), selector de alcance para administradores (Todas las tareas, Mis tareas o filtrado por colaborador específico) y gráficos circulares de distribución.
+[199] (Normal): •  Ruta de Acceso: http://localhost:5173/dashboard
+[200] (Normal): •  Capacidades: Auto-refresco periódico, filtrado rápido y acceso directo a tickets urgentes.
+[201] (Normal): Figura 4. Tablero Principal de Control (Dashboard) con métricas y tarjetas KPI.
+[202] (Normal): 10.4. Feed de Actividad Reciente en Vivo (ActividadReciente)
+[203] (Normal): Componente integrado en el Dashboard que lista cronológicamente los últimos 10 eventos ocurridos en la plataforma (tickets creados, respuestas emitidas, transiciones de estado o asignación de técnicos), facilitando al personal de Sistemas un monitoreo pasivo sin necesidad de consultar la bitácora completa.
+[204] (Normal): •  Ubicación: Panel inferior derecho del Tablero de Control.
+[205] (Normal): •  Información: Usuario autor, acción efectuada, resumen del ticket y marca de tiempo relativa.
+[206] (Normal): Figura 5. Sección de Actividad Reciente en Vivo del Dashboard.
+[207] (Normal): 10.5. Bandeja de Gestión de Tareas y Filtros Avanzados (GestionTareas)
+[208] (Normal): Pantalla operativa principal donde se visualiza la tabla interactiva de requerimientos. Incluye barra de búsqueda con debounce, selectores de filtro por Estado, Prioridad y Colaborador, badges de colores semánticos, paginador dinámico de servidor y botones de acción rápida (Ver, Editar, Eliminar y Restaurar).
+[209] (Normal): •  Ruta de Acceso: http://localhost:5173/tareas
+[210] (Normal): •  Permisos: Los administradores visualizan todo el universo de tickets; los empleados visualizan únicamente sus requerimientos personales.
+[211] (Normal): Figura 6. Bandeja Principal de Gestión de Tareas con filtros avanzados y tabla.
+[212] (Normal): 10.6. Formulario de Creación y Edición de Tarea con Adjuntos (TaskFormModal)
+[213] (Normal): Ventana modal para registrar un nuevo ticket de soporte o editar los parámetros de uno existente. Permite ingresar Título, Descripción detallada, selección de Prioridad, asignación de responsable (solo Admin) y una zona interactiva para arrastrar o adjuntar hasta 5 imágenes de evidencia con previsualización en miniatura.
+[214] (Normal): •  Ubicación: Se activa al presionar '+ Nuevo Requerimiento' o el botón de edición en una fila.
+[215] (Normal): •  Validaciones: Campos obligatorios, tamaño máximo por imagen (5 MB) y formatos permitidos (PNG, JPG, WEBP).
+[216] (Normal): Figura 7. Formulario Modal de Creación / Edición de Tarea (TaskFormModal).
+[217] (Normal): 10.7. Modal de Detalle, Seguimiento y Respuesta Administrativa (TaskViewModal)
+[218] (Normal): Permite consultar a fondo el historial del ticket. Muestra el título, descripción completa, solicitante, fecha y hora exacta de emisión, galería de capturas adjuntas con miniaturas cliqueables, notas técnicas previas y una caja de texto para que el administrador redacte respuestas de seguimiento.
+[219] (Normal): •  Ubicación: Se activa al presionar el botón con icono de ojo en cualquier ticket de la tabla.
+[220] (Normal): •  Operaciones: Cambio directo de estado y adición de notas de resolución técnica.
+[221] (Normal): Figura 8. Modal de Detalle y Seguimiento Técnico con Galería y Respuestas (TaskViewModal).
+[222] (Normal): 10.8. Visualizador Lightbox de Imágenes a Pantalla Completa (TaskLightboxModal)
+[223] (Normal): Visualizador de imágenes flotante a pantalla completa. Permite a los técnicos de soporte inspeccionar capturas de pantalla de errores con zoom ajustable, navegación entre archivos fotográficos mediante teclado y descarga del archivo original en alta resolución.
+[224] (Normal): •  Ubicación: Se abre al hacer clic sobre cualquier miniatura en el modal de detalle del ticket.
+[225] (Normal): •  Controles: Zoom (+/-), Reset de escala, Rotación 90° y flechas Anterior / Siguiente.
+[226] (Normal): Figura 9. Visualizador Lightbox de Imágenes a Pantalla Completa (TaskLightboxModal).
+[227] (Normal): 10.9. Bandeja del Historial de Movimientos y Auditoría (Movimientos)
+[228] (Normal): Módulo de trazabilidad y auditoría forense del sistema. Presenta una tabla paginada con todos los eventos registrados por los triggers de base de datos: creación, actualización, cambio de estado, eliminación lógica y restauración de registros.
+[229] (Normal): •  Ruta de Acceso: http://localhost:5173/movimientos
+[230] (Normal): •  Columnas: Fecha y Hora (DD/MM/AAAA HH:mm), Usuario Responsable, Módulo, Acción (Badge) y Botón de Inspección de Cambios.
+[231] (Normal): Figura 10. Bandeja Principal del Historial de Movimientos y Auditoría.
+[232] (Normal): 10.10. Modal de Detalle de Auditoría y Comparador de Cambios (MovimientoChangeDiff)
+[233] (Normal): Componente de alta precisión forense que deserializa los volcados JSON capturados por los triggers en MySQL y presenta una comparación visual lado a lado ('Valor Anterior' versus 'Valor Nuevo') de cada campo modificado, resaltando en verde las adiciones y en rojo las supresiones.
+[234] (Normal): •  Ubicación: Se activa al pulsar 'Ver Detalle' en cualquier fila de la bitácora de movimientos.
+[235] (Normal): •  Propósito: Auditoría transparente de quién modificó qué campo y en qué segundo exacto.
+[236] (Normal): Figura 11. Modal de Detalle de Auditoría con Comparador de Cambios (MovimientoChangeDiff).
+[237] (Normal): 10.11. Módulo de Reportes Estadísticos y Selector de Fechas (Reportes)
+[238] (Normal): Centro de inteligencia de negocios y analítica del sistema. Permite a los administradores definir un rango temporal mediante selectores de fecha con formateo DD/MM/AAAA, validación de fechas coherentes y botones de presets rápidos (Hoy, Última Semana, Último Mes, Este Año).
+[239] (Normal): •  Ruta de Acceso: http://localhost:5173/reportes
+[240] (Normal): •  Acciones: Filtrado analítico en tiempo real y botón de exportación profesional a Excel (ExcelJS).
+[241] (Normal): Figura 12. Módulo de Reportes Analíticos con selector de rango de fechas y KPIs.
+[242] (Normal): 10.12. Gráficos de Tendencia Temporal y Distribución (Recharts)
+[243] (Normal): Gráficos estadísticos interactivos alimentados por la biblioteca Recharts. Incluye un gráfico de área con degradado suave que refleja la evolución temporal de tickets creados versus resueltos, y gráficos de tipo donut que ilustran la proporción por prioridad y estado.
+[244] (Normal): •  Ubicación: Cuerpo intermedio del módulo de Reportes.
+[245] (Normal): •  Interactividad: Tooltips flotantes al pasar el cursor con cifras exactas y porcentajes calculados.
+[246] (Normal): Figura 13. Gráficos Estadísticos de Tendencia Temporal y Distribución (Recharts).
+[247] (Normal): 10.13. Tablas de Incidentes Críticos y Demanda por Usuario
+[248] (Normal): Sección analítica tabular que desglosa los dos factores más relevantes para la toma de decisiones: el ranking de colaboradores con mayor volumen de solicitudes de soporte y la lista prioritaria de incidencias críticas que requieren atención inmediata.
+[249] (Normal): •  Ubicación: Parte inferior del módulo de Reportes.
+[250] (Normal): •  Utilidad Gerencial: Permite detectar necesidades de capacitación en áreas específicas o sustitución de equipos informáticos obsoletos.
+[251] (Normal): Figura 14. Tablas Analíticas de Demanda por Colaborador e Incidentes Críticos.
+[252] (Normal): 10.14. Hoja de Cálculo Exportada a Excel con ExcelJS
+[253] (Normal): Demuestra el archivo resultante generado al presionar 'Exportar a Excel'. El archivo XLSX cuenta con formato corporativo, paleta de colores institucional, cabeceras fijadas con auto-filtro, columnas auto-ajustadas y pestañas independientes para resumen gerencial y datos en bruto.
+[254] (Normal): •  Compatibilidad: Totalmente compatible con Microsoft Excel 2016+, Office 365, Google Sheets y LibreOffice.
+[255] (Normal): •  Descarga: Se descarga instantáneamente en el navegador con el nombre 'Reporte_TI_Tecnofilm_[Fecha].xlsx'.
+[256] (Normal): Figura 15. Hoja de Cálculo XLSX Generada y Formateada mediante ExcelJS.
+[257] (Normal): 10.15. Bandeja de Gestión de Usuarios y Accesos (Usuarios)
+[258] (Normal): Módulo exclusivo de administración para la gestión de cuentas y credenciales. Presenta la lista completa de colaboradores con su estado (Activo / Inactivo), rol en el sistema, fecha de registro y botones para editar datos, desactivar cuenta o restaurar acceso.
+[259] (Normal): •  Ruta de Acceso: http://localhost:5173/usuarios
+[260] (Normal): •  Acciones: Búsqueda por nombre/correo, filtrado por rol y botón para dar de alta a nuevos colaboradores.
+[261] (Normal): Figura 16. Bandeja de Administración de Usuarios y Privilegios del Sistema.
+[262] (Normal): 10.16. Modal de Creación y Edición de Usuario (UsuariosModal)
+[263] (Normal): Formulario modal que permite registrar un nuevo colaborador en la base de datos o modificar su rol y credenciales. Al crear una cuenta, el sistema inserta transaccionalmente el registro en la tabla personas y genera las credenciales seguras con contraseña cifrada en la tabla usuarios.
+[264] (Normal): •  Ubicación: Se abre al presionar '+ Nuevo Usuario' o el icono de lápiz en la tabla de usuarios.
+[265] (Normal): •  Validaciones: Validación de unicidad de correo institucional y longitud mínima de contraseña (6 caracteres).
+[266] (Normal): Figura 17. Modal de Registro y Edición de Usuario (UsuariosModal).
+[267] (Normal): 10.17. Menú Flotante de Accesibilidad Universal (AccessibilityMenu)
+[268] (Normal): Widget accesible ubicado de forma fija y no intrusiva en la esquina inferior de la pantalla. Permite a los colaboradores adaptar la interfaz a sus preferencias sensoriales: aumento de tamaño de letra (A+ / A-), contraste reforzado, escala de grises y alternancia rápida de tema.
+[269] (Normal): •  Ubicación: Botón flotante con icono universal de accesibilidad en todas las vistas del sistema.
+[270] (Normal): •  Persistencia: Las preferencias de accesibilidad seleccionadas se conservan entre sesiones mediante localStorage.
+[271] (Normal): Figura 18. Menú Flotante de Accesibilidad Universal (AccessibilityMenu) desplegado.
+[272] (Normal): 10.18. Interfaz General en Modo Oscuro (Dark Mode)
+[273] (Normal): Demostración de la interfaz del sistema con el Modo Oscuro activo. Todos los componentes de la aplicación (barras de navegación, tarjetas de métricas, tablas, modales y formularios) adoptan una gama balanceada de tonos oscuros (#0F172A y #1E293B) con contrastes estudiados para reducir el estrés visual en ambientes de poca iluminación.
+[274] (Normal): •  Activación: Interruptor de sol/luna en la barra superior de navegación o mediante el menú de accesibilidad.
+[275] (Normal): •  Compatibilidad: Sincronizado con la clase 'dark' de Tailwind CSS y validado en todas las páginas.
+[276] (Normal): Figura 19. Interfaz General del Sistema operando en Modo Oscuro (Dark Mode).
+[277] (Normal): 11. Guía de Instalación y Despliegue Local

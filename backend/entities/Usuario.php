@@ -9,7 +9,6 @@ class Usuario extends Model {
     protected $table = 'usuarios';
     protected $fillable = ['persona_id', 'rol_id', 'email', 'password'];
     
-    // Asumiendo que la base de datos tiene campos created_at, updated_at
     public $timestamps = true;
 
     // Ocultar password de serialización por seguridad

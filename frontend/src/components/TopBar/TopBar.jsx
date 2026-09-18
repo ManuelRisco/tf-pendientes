@@ -18,7 +18,7 @@ function TopBar({ toggleSidebar, isSidebarOpen }) {
                     aria-label={isSidebarOpen ? "Cerrar menú lateral" : "Abrir menú lateral"}
                     aria-expanded={isSidebarOpen}
                 >
-                    <i className="bi bi-list text-2xl" aria-hidden="true"></i>
+                    <i className={`bi bi-list text-2xl transition-transform duration-300 ${isSidebarOpen ? 'rotate-0' : 'rotate-90'}`} aria-hidden="true"></i>
                 </button>
             </div>
             

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Modal, Form, Row, Col } from 'react-bootstrap';
 
@@ -11,8 +12,17 @@ export default function UsuariosModal({
     handleSaveUser,
     resetForm
 }) {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const handleModalHide = () => {
+        setShowPassword(false);
+        setShowConfirmPassword(false);
+        if (resetForm) resetForm();
+    };
+
     return (
-        <Modal show={showModal} onHide={resetForm} centered backdrop="static" size="lg">
+        <Modal show={showModal} onHide={handleModalHide} centered backdrop="static" size="lg">
             <Modal.Header closeButton className="border-b" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
                 <Modal.Title className="font-bold text-base sm:text-lg flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                     {editId ? (
@@ -35,7 +45,7 @@ export default function UsuariosModal({
                                     onChange={handleInputChange}
                                     placeholder="Ej. Juan"
                                     required
-                                    className="text-xs sm:text-sm"
+                                    className="text-xs sm:text-sm rounded-xl border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                                     style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
                                 />
                             </Form.Group>
@@ -50,7 +60,7 @@ export default function UsuariosModal({
                                     onChange={handleInputChange}
                                     placeholder="Ej. Pérez"
                                     required
-                                    className="text-xs sm:text-sm"
+                                    className="text-xs sm:text-sm rounded-xl border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                                     style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
                                 />
                             </Form.Group>
@@ -63,30 +73,77 @@ export default function UsuariosModal({
                             name="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            placeholder="usuario@tecnofilm.com"
+                            placeholder="usuario@tecnofilm.pe"
                             required
                             autoComplete="off"
-                            className="text-xs sm:text-sm"
+                            className="text-xs sm:text-sm rounded-xl border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                             style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
                         />
                     </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Label className="text-xs sm:text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                            Contraseña {editId && <small className="opacity-75 font-normal" style={{ color: 'var(--text-secondary)' }}>(Dejar en blanco para conservar)</small>}
-                        </Form.Label>
-                        <Form.Control
-                            type="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            placeholder={editId ? "•••••••• (opcional)" : "Mínimo 6 caracteres"}
-                            required={!editId}
-                            minLength={6}
-                            autoComplete="new-password"
-                            className="text-xs sm:text-sm"
-                            style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
-                        />
-                    </Form.Group>
+                    <Row>
+                        <Col xs={12} sm={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label className="text-xs sm:text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                                    Contraseña {!editId ? '*' : <small className="opacity-75 font-normal" style={{ color: 'var(--text-secondary)' }}>(Dejar en blanco para conservar)</small>}
+                                </Form.Label>
+                                <div className="relative flex items-center">
+                                    <Form.Control
+                                        type={showPassword ? "text" : "password"}
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleInputChange}
+                                        placeholder={editId ? "•••••••• (opcional)" : "Mínimo 6 caracteres"}
+                                        required={!editId}
+                                        minLength={editId && !formData.password ? undefined : 6}
+                                        autoComplete="new-password"
+                                        className="text-xs sm:text-sm pr-10 rounded-xl border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                        style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 text-sm opacity-60 hover:opacity-100 transition-opacity bg-transparent border-0 cursor-pointer p-0"
+                                        style={{ color: 'var(--text-primary)' }}
+                                        title={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                                        aria-label="Alternar visibilidad de contraseña"
+                                    >
+                                        <i className={`bi ${showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
+                                    </button>
+                                </div>
+                            </Form.Group>
+                        </Col>
+                        <Col xs={12} sm={6}>
+                            <Form.Group className="mb-3">
+                                <Form.Label className="text-xs sm:text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                                    Confirmar Contraseña {!editId ? '*' : <small className="opacity-75 font-normal" style={{ color: 'var(--text-secondary)' }}>(Requerido si cambias)</small>}
+                                </Form.Label>
+                                <div className="relative flex items-center">
+                                    <Form.Control
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        name="confirmPassword"
+                                        value={formData.confirmPassword || ''}
+                                        onChange={handleInputChange}
+                                        placeholder="•••••••• (repite contraseña)"
+                                        required={!editId || Boolean(formData.password)}
+                                        minLength={editId && !formData.password ? undefined : 6}
+                                        autoComplete="new-password"
+                                        className="text-xs sm:text-sm pr-10 rounded-xl border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                        style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 text-sm opacity-60 hover:opacity-100 transition-opacity bg-transparent border-0 cursor-pointer p-0"
+                                        style={{ color: 'var(--text-primary)' }}
+                                        title={showConfirmPassword ? "Ocultar confirmación" : "Ver confirmación"}
+                                        aria-label="Alternar visibilidad de confirmación de contraseña"
+                                    >
+                                        <i className={`bi ${showConfirmPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
+                                    </button>
+                                </div>
+                            </Form.Group>
+                        </Col>
+                    </Row>
                     <Form.Group className="mb-4">
                         <Form.Label className="text-xs sm:text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Rol *</Form.Label>
                         <Form.Select
@@ -95,7 +152,7 @@ export default function UsuariosModal({
                             onChange={handleInputChange}
                             disabled={Number(user?.rol_id) !== 1}
                             required
-                            className="text-xs sm:text-sm"
+                            className="text-xs sm:text-sm rounded-xl border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                             style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
                         >
                             <option value="">Seleccione un rol...</option>

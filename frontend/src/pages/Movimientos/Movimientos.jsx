@@ -9,7 +9,7 @@ import MovimientoDetailModal from "./components/MovimientoDetailModal";
 export default function Movimientos() {
     const navigate = useNavigate();
     const movHook = useMovimientos();
-    const { user, loading, movimientosFiltrados, metrics, exportToCSV, selectedMovimiento, setSelectedMovimiento, getActionText } = movHook;
+    const { user, loading, movimientosFiltrados, metrics, handleExportExcel, isExporting, selectedMovimiento, setSelectedMovimiento, getActionText } = movHook;
     const isAdmin = Number(user?.rol_id) === 1;
 
     if (loading && movimientosFiltrados.length === 0) {
@@ -53,14 +53,23 @@ export default function Movimientos() {
 
                                 <button
                                     type="button"
-                                    onClick={exportToCSV}
-                                    disabled={movimientosFiltrados.length === 0}
+                                    onClick={handleExportExcel}
+                                    disabled={movimientosFiltrados.length === 0 || isExporting}
                                     className="w-full sm:w-auto px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs disabled:opacity-50 hover:bg-slate-500/10 active:scale-95"
                                     style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
-                                    title="Descargar historial filtrado en archivo CSV"
+                                    title="Descargar historial filtrado en formato Excel (.xlsx) estandarizado"
                                 >
-                                    <i className="bi bi-file-earmark-arrow-down text-emerald-600 dark:text-emerald-400 text-base"></i>
-                                    <span>Exportar CSV</span>
+                                    {isExporting ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm text-emerald-600" role="status" aria-hidden="true"></span>
+                                            <span>Generando Excel...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-file-earmark-excel-fill text-emerald-600 dark:text-emerald-400 text-base"></i>
+                                            <span>Exportar Excel</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
 

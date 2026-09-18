@@ -32,15 +32,44 @@ class TareaModel {
             $query->where('prioridad_id', (int)$filters['prioridad_id']);
         }
 
-        if (!empty($filters['search'])) {
-            $search = '%' . trim($filters['search']) . '%';
-            $rawSearch = trim($filters['search']);
-            $query->where(function($q) use ($search, $rawSearch) {
-                $q->where('titulo', 'LIKE', $search)
-                  ->orWhere('descripcion', 'LIKE', $search);
+        if (!empty($filters['atencion'])) {
+            if ($filters['atencion'] === 'atendidos') {
+                $query->where(function($q) {
+                    $q->where(function($sq) {
+                        $sq->whereNotNull('respuesta_admin')
+                           ->whereRaw("TRIM(respuesta_admin) != ''");
+                    })->orWhereHas('respuestas');
+                });
+            } elseif ($filters['atencion'] === 'por_atender') {
+                $query->where(function($q) {
+                    $q->where(function($sq) {
+                        $sq->whereNull('respuesta_admin')
+                           ->orWhereRaw("TRIM(respuesta_admin) = ''");
+                    })->whereDoesntHave('respuestas');
+                });
+            }
+        }
 
-                if (is_numeric($rawSearch)) {
-                    $q->orWhere('id', (int)$rawSearch);
+        if (!empty($filters['search'])) {
+            $rawSearch = trim($filters['search']);
+            $cleanId = preg_replace('/^[#\s]*(?:id\s*[:\s]*)?/i', '', $rawSearch);
+            $cleanId = trim($cleanId);
+            $isIdSearch = is_numeric($cleanId) && (int)$cleanId > 0;
+
+            $search = '%' . $rawSearch . '%';
+            $cleanSearch = '%' . $cleanId . '%';
+
+            $query->where(function($q) use ($search, $cleanSearch, $cleanId, $isIdSearch) {
+                if ($isIdSearch) {
+                    $q->where('id', (int)$cleanId);
+                } else {
+                    $q->where('titulo', 'LIKE', $search)
+                      ->orWhere('descripcion', 'LIKE', $search);
+                }
+
+                if ($isIdSearch) {
+                    $q->orWhere('titulo', 'LIKE', $cleanSearch)
+                      ->orWhere('descripcion', 'LIKE', $cleanSearch);
                 }
 
                 $q->orWhereHas('usuario', function($qu) use ($search) {
@@ -108,15 +137,44 @@ class TareaModel {
             $query->where('prioridad_id', (int)$filters['prioridad_id']);
         }
 
-        if (!empty($filters['search'])) {
-            $search = '%' . trim($filters['search']) . '%';
-            $rawSearch = trim($filters['search']);
-            $query->where(function($q) use ($search, $rawSearch) {
-                $q->where('titulo', 'LIKE', $search)
-                  ->orWhere('descripcion', 'LIKE', $search);
+        if (!empty($filters['atencion'])) {
+            if ($filters['atencion'] === 'atendidos') {
+                $query->where(function($q) {
+                    $q->where(function($sq) {
+                        $sq->whereNotNull('respuesta_admin')
+                           ->whereRaw("TRIM(respuesta_admin) != ''");
+                    })->orWhereHas('respuestas');
+                });
+            } elseif ($filters['atencion'] === 'por_atender') {
+                $query->where(function($q) {
+                    $q->where(function($sq) {
+                        $sq->whereNull('respuesta_admin')
+                           ->orWhereRaw("TRIM(respuesta_admin) = ''");
+                    })->whereDoesntHave('respuestas');
+                });
+            }
+        }
 
-                if (is_numeric($rawSearch)) {
-                    $q->orWhere('id', (int)$rawSearch);
+        if (!empty($filters['search'])) {
+            $rawSearch = trim($filters['search']);
+            $cleanId = preg_replace('/^[#\s]*(?:id\s*[:\s]*)?/i', '', $rawSearch);
+            $cleanId = trim($cleanId);
+            $isIdSearch = is_numeric($cleanId) && (int)$cleanId > 0;
+
+            $search = '%' . $rawSearch . '%';
+            $cleanSearch = '%' . $cleanId . '%';
+
+            $query->where(function($q) use ($search, $cleanSearch, $cleanId, $isIdSearch) {
+                if ($isIdSearch) {
+                    $q->where('id', (int)$cleanId);
+                } else {
+                    $q->where('titulo', 'LIKE', $search)
+                      ->orWhere('descripcion', 'LIKE', $search);
+                }
+
+                if ($isIdSearch) {
+                    $q->orWhere('titulo', 'LIKE', $cleanSearch)
+                      ->orWhere('descripcion', 'LIKE', $cleanSearch);
                 }
 
                 $q->orWhereHas('usuario', function($qu) use ($search) {
@@ -415,5 +473,18 @@ class TareaModel {
         }
 
         return (bool)$imagen->delete();
+    }
+
+    // ------------------------------------------------------------------
+    // Restaurar tarea eliminada lógicamente
+    // ------------------------------------------------------------------
+    public function restore(int $id, int $restorerId): bool {
+        Capsule::statement("SET @usuario_id_app = ?", [$restorerId]);
+
+        $tarea = Tarea::withTrashed()->find($id);
+        if ($tarea) {
+            return (bool)$tarea->restore();
+        }
+        return false;
     }
 }

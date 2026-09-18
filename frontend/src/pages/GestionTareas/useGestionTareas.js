@@ -47,6 +47,7 @@ export function useGestionTareas() {
     const [filtroPrioridad, setFiltroPrioridad] = useState('');
     const [filtroAlcance, setFiltroAlcance] = useState('todos'); // 'todos', 'mis_tareas', 'por_otros_usuarios'
     const [filtroUsuarioId, setFiltroUsuarioId] = useState('');
+    const [filtroAtencion, setFiltroAtencion] = useState(''); // '', 'atendidos', 'por_atender'
     const descRef = useRef(null);
     const fileInputRef = useRef(null);
 
@@ -69,7 +70,7 @@ export function useGestionTareas() {
             setLoading(true);
             const searchParam = debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : '';
             const promises = [
-                api.get(`/tareas?page=${currentPage}&limit=${limit}&estado_id=${filtroEstado}&prioridad_id=${filtroPrioridad}&scope=${filtroAlcance}&usuario_id=${filtroUsuarioId}${searchParam}`),
+                api.get(`/tareas?page=${currentPage}&limit=${limit}&estado_id=${filtroEstado}&prioridad_id=${filtroPrioridad}&scope=${filtroAlcance}&usuario_id=${filtroUsuarioId}&atencion=${filtroAtencion}${searchParam}`),
                 api.get('/catalogos'),
             ];
 
@@ -107,6 +108,7 @@ export function useGestionTareas() {
         filtroPrioridad,
         filtroAlcance,
         filtroUsuarioId,
+        filtroAtencion,
         debouncedSearch
     });
 
@@ -117,6 +119,7 @@ export function useGestionTareas() {
             prev.filtroPrioridad !== filtroPrioridad ||
             prev.filtroAlcance !== filtroAlcance ||
             prev.filtroUsuarioId !== filtroUsuarioId ||
+            prev.filtroAtencion !== filtroAtencion ||
             prev.debouncedSearch !== debouncedSearch
         );
 
@@ -125,6 +128,7 @@ export function useGestionTareas() {
             filtroPrioridad,
             filtroAlcance,
             filtroUsuarioId,
+            filtroAtencion,
             debouncedSearch
         };
 
@@ -135,7 +139,7 @@ export function useGestionTareas() {
 
         fetchTareas();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage, filtroEstado, filtroPrioridad, filtroAlcance, filtroUsuarioId, debouncedSearch]);
+    }, [currentPage, filtroEstado, filtroPrioridad, filtroAlcance, filtroUsuarioId, filtroAtencion, debouncedSearch]);
 
     const handleClearFilters = () => {
         setSearchQuery('');
@@ -144,6 +148,7 @@ export function useGestionTareas() {
         setFiltroPrioridad('');
         setFiltroAlcance('todos');
         setFiltroUsuarioId('');
+        setFiltroAtencion('');
         setCurrentPage(1);
     };
 
@@ -151,6 +156,7 @@ export function useGestionTareas() {
         searchQuery.trim() ||
         filtroEstado ||
         filtroPrioridad ||
+        filtroAtencion ||
         (isAdmin && (filtroAlcance !== 'todos' || filtroUsuarioId))
     );
 
@@ -651,6 +657,8 @@ export function useGestionTareas() {
         setFiltroAlcance,
         filtroUsuarioId,
         setFiltroUsuarioId,
+        filtroAtencion,
+        setFiltroAtencion,
         hasActiveFilters,
         handleClearFilters,
         descRef,

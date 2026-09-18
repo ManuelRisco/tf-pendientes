@@ -62,7 +62,7 @@ export default function GestionTareasTable({
 
     return (
         <>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-h-[300px]">
                 <Table hover className="table-custom min-w-[750px]">
                     <thead>
                         <tr>
@@ -172,27 +172,47 @@ export default function GestionTareasTable({
 
                                     <td>
                                         {isAdmin ? (
-                                            <Dropdown>
+                                            <Dropdown className="inline-block relative" align="start">
                                                 <Dropdown.Toggle
                                                     as="button"
-                                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusStyle(estadoNombre)} focus:outline-none cursor-pointer`}
+                                                    id={`dropdown-status-${item.id}`}
+                                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusStyle(estadoNombre)} focus:outline-none cursor-pointer hover:shadow-xs transition-all`}
                                                 >
                                                     <span className={`w-2 h-2 rounded-full ${getStatusDotColor(estadoNombre)}`}></span>
                                                     <span>{estadoNombre}</span>
                                                 </Dropdown.Toggle>
                                                 <Dropdown.Menu
-                                                    className="shadow-lg border text-xs py-1 rounded-xl"
-                                                    style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
+                                                    popperConfig={{
+                                                        modifiers: [
+                                                            {
+                                                                name: 'offset',
+                                                                options: {
+                                                                    offset: [0, 4],
+                                                                },
+                                                            },
+                                                            {
+                                                                name: 'flip',
+                                                                options: {
+                                                                    fallbackPlacements: ['top-start', 'bottom-start'],
+                                                                },
+                                                            },
+                                                        ],
+                                                    }}
+                                                    className="shadow-xl border text-xs py-1.5 rounded-xl z-50"
+                                                    style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', minWidth: '150px' }}
                                                 >
                                                     {estados.map(estado => (
                                                         <Dropdown.Item
                                                             key={estado.id}
                                                             onClick={() => handleChangeStatus(item.id, estado.id, item.estado_id)}
-                                                            className="flex items-center gap-2 px-3 py-1.5 hover:opacity-80"
+                                                            className="flex items-center gap-2 px-3 py-2 hover:opacity-80 cursor-pointer"
                                                             style={{ color: 'var(--text-primary)' }}
                                                         >
                                                             <span className={`w-2 h-2 rounded-full ${getStatusDotColor(estado.nombre)}`}></span>
-                                                            <span>{estado.nombre}</span>
+                                                            <span className={estado.nombre === estadoNombre ? "font-bold" : "font-normal"}>{estado.nombre}</span>
+                                                            {estado.nombre === estadoNombre && (
+                                                                <i className="bi bi-check2 text-xs ml-auto text-blue-600 dark:text-blue-400"></i>
+                                                            )}
                                                         </Dropdown.Item>
                                                     ))}
                                                 </Dropdown.Menu>

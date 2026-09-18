@@ -54,7 +54,7 @@ export default function ReportesDemandaTable({
                         </select>
                     </div>
 
-                    <div className="relative flex-1 sm:w-64">
+                    <div className="relative flex-1 sm:w-72 md:w-80">
                         <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-xs opacity-60" style={{ color: 'var(--text-secondary)' }}></i>
                         <input
                             type="text"
@@ -70,7 +70,7 @@ export default function ReportesDemandaTable({
                                         ? "Buscar por correo..."
                                         : "Buscar por nombre o correo..."
                             }
-                            className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm rounded-xl border focus:outline-none transition-all"
+                            className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm rounded-xl border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-[11px] sm:placeholder:text-xs"
                             style={{
                                 backgroundColor: 'var(--bg-secondary)',
                                 color: 'var(--text-primary)',
@@ -94,7 +94,7 @@ export default function ReportesDemandaTable({
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-h-[260px]">
                 <table className="w-full text-xs sm:text-sm text-left">
                     <thead className="text-xs font-semibold uppercase tracking-wider" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>
                         <tr>

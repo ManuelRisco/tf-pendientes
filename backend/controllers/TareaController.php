@@ -14,6 +14,7 @@ class TareaController {
             'estado_id'    => $_GET['estado_id']    ?? null,
             'prioridad_id' => $_GET['prioridad_id'] ?? null,
             'search'       => $_GET['search']       ?? null,
+            'atencion'     => $_GET['atencion']     ?? $_GET['filtro_atencion'] ?? null,
         ];
 
         // Control de visibilidad según rol

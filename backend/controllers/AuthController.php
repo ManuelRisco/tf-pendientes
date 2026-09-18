@@ -22,11 +22,7 @@ class AuthController {
         $db   = Database::getConnection();
         $user = $this->model->findByEmail($email);
 
-        $exitoso = 0;
-
         if ($user && is_null($user['deleted_at']) && password_verify($password, $user['password'])) {
-            $exitoso = 1;
-
             // Registrar log de acceso exitoso
             $this->registrarLog($db, $user['id'], $email, $ip, 1);
 

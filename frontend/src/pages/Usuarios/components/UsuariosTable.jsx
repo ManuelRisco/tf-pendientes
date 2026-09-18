@@ -54,7 +54,7 @@ export default function UsuariosTable({
 
     return (
         <>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-h-[300px]">
                 <Table hover className="table-usuarios min-w-[700px]">
                     <thead>
                         <tr>

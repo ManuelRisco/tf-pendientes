@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
-import { formatDate } from './dateUtils';
+import { formatDate, formatDateTime } from './dateUtils.js';
+import { ESTADO_ID_MAP, PRIORIDAD_ID_MAP, ROLES_MAP } from './themeConstants.js';
 
 /**
  * Dibuja un rectángulo con esquinas redondeadas y borde suave (estilo Card moderna)
@@ -842,3 +843,703 @@ export async function exportarReporteExcelAvanzado(params) {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 }
+
+/**
+ * Aplica estilos de borde a un rango de celdas (útil para celdas combinadas)
+ */
+function applyBorderToRange(ws, rangeStr, borderStyle) {
+    const [start, end] = rangeStr.split(':');
+    const startCol = start.replace(/[0-9]/g, '');
+    const startRow = parseInt(start.replace(/[^0-9]/g, ''), 10);
+    const endCol = (end || start).replace(/[0-9]/g, '');
+    const endRow = parseInt((end || start).replace(/[^0-9]/g, ''), 10);
+
+    const startColIdx = startCol.charCodeAt(0);
+    const endColIdx = endCol.charCodeAt(0);
+
+    for (let r = startRow; r <= endRow; r++) {
+        for (let c = startColIdx; c <= endColIdx; c++) {
+            const colLetter = String.fromCharCode(c);
+            ws.getCell(`${colLetter}${r}`).border = borderStyle;
+        }
+    }
+}
+
+/**
+ * Obtiene la descripción textual legible de la acción de un movimiento
+ */
+function getMovActionDescription(mov) {
+    const isUser = mov.modulo === 'usuarios';
+    const articulo = isUser ? 'un usuario' : 'una tarea';
+
+    let targetInfo = '';
+    if (mov.detalles) {
+        const data = mov.detalles.nuevo || mov.detalles.anterior || {};
+        let name = data.email || data.titulo;
+        if (name) {
+            if (name.length > 45) name = name.substring(0, 45) + '...';
+            targetInfo = ` ("${name}")`;
+        }
+    }
+
+    switch (mov.tipo_accion) {
+        case 'CREAR': return `Creó ${isUser ? 'un nuevo usuario' : 'una nueva tarea'}${targetInfo}`;
+        case 'ACTUALIZAR': return `Actualizó ${articulo}${targetInfo}`;
+        case 'ELIMINAR_LOGICO': return isUser ? `Desactivó ${articulo}${targetInfo}` : `Eliminó ${articulo}${targetInfo}`;
+        case 'RESTAURAR': return `Reactivó ${articulo}${targetInfo}`;
+        default: return `Acción en ${articulo}${targetInfo}`;
+    }
+}
+
+/**
+ * Obtiene el detalle técnico legible de cambios (anterior ➜ nuevo)
+ */
+function getMovChangesDetail(mov) {
+    if (!mov?.detalles) return '—';
+    const { anterior = {}, nuevo = {} } = mov.detalles;
+    const isUser = mov.modulo === 'usuarios';
+    const changes = [];
+
+    if (mov.tipo_accion === 'ACTUALIZAR') {
+        if (!isUser) {
+            if (anterior.estado_id && nuevo.estado_id && anterior.estado_id !== nuevo.estado_id) {
+                const eOld = ESTADO_ID_MAP[anterior.estado_id]?.nombre || `Estado #${anterior.estado_id}`;
+                const eNew = ESTADO_ID_MAP[nuevo.estado_id]?.nombre || `Estado #${nuevo.estado_id}`;
+                changes.push(`Estado: ${eOld} ➜ ${eNew}`);
+            }
+            if (anterior.prioridad_id && nuevo.prioridad_id && anterior.prioridad_id !== nuevo.prioridad_id) {
+                const pOld = PRIORIDAD_ID_MAP[anterior.prioridad_id]?.nombre || `Prioridad #${anterior.prioridad_id}`;
+                const pNew = PRIORIDAD_ID_MAP[nuevo.prioridad_id]?.nombre || `Prioridad #${nuevo.prioridad_id}`;
+                changes.push(`Prioridad: ${pOld} ➜ ${pNew}`);
+            }
+            if (anterior.titulo && nuevo.titulo && anterior.titulo !== nuevo.titulo) {
+                changes.push(`Título modificado`);
+            }
+            if (anterior.descripcion && nuevo.descripcion && anterior.descripcion !== nuevo.descripcion) {
+                changes.push(`Descripción actualizada`);
+            }
+            if (anterior.respuesta_admin !== nuevo.respuesta_admin && nuevo.respuesta_admin) {
+                changes.push(`Respuesta técnica agregada/editada`);
+            }
+        } else {
+            if (anterior.rol_id && nuevo.rol_id && anterior.rol_id !== nuevo.rol_id) {
+                const rOld = ROLES_MAP[anterior.rol_id] || `Rol #${anterior.rol_id}`;
+                const rNew = ROLES_MAP[nuevo.rol_id] || `Rol #${nuevo.rol_id}`;
+                changes.push(`Rol: ${rOld} ➜ ${rNew}`);
+            }
+            if (anterior.estado_id && nuevo.estado_id && anterior.estado_id !== nuevo.estado_id) {
+                changes.push(`Estado: ${anterior.estado_id == 1 ? 'Activo' : 'Inactivo'} ➜ ${nuevo.estado_id == 1 ? 'Activo' : 'Inactivo'}`);
+            }
+            if (anterior.email && nuevo.email && anterior.email !== nuevo.email) {
+                changes.push(`Email: ${anterior.email} ➜ ${nuevo.email}`);
+            }
+        }
+    } else if (mov.tipo_accion === 'CREAR') {
+        if (!isUser) {
+            const e = ESTADO_ID_MAP[nuevo.estado_id]?.nombre;
+            const p = PRIORIDAD_ID_MAP[nuevo.prioridad_id]?.nombre;
+            if (e || p) changes.push(`Estado inicial: ${e || 'Pendiente'} | Prioridad: ${p || 'Media'}`);
+        } else {
+            const r = ROLES_MAP[nuevo.rol_id];
+            if (r) changes.push(`Rol inicial asignado: ${r}`);
+        }
+    } else if (mov.tipo_accion === 'ELIMINAR_LOGICO') {
+        changes.push(isUser ? 'Cuenta de usuario desactivada' : 'Tarea enviada a papelera (Soft delete)');
+    } else if (mov.tipo_accion === 'RESTAURAR') {
+        changes.push(isUser ? 'Cuenta de usuario reactivada' : 'Tarea restaurada de la papelera');
+    }
+
+    if (changes.length > 0) return changes.join(' | ');
+    return mov.detalles.descripcion || '—';
+}
+
+/**
+ * Colores sobrios tipo badge para cada tipo de acción en Excel
+ */
+function getActionExcelBadge(actionType) {
+    switch (actionType) {
+        case 'CREAR':
+            return { label: 'CREACIÓN', fontColor: 'FF16A34A', bgColor: 'FFECFDF5' };
+        case 'ACTUALIZAR':
+            return { label: 'ACTUALIZACIÓN', fontColor: 'FF2563EB', bgColor: 'FFEFF6FF' };
+        case 'ELIMINAR_LOGICO':
+        case 'ELIMINAR':
+            return { label: 'ELIMINACIÓN', fontColor: 'FFDC2626', bgColor: 'FFFEF2F2' };
+        case 'RESTAURAR':
+            return { label: 'RESTAURACIÓN', fontColor: 'FFD97706', bgColor: 'FFFFFBEB' };
+        default:
+            return { label: actionType || 'ACCIÓN', fontColor: 'FF475569', bgColor: 'FFF1F5F9' };
+    }
+}
+
+/**
+ * Exporta el historial de movimientos y auditoría a un libro Excel (.xlsx) altamente profesional,
+ * estandarizado con el mismo formato corporativo de Reportes, con anchos óptimos para evitar `#######`,
+ * cuadrículas activas, tarjetas KPI y hoja de resumen consolidado.
+ */
+export async function exportarMovimientosExcel(params) {
+    const {
+        movimientos = [],
+        metrics = {},
+        filtros = {},
+    } = params;
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Tecnofilm ERP — Antigravity';
+    workbook.created = new Date();
+
+    const COLOR_HEADER_PRIMARY = 'FF1E293B';  // Dark Slate / Azul Corporativo estándar
+    const COLOR_HEADER_TEXT    = 'FFFFFFFF';  // Texto blanco
+    const COLOR_BORDER         = 'FFCBD5E1';  // Gris suave estándar de Excel
+    const COLOR_CARD_HEADER    = 'FFF1F5F9';  // Fondo gris suave para títulos de tarjetas
+    const COLOR_ZEBRA_ROW      = 'FFF8FAFC';  // Alternancia de fila muy limpia y sutil
+    const COLOR_WHITE          = 'FFFFFFFF';
+
+    const borderStyleThin = {
+        top:    { style: 'thin', color: { argb: COLOR_BORDER } },
+        left:   { style: 'thin', color: { argb: COLOR_BORDER } },
+        bottom: { style: 'thin', color: { argb: COLOR_BORDER } },
+        right:  { style: 'thin', color: { argb: COLOR_BORDER } }
+    };
+
+    // =========================================================================
+    // HOJA 1: BITÁCORA DE MOVIMIENTOS
+    // =========================================================================
+    const ws = workbook.addWorksheet('Bitácora de Movimientos', {
+        views: [{ showGridLines: true }]
+    });
+
+    // Anchos estandarizados y generosos para CERO #######
+    ws.columns = [
+        { width: 4 },  // A: Margen
+        { width: 12 }, // B: #ID
+        { width: 24 }, // C: Fecha y Hora (amplio, evita #####)
+        { width: 28 }, // D: Usuario Responsable
+        { width: 32 }, // E: Correo Electrónico
+        { width: 16 }, // F: Módulo
+        { width: 20 }, // G: Acción
+        { width: 20 }, // H: Registro Afectado
+        { width: 46 }, // I: Descripción de la Acción
+        { width: 50 }, // J: Detalle de Modificaciones
+    ];
+
+    // Banner Superior
+    ws.mergeCells('B2:J2');
+    const titleCell = ws.getCell('B2');
+    titleCell.value = 'SISTEMA DE GESTIÓN DE INCIDENCIAS — BITÁCORA DE AUDITORÍA Y MOVIMIENTOS';
+    titleCell.font = { name: 'Calibri', size: 13, bold: true, color: { argb: COLOR_HEADER_TEXT } };
+    titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_PRIMARY } };
+    titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    ws.getRow(2).height = 32;
+
+    // Subtítulo con metadata
+    ws.mergeCells('B3:J3');
+    const subCell = ws.getCell('B3');
+    const moduloDesc = filtros.filtroModulo ? `Módulo: ${filtros.filtroModulo.toUpperCase()}` : 'Todos los módulos';
+    const accionDesc = filtros.filtroAccion ? `Acción: ${filtros.filtroAccion}` : 'Todas las acciones';
+    const busquedaDesc = filtros.searchQuery ? ` | Búsqueda: "${filtros.searchQuery}"` : '';
+    subCell.value = `Historial de Auditoría   |   ${moduloDesc}   |   ${accionDesc}${busquedaDesc}   |   Generado el: ${formatDateTime(new Date())}`;
+    subCell.font = { name: 'Calibri', size: 9.5, italic: true, color: { argb: 'FF475569' } };
+    subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+    subCell.alignment = { vertical: 'middle', horizontal: 'center' };
+    subCell.border = { bottom: { style: 'thin', color: { argb: COLOR_BORDER } } };
+    ws.getRow(3).height = 22;
+
+    ws.getRow(4).height = 10;
+
+    // Tarjetas KPI idénticas a Reportes
+    const totalCount = movimientos.length;
+    const tareasCount = movimientos.filter(m => m.modulo === 'tareas').length;
+    const usuariosCount = movimientos.filter(m => m.modulo === 'usuarios').length;
+    const hoyIso = new Date().toISOString().slice(0, 10);
+    const hoyCount = movimientos.filter(m => (m.created_at || '').startsWith(hoyIso)).length;
+
+    const kpis = [
+        { cols: 'B5:C5', valCols: 'B6:C6', startCol: 'B', title: 'TOTAL REGISTROS', value: metrics.total || totalCount, color: 'FF2563EB' },
+        { cols: 'D5:E5', valCols: 'D6:E6', startCol: 'D', title: 'MÓDULO TAREAS', value: metrics.tareas ?? tareasCount, color: 'FF4F46E5' },
+        { cols: 'F5:G5', valCols: 'F6:G6', startCol: 'F', title: 'MÓDULO USUARIOS', value: metrics.usuarios ?? usuariosCount, color: 'FF7C3AED' },
+        { cols: 'H5:J5', valCols: 'H6:J6', startCol: 'H', title: 'ACTIVIDAD HOY', value: metrics.hoy ?? hoyCount, color: 'FF16A34A' },
+    ];
+
+    ws.getRow(5).height = 19;
+    ws.getRow(6).height = 26;
+
+    kpis.forEach(k => {
+        ws.mergeCells(k.cols);
+        const hCell = ws.getCell(k.startCol + '5');
+        hCell.value = k.title;
+        hCell.font = { name: 'Calibri', size: 8.5, bold: true, color: { argb: 'FF475569' } };
+        hCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+        hCell.alignment = { vertical: 'middle', horizontal: 'center' };
+        applyBorderToRange(ws, k.cols, borderStyleThin);
+
+        ws.mergeCells(k.valCols);
+        const vCell = ws.getCell(k.startCol + '6');
+        vCell.value = k.value;
+        vCell.font = { name: 'Calibri', size: 14, bold: true, color: { argb: k.color } };
+        vCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_WHITE } };
+        vCell.alignment = { vertical: 'middle', horizontal: 'center' };
+        applyBorderToRange(ws, k.valCols, borderStyleThin);
+    });
+
+    ws.getRow(7).height = 12;
+
+    // Encabezados de Tabla (Fila 8)
+    const headers = [
+        { col: 'B', title: 'ID' },
+        { col: 'C', title: 'Fecha y Hora' },
+        { col: 'D', title: 'Usuario Responsable' },
+        { col: 'E', title: 'Correo Electrónico' },
+        { col: 'F', title: 'Módulo' },
+        { col: 'G', title: 'Tipo de Acción' },
+        { col: 'H', title: 'Registro Afectado' },
+        { col: 'I', title: 'Descripción de la Acción' },
+        { col: 'J', title: 'Detalle Técnico / Modificaciones' },
+    ];
+
+    const headerRow = ws.getRow(8);
+    headerRow.height = 26;
+    headers.forEach(h => {
+        const cell = ws.getCell(`${h.col}8`);
+        cell.value = h.title;
+        cell.font = { name: 'Calibri', size: 10.5, bold: true, color: { argb: COLOR_HEADER_TEXT } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_PRIMARY } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = borderStyleThin;
+    });
+
+    // Filas de datos
+    movimientos.forEach((m, idx) => {
+        const rowNum = 9 + idx;
+        const row = ws.getRow(rowNum);
+        row.height = 23;
+        const isZebra = idx % 2 === 0;
+        const rowBgColor = isZebra ? COLOR_ZEBRA_ROW : COLOR_WHITE;
+
+        const userName = m.persona_nombre ? `${m.persona_nombre} ${m.persona_apellido || ''}`.trim() : (m.email || 'Sistema');
+        const userEmail = m.email || '—';
+        const formattedFecha = formatDateTime(m.created_at);
+        const moduloNombre = (m.modulo || 'general').toUpperCase();
+        const regInfo = m.registro_id ? `${m.modulo === 'usuarios' ? 'Usuario' : 'Tarea'} #${m.registro_id}` : '—';
+        const descTexto = getMovActionDescription(m);
+        const detalleTexto = getMovChangesDetail(m);
+        const actionMeta = getActionExcelBadge(m.tipo_accion);
+
+        // B: ID
+        const cId = ws.getCell(`B${rowNum}`);
+        cId.value = `#${m.id}`;
+        cId.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF334155' } };
+        cId.alignment = { vertical: 'middle', horizontal: 'center' };
+        cId.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBgColor } };
+        cId.border = borderStyleThin;
+
+        // C: Fecha y Hora (Texto explícito formateado con width 24 -> CERO ######)
+        const cFecha = ws.getCell(`C${rowNum}`);
+        cFecha.value = formattedFecha;
+        cFecha.font = { name: 'Calibri', size: 9.5, color: { argb: 'FF1E293B' } };
+        cFecha.alignment = { vertical: 'middle', horizontal: 'center' };
+        cFecha.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBgColor } };
+        cFecha.border = borderStyleThin;
+
+        // D: Usuario Responsable
+        const cUser = ws.getCell(`D${rowNum}`);
+        cUser.value = userName;
+        cUser.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        cUser.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+        cUser.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBgColor } };
+        cUser.border = borderStyleThin;
+
+        // E: Correo
+        const cEmail = ws.getCell(`E${rowNum}`);
+        cEmail.value = userEmail;
+        cEmail.font = { name: 'Calibri', size: 9, color: { argb: 'FF475569' } };
+        cEmail.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+        cEmail.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBgColor } };
+        cEmail.border = borderStyleThin;
+
+        // F: Módulo
+        const cMod = ws.getCell(`F${rowNum}`);
+        cMod.value = moduloNombre;
+        cMod.font = { name: 'Calibri', size: 9, bold: true, color: { argb: m.modulo === 'usuarios' ? 'FF7C3AED' : 'FF2563EB' } };
+        cMod.alignment = { vertical: 'middle', horizontal: 'center' };
+        cMod.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBgColor } };
+        cMod.border = borderStyleThin;
+
+        // G: Tipo de Acción
+        const cAccion = ws.getCell(`G${rowNum}`);
+        cAccion.value = actionMeta.label;
+        cAccion.font = { name: 'Calibri', size: 8.5, bold: true, color: { argb: actionMeta.fontColor } };
+        cAccion.alignment = { vertical: 'middle', horizontal: 'center' };
+        cAccion.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: actionMeta.bgColor } };
+        cAccion.border = borderStyleThin;
+
+        // H: Registro Afectado
+        const cReg = ws.getCell(`H${rowNum}`);
+        cReg.value = regInfo;
+        cReg.font = { name: 'Calibri', size: 9, bold: true, color: { argb: 'FF475569' } };
+        cReg.alignment = { vertical: 'middle', horizontal: 'center' };
+        cReg.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBgColor } };
+        cReg.border = borderStyleThin;
+
+        // I: Descripción
+        const cDesc = ws.getCell(`I${rowNum}`);
+        cDesc.value = descTexto;
+        cDesc.font = { name: 'Calibri', size: 9, color: { argb: 'FF1E293B' } };
+        cDesc.alignment = { vertical: 'middle', horizontal: 'left', indent: 1, wrapText: true };
+        cDesc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBgColor } };
+        cDesc.border = borderStyleThin;
+
+        // J: Detalle de Modificaciones
+        const cDet = ws.getCell(`J${rowNum}`);
+        cDet.value = detalleTexto;
+        cDet.font = { name: 'Calibri', size: 8.5, italic: detalleTexto === '—', color: { argb: detalleTexto === '—' ? 'FF94A3B8' : 'FF334155' } };
+        cDet.alignment = { vertical: 'middle', horizontal: 'left', indent: 1, wrapText: true };
+        cDet.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBgColor } };
+        cDet.border = borderStyleThin;
+    });
+
+    // =========================================================================
+    // HOJA 2: RESUMEN OPERATIVO
+    // =========================================================================
+    const wsResumen = workbook.addWorksheet('Resumen Operativo', {
+        views: [{ showGridLines: true }]
+    });
+
+    wsResumen.columns = [
+        { width: 4 },  // A
+        { width: 28 }, // B
+        { width: 20 }, // C
+        { width: 20 }, // D
+        { width: 6 },  // E
+        { width: 28 }, // F
+        { width: 20 }, // G
+        { width: 20 }, // H
+    ];
+
+    // Banner Hoja 2
+    wsResumen.mergeCells('B2:H2');
+    const rTitle = wsResumen.getCell('B2');
+    rTitle.value = 'RESUMEN CONSOLIDADO DE ACTIVIDAD POR MÓDULO Y ACCIÓN';
+    rTitle.font = { name: 'Calibri', size: 12, bold: true, color: { argb: COLOR_HEADER_TEXT } };
+    rTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_PRIMARY } };
+    rTitle.alignment = { vertical: 'middle', horizontal: 'center' };
+    wsResumen.getRow(2).height = 30;
+
+    // Subtítulo Hoja 2
+    wsResumen.mergeCells('B3:H3');
+    const rSub = wsResumen.getCell('B3');
+    rSub.value = `Agrupación estadística de las ${totalCount} operaciones registradas en el período evaluado`;
+    rSub.font = { name: 'Calibri', size: 9.5, italic: true, color: { argb: 'FF475569' } };
+    rSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+    rSub.alignment = { vertical: 'middle', horizontal: 'center' };
+    rSub.border = { bottom: { style: 'thin', color: { argb: COLOR_BORDER } } };
+    wsResumen.getRow(3).height = 20;
+
+    wsResumen.getRow(4).height = 12;
+
+    // Tabla 1 (B5:D...): Distribución por Módulo
+    wsResumen.mergeCells('B5:D5');
+    const modHeader = wsResumen.getCell('B5');
+    modHeader.value = 'DISTRIBUCIÓN POR MÓDULO';
+    modHeader.font = { name: 'Calibri', size: 10, bold: true, color: { argb: COLOR_HEADER_TEXT } };
+    modHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_PRIMARY } };
+    modHeader.alignment = { vertical: 'middle', horizontal: 'center' };
+    applyBorderToRange(wsResumen, 'B5:D5', borderStyleThin);
+
+    const modCols = [
+        { col: 'B', title: 'Módulo del Sistema' },
+        { col: 'C', title: 'Total Operaciones' },
+        { col: 'D', title: '% Participación' },
+    ];
+    modCols.forEach(c => {
+        const cell = wsResumen.getCell(`${c.col}6`);
+        cell.value = c.title;
+        cell.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF1E293B' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = borderStyleThin;
+    });
+
+    // Conteo por módulo
+    const modMap = {};
+    movimientos.forEach(m => {
+        const modKey = (m.modulo || 'otros').toLowerCase();
+        modMap[modKey] = (modMap[modKey] || 0) + 1;
+    });
+    const modEntries = Object.entries(modMap).sort((a, b) => b[1] - a[1]);
+
+    modEntries.forEach(([mod, count], idx) => {
+        const rNum = 7 + idx;
+        const rowBg = idx % 2 === 0 ? COLOR_ZEBRA_ROW : COLOR_WHITE;
+        const pct = totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : '0.0';
+
+        const c1 = wsResumen.getCell(`B${rNum}`);
+        c1.value = mod.toUpperCase();
+        c1.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        c1.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+        c1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        c1.border = borderStyleThin;
+
+        const c2 = wsResumen.getCell(`C${rNum}`);
+        c2.value = count;
+        c2.font = { name: 'Calibri', size: 9.5, color: { argb: 'FF1E293B' } };
+        c2.alignment = { vertical: 'middle', horizontal: 'center' };
+        c2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        c2.border = borderStyleThin;
+
+        const c3 = wsResumen.getCell(`D${rNum}`);
+        c3.value = `${pct}%`;
+        c3.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF2563EB' } };
+        c3.alignment = { vertical: 'middle', horizontal: 'center' };
+        c3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        c3.border = borderStyleThin;
+
+        wsResumen.getRow(rNum).height = 20;
+    });
+
+    // Fila Total Módulo
+    const totalModRow = 7 + modEntries.length;
+    const tMod1 = wsResumen.getCell(`B${totalModRow}`);
+    tMod1.value = 'TOTAL';
+    tMod1.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+    tMod1.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    tMod1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+    tMod1.border = borderStyleThin;
+
+    const tMod2 = wsResumen.getCell(`C${totalModRow}`);
+    tMod2.value = totalCount;
+    tMod2.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+    tMod2.alignment = { vertical: 'middle', horizontal: 'center' };
+    tMod2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+    tMod2.border = borderStyleThin;
+
+    const tMod3 = wsResumen.getCell(`D${totalModRow}`);
+    tMod3.value = '100.0%';
+    tMod3.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+    tMod3.alignment = { vertical: 'middle', horizontal: 'center' };
+    tMod3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+    tMod3.border = borderStyleThin;
+    wsResumen.getRow(totalModRow).height = 22;
+
+    // Tabla 2 (F5:H...): Distribución por Tipo de Acción
+    wsResumen.mergeCells('F5:H5');
+    const actHeader = wsResumen.getCell('F5');
+    actHeader.value = 'DISTRIBUCIÓN POR TIPO DE ACCIÓN';
+    actHeader.font = { name: 'Calibri', size: 10, bold: true, color: { argb: COLOR_HEADER_TEXT } };
+    actHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_PRIMARY } };
+    actHeader.alignment = { vertical: 'middle', horizontal: 'center' };
+    applyBorderToRange(wsResumen, 'F5:H5', borderStyleThin);
+
+    const actCols = [
+        { col: 'F', title: 'Acción Ejecutada' },
+        { col: 'G', title: 'Total Eventos' },
+        { col: 'H', title: '% Participación' },
+    ];
+    actCols.forEach(c => {
+        const cell = wsResumen.getCell(`${c.col}6`);
+        cell.value = c.title;
+        cell.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF1E293B' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = borderStyleThin;
+    });
+
+    const actMap = {};
+    movimientos.forEach(m => {
+        const actKey = m.tipo_accion || 'OTROS';
+        actMap[actKey] = (actMap[actKey] || 0) + 1;
+    });
+    const actEntries = Object.entries(actMap).sort((a, b) => b[1] - a[1]);
+
+    actEntries.forEach(([act, count], idx) => {
+        const rNum = 7 + idx;
+        const rowBg = idx % 2 === 0 ? COLOR_ZEBRA_ROW : COLOR_WHITE;
+        const pct = totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : '0.0';
+        const badge = getActionExcelBadge(act);
+
+        const c1 = wsResumen.getCell(`F${rNum}`);
+        c1.value = badge.label;
+        c1.font = { name: 'Calibri', size: 9, bold: true, color: { argb: badge.fontColor } };
+        c1.alignment = { vertical: 'middle', horizontal: 'center' };
+        c1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: badge.bgColor } };
+        c1.border = borderStyleThin;
+
+        const c2 = wsResumen.getCell(`G${rNum}`);
+        c2.value = count;
+        c2.font = { name: 'Calibri', size: 9.5, color: { argb: 'FF1E293B' } };
+        c2.alignment = { vertical: 'middle', horizontal: 'center' };
+        c2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        c2.border = borderStyleThin;
+
+        const c3 = wsResumen.getCell(`H${rNum}`);
+        c3.value = `${pct}%`;
+        c3.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF2563EB' } };
+        c3.alignment = { vertical: 'middle', horizontal: 'center' };
+        c3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        c3.border = borderStyleThin;
+
+        wsResumen.getRow(rNum).height = 20;
+    });
+
+    // Fila Total Acción
+    const totalActRow = 7 + actEntries.length;
+    const tAct1 = wsResumen.getCell(`F${totalActRow}`);
+    tAct1.value = 'TOTAL';
+    tAct1.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+    tAct1.alignment = { vertical: 'middle', horizontal: 'center' };
+    tAct1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+    tAct1.border = borderStyleThin;
+
+    const tAct2 = wsResumen.getCell(`G${totalActRow}`);
+    tAct2.value = totalCount;
+    tAct2.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+    tAct2.alignment = { vertical: 'middle', horizontal: 'center' };
+    tAct2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+    tAct2.border = borderStyleThin;
+
+    const tAct3 = wsResumen.getCell(`H${totalActRow}`);
+    tAct3.value = '100.0%';
+    tAct3.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+    tAct3.alignment = { vertical: 'middle', horizontal: 'center' };
+    tAct3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+    tAct3.border = borderStyleThin;
+    wsResumen.getRow(totalActRow).height = 22;
+
+    // Tabla 3: Ranking de Actividad por Usuario
+    const userStartRow = Math.max(totalModRow, totalActRow) + 3;
+
+    wsResumen.mergeCells(`B${userStartRow}:H${userStartRow}`);
+    const uRankHeader = wsResumen.getCell(`B${userStartRow}`);
+    uRankHeader.value = 'RANKING DE ACTIVIDAD POR USUARIO RESPONSABLE';
+    uRankHeader.font = { name: 'Calibri', size: 10, bold: true, color: { argb: COLOR_HEADER_TEXT } };
+    uRankHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_HEADER_PRIMARY } };
+    uRankHeader.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    applyBorderToRange(wsResumen, `B${userStartRow}:H${userStartRow}`, borderStyleThin);
+    wsResumen.getRow(userStartRow).height = 24;
+
+    const userMap = {};
+    movimientos.forEach(m => {
+        const key = m.email || (m.persona_nombre ? `${m.persona_nombre} ${m.persona_apellido || ''}`.trim() : 'Sistema');
+        if (!userMap[key]) {
+            userMap[key] = {
+                nombre: m.persona_nombre ? `${m.persona_nombre} ${m.persona_apellido || ''}`.trim() : (m.email || 'Sistema'),
+                email: m.email || '—',
+                count: 0,
+                lastDate: m.created_at || null,
+            };
+        }
+        userMap[key].count += 1;
+        if (m.created_at && (!userMap[key].lastDate || new Date(m.created_at) > new Date(userMap[key].lastDate))) {
+            userMap[key].lastDate = m.created_at;
+        }
+    });
+
+    const userEntries = Object.values(userMap).sort((a, b) => b.count - a.count);
+    const userHeaderRowNum = userStartRow + 1;
+    wsResumen.getRow(userHeaderRowNum).height = 22;
+
+    const uHeaderDefs = [
+        { col: 'B', title: '#' },
+        { col: 'C', title: 'Usuario Responsable' },
+        { col: 'D', title: 'Correo Electrónico' },
+        { col: 'F', title: 'Total Operaciones' },
+        { col: 'G', title: '% del Total' },
+        { col: 'H', title: 'Última Actividad Registrada' },
+    ];
+    uHeaderDefs.forEach(h => {
+        if (h.col === 'D') {
+            wsResumen.mergeCells(`D${userHeaderRowNum}:E${userHeaderRowNum}`);
+            applyBorderToRange(wsResumen, `D${userHeaderRowNum}:E${userHeaderRowNum}`, borderStyleThin);
+        }
+        const cell = wsResumen.getCell(`${h.col}${userHeaderRowNum}`);
+        cell.value = h.title;
+        cell.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF1E293B' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR_CARD_HEADER } };
+        cell.alignment = { vertical: 'middle', horizontal: h.col === 'C' || h.col === 'D' ? 'left' : 'center', indent: h.col === 'C' || h.col === 'D' ? 1 : 0 };
+        cell.border = borderStyleThin;
+    });
+
+    userEntries.forEach((u, i) => {
+        const rNum = userHeaderRowNum + 1 + i;
+        const rowBg = i % 2 === 0 ? COLOR_ZEBRA_ROW : COLOR_WHITE;
+        const pct = totalCount > 0 ? ((u.count / totalCount) * 100).toFixed(1) : '0.0';
+
+        wsResumen.getRow(rNum).height = 20;
+
+        // B: #
+        const cB = wsResumen.getCell(`B${rNum}`);
+        cB.value = i + 1;
+        cB.font = { name: 'Calibri', size: 9, bold: true, color: { argb: 'FF64748B' } };
+        cB.alignment = { vertical: 'middle', horizontal: 'center' };
+        cB.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        cB.border = borderStyleThin;
+
+        // C: Usuario
+        const cC = wsResumen.getCell(`C${rNum}`);
+        cC.value = u.nombre;
+        cC.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        cC.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+        cC.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        cC.border = borderStyleThin;
+
+        // D-E: Email
+        wsResumen.mergeCells(`D${rNum}:E${rNum}`);
+        const cD = wsResumen.getCell(`D${rNum}`);
+        cD.value = u.email;
+        cD.font = { name: 'Calibri', size: 9, color: { argb: 'FF475569' } };
+        cD.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+        cD.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        applyBorderToRange(wsResumen, `D${rNum}:E${rNum}`, borderStyleThin);
+
+        // F: Total
+        const cF = wsResumen.getCell(`F${rNum}`);
+        cF.value = u.count;
+        cF.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF0F172A' } };
+        cF.alignment = { vertical: 'middle', horizontal: 'center' };
+        cF.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        cF.border = borderStyleThin;
+
+        // G: %
+        const cG = wsResumen.getCell(`G${rNum}`);
+        cG.value = `${pct}%`;
+        cG.font = { name: 'Calibri', size: 9.5, bold: true, color: { argb: 'FF2563EB' } };
+        cG.alignment = { vertical: 'middle', horizontal: 'center' };
+        cG.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        cG.border = borderStyleThin;
+
+        // H: Última Actividad
+        const cH = wsResumen.getCell(`H${rNum}`);
+        cH.value = formatDateTime(u.lastDate);
+        cH.font = { name: 'Calibri', size: 9, color: { argb: 'FF475569' } };
+        cH.alignment = { vertical: 'middle', horizontal: 'center' };
+        cH.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        cH.border = borderStyleThin;
+    });
+
+    // Guard de anchos mínimos en ambas hojas para garantizar que ninguna celda trunque texto
+    [ws, wsResumen].forEach(sheet => {
+        sheet.columns.forEach((col, idx) => {
+            if (idx > 0 && (!col.width || col.width < 12)) {
+                col.width = 14;
+            }
+        });
+    });
+
+    // =========================================================================
+    // DESCARGA DIRECTA DEL ARCHIVO EXCEL (.XLSX)
+    // =========================================================================
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const fechaArchivo = new Date().toISOString().slice(0, 10);
+    link.download = `Bitacora_Movimientos_${fechaArchivo}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+

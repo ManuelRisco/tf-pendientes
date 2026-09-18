@@ -4,7 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Bitacora extends Model {
     protected $table = 'bitacora';
-    public $timestamps = false; // Solo tiene created_at
+    public $timestamps = false;
 
     public function tipoAccion() {
         return $this->belongsTo(TipoAccion::class, 'tipo_accion_id');

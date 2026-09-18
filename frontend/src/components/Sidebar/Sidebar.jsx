@@ -11,15 +11,17 @@ function Sidebar({ isOpen, onOpenProfile }) {
         { path: "/dashboard", label: "Dashboard", icon: "bi-grid-1x2-fill" },
         { path: "/gestion-tareas", label: "Tareas", icon: "bi-card-checklist" },
         { path: "/movimientos", label: "Movimientos", icon: "bi-arrow-left-right" },
-        { path: "/usuarios", label: "Usuarios", icon: "bi-people" },
+
+
         ...(user && Number(user.rol_id) === 1 ? [
             { path: "/reportes", label: "Reportes", icon: "bi-bar-chart-fill" }
-        ] : [])
+        ] : []),
+        { path: "/usuarios", label: "Usuarios", icon: "bi-people" }
     ];
 
     return (
         <aside
-            className={`w-64 max-w-[85vw] h-screen fixed left-0 top-0 z-50 flex flex-col border-r transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+            className={`sidebar-animated w-64 max-w-[85vw] h-screen fixed left-0 top-0 z-50 flex flex-col border-r shadow-2xl md:shadow-none ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
             style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
             aria-label="Menú lateral"
         >

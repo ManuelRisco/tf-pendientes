@@ -1,0 +1,82 @@
+4: 1. Introducción y Justificación del Proyecto
+6: 1.1. Diagnóstico del Problema Previo
+12: 1.2. Solución Implementada
+14: 2. Stack Tecnológico y Arquitectura General del Sistema
+17: 3. Arquitectura del Frontend: Patrón Orquestador y Modularización
+18: 3. Arquitectura del Frontend: Patrón Orquestador y Modularización
+22: 3.1. Principios de Diseño y Separación de Responsabilidades
+29: 3.2. Estructura de Directorios Modular
+31: 3.3. Detalle de los Módulos Refactorizados
+42: 3.4. Estado Global y Utilidades Transversales
+51: 4. Arquitectura del Backend: Patrón MVC, Enrutamiento REST y Doble Motor de Datos
+53: 4.1. Principios de Diseño y Ciclo de Vida de la Petición (Request Lifecycle)
+69: 4.2. Estructura Modular de Directorios del Backend
+85: 4.3. Motor de Enrutamiento Dinámico con Regex y Normalización (Router.php)
+90: 4.4. Capa de Controladores REST y Casos de Uso (controllers/)
+93: 4.5. Doble Motor de Datos: Eloquent ORM (entities/) vs. PDO Nativo (models/)
+98: 4.6. Middleware de Seguridad e Invalidación Dinámica de Tokens (AuthMiddleware.php)
+104: 4.7. Estandarización de Respuestas JSON y Manejo Centralizado de Excepciones (Response.php)
+110: 4.8. Gestión Segura de Archivos Adjuntos y Sanitización (uploads/tickets/)
+116: 5. Modelo de Datos Relacional y Auditoría (MySQL)
+119: 5.1. Relaciones y Cardinalidades del Modelo de Datos (Explicación Detallada)
+136: 5.2. Matriz de Claves Foráneas (Foreign Keys)
+138: 5.3. Diagrama Estructural de Relaciones (Mapa Entidad-Relación)
+140: 5.4. Triggers de Auditoría Automática
+145: 6. Capa de Modelos y Consultas Analíticas del Backend (PHP PDO)
+147: 6.1. Métodos Analíticos Principales (ReporteModel.php)
+152: 6.2. Código SQL Seguro de Consulta Agregada
+155: 7. Seguridad, Autenticación y Control de Accesos
+156: 7.1. Hashing Criptográfico de Contraseñas (Bcrypt)
+159: 7.2. Autenticación Basada en Tokens JWT
+161: 7.3. Matriz de Control de Acceso Basado en Roles (RBAC)
+163: 8. Backend: Catálogo de Endpoints de la API REST
+166: 9. Módulos Especiales y Nuevas Características del Sistema
+167: 9.1. Motor de Exportación Avanzada a Excel (ExcelJS)
+172: 9.2. Sistema de Archivos Adjuntos y Galería Lightbox
+177: 9.3. Seguimiento y Respuestas Administrativas Integradas
+179: 9.4. Menú de Accesibilidad Universal y Modo Oscuro
+185: 10. Manual de Usuario y Catálogo de Pantallas del Sistema
+187: 10.1. Pantalla de Inicio de Sesión (Login)
+192: 10.2. Modal de Perfil de Usuario y Cambio de Contraseña (ProfileModal)
+197: 10.3. Tablero Principal de Control (Dashboard)
+202: 10.4. Feed de Actividad Reciente en Vivo (ActividadReciente)
+207: 10.5. Bandeja de Gestión de Tareas y Filtros Avanzados (GestionTareas)
+212: 10.6. Formulario de Creación y Edición de Tarea con Adjuntos (TaskFormModal)
+217: 10.7. Modal de Detalle, Seguimiento y Respuesta Administrativa (TaskViewModal)
+222: 10.8. Visualizador Lightbox de Imágenes a Pantalla Completa (TaskLightboxModal)
+227: 10.9. Bandeja del Historial de Movimientos y Auditoría (Movimientos)
+232: 10.10. Modal de Detalle de Auditoría y Comparador de Cambios (MovimientoChangeDiff)
+237: 10.11. Módulo de Reportes Estadísticos y Selector de Fechas (Reportes)
+242: 10.12. Gráficos de Tendencia Temporal y Distribución (Recharts)
+247: 10.13. Tablas de Incidentes Críticos y Demanda por Usuario
+252: 10.14. Hoja de Cálculo Exportada a Excel con ExcelJS
+257: 10.15. Bandeja de Gestión de Usuarios y Accesos (Usuarios)
+262: 10.16. Modal de Creación y Edición de Usuario (UsuariosModal)
+267: 10.17. Menú Flotante de Accesibilidad Universal (AccessibilityMenu)
+272: 10.18. Interfaz General en Modo Oscuro (Dark Mode)
+277: 11. Guía de Instalación y Despliegue Local
+279: 11.1. Requisitos Previos de Software
+284: 11.2. Configuración de la Base de Datos en MySQL
+285: 1. Iniciar los servicios de Apache y MySQL desde el panel de control de XAMPP.
+286: 2. Abrir el navegador web e ingresar a phpMyAdmin: http://localhost/phpmyadmin
+287: 3. Crear una nueva base de datos llamada tf_pendientes con cotejamiento utf8mb4_unicode_ci.
+288: 4. Importar el archivo del esquema relacional y datos iniciales (database.sql o seeders del proyecto).
+289: 5. Verificar que se hayan creado exactamente las 11 tablas y los triggers trg_tareas_after_insert y trg_tareas_after_update.
+290: 11.3. Puesta en Marcha del Backend (PHP)
+291: 1. Ubicar los archivos del backend en el directorio htdocs de XAMPP: C:\xampp\htdocs\tf-pendientes\backend
+292: 2. Abrir una terminal de comandos en la carpeta backend y verificar las dependencias de Composer:
+294: 3. Verificar la configuración de base de datos en config/database.php (usuario 'root' y contraseña vacía por defecto en XAMPP).
+295: 4. Garantizar que la carpeta uploads/tickets/ cuente con permisos de escritura para la subida de imágenes.
+296: 5. Comprobar la conectividad del backend abriendo en el navegador: http://localhost/tf-pendientes/backend/catalogos
+297: 11.4. Puesta en Marcha del Frontend (React + Vite)
+298: 1. Abrir una terminal en el directorio frontend del proyecto:
+300: 2. Instalar las dependencias de Node.js:
+302: 3. Iniciar el servidor de desarrollo ultrarrápido de Vite:
+304: 4. Abrir en el navegador web la dirección asignada: http://localhost:5173
+305: 5. Iniciar sesión con las credenciales administrativas de prueba (o las configuradas en la base de datos).
+306: 11.5. Configuración para Acceso en Red Local (LAN)
+308: 1. Obtener la dirección IP local de la computadora servidora ejecutando ipconfig en PowerShell (ejemplo: 192.168.1.150).
+309: 2. En el frontend, iniciar Vite exponiendo el host a la red: npm run dev -- --host
+310: 3. En el archivo src/lib/axios.js, configurar baseURL apuntando a la IP local: http://192.168.1.150/tf-pendientes/backend
+311: 4. Permitir el puerto 5173 en el Firewall de Windows para conexiones entrantes de red privada.
+312: 12. Preguntas Frecuentes y Solución de Problemas (Troubleshooting)

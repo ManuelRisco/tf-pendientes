@@ -8,8 +8,6 @@ class Movimiento extends Model {
     
     public $timestamps = false; 
     
-    // Para mapear fecha_movimiento como un timestamp automáticamente si queremos
-    // pero por ahora lo dejamos simple.
 
     public function tarea() {
         return $this->belongsTo(Tarea::class, 'tarea_id');

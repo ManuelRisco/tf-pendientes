@@ -43,7 +43,7 @@ export default function MovimientosTable({
 
     return (
         <>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto min-h-[300px]">
                 <Table hover className="table-movimientos min-w-[760px]">
                     <thead>
                         <tr>

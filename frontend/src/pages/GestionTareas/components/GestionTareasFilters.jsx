@@ -11,6 +11,8 @@ export default function GestionTareasFilters({
     setFiltroEstado,
     filtroPrioridad,
     setFiltroPrioridad,
+    filtroAtencion,
+    setFiltroAtencion,
     estados,
     prioridades,
     hasActiveFilters,
@@ -20,7 +22,7 @@ export default function GestionTareasFilters({
 }) {
     return (
         <div className="mb-4 pb-3 border-b space-y-3" style={{ borderColor: 'var(--border-color)' }}>
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3">
                 <div className="flex items-center gap-2 shrink-0">
                     <h5 className="text-sm sm:text-base font-bold m-0" style={{ color: 'var(--text-primary)' }}>Lista de tareas</h5>
                     {!isAdmin && (
@@ -30,25 +32,25 @@ export default function GestionTareasFilters({
                     )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
                     <div
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-xs w-full sm:w-64 md:w-72 focus-within:border-blue-500 transition-all"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-xl border shadow-xs w-full sm:w-80 md:w-96 lg:w-[340px] xl:w-[360px] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all shrink-0"
                         style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                     >
-                        <i className="bi bi-search text-xs opacity-60" style={{ color: 'var(--text-secondary)' }}></i>
+                        <i className="bi bi-search text-xs opacity-60 shrink-0" style={{ color: 'var(--text-secondary)' }}></i>
                         <input
                             type="text"
                             placeholder={isAdmin ? "Buscar por título, usuario o #ID..." : "Buscar en mis tareas..."}
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="bg-transparent border-0 outline-none shadow-none text-xs w-full font-medium"
+                            className="bg-transparent border-0 outline-none shadow-none text-xs w-full font-medium placeholder:text-[11px] sm:placeholder:text-xs"
                             style={{ color: 'var(--text-primary)' }}
                         />
                         {searchQuery && (
                             <button
                                 type="button"
                                 onClick={() => setSearchQuery('')}
-                                className="text-xs opacity-60 hover:opacity-100 cursor-pointer border-0 bg-transparent p-0"
+                                className="text-xs opacity-60 hover:opacity-100 cursor-pointer border-0 bg-transparent p-0 shrink-0 transition-opacity"
                                 style={{ color: 'var(--text-secondary)' }}
                                 title="Limpiar búsqueda"
                             >
@@ -59,17 +61,17 @@ export default function GestionTareasFilters({
 
                     {isAdmin && (
                         <div
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs w-full sm:w-auto"
                             style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                         >
-                            <i className="bi bi-people-fill text-indigo-500 text-xs"></i>
+                            <i className="bi bi-people-fill text-indigo-500 text-xs shrink-0"></i>
                             <select
                                 value={filtroAlcance}
                                 onChange={e => {
                                     setFiltroAlcance(e.target.value);
                                     setFiltroUsuarioId('');
                                 }}
-                                className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
+                                className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer w-full sm:w-auto"
                                 style={{ color: 'var(--text-primary)' }}
                             >
                                 <option value="todos">Todas las tareas</option>
@@ -80,14 +82,14 @@ export default function GestionTareasFilters({
                     )}
 
                     <div
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs flex-1 sm:flex-initial min-w-[130px]"
                         style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                     >
-                        <i className="bi bi-funnel-fill text-blue-500 text-xs"></i>
+                        <i className="bi bi-funnel-fill text-blue-500 text-xs shrink-0"></i>
                         <select
                             value={filtroEstado}
                             onChange={e => setFiltroEstado(e.target.value)}
-                            className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
+                            className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer w-full sm:w-auto"
                             style={{ color: 'var(--text-primary)' }}
                         >
                             <option value="">Todos los estados</option>
@@ -96,14 +98,14 @@ export default function GestionTareasFilters({
                     </div>
 
                     <div
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs flex-1 sm:flex-initial min-w-[130px]"
                         style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
                     >
-                        <i className="bi bi-flag-fill text-red-500 text-xs"></i>
+                        <i className="bi bi-flag-fill text-red-500 text-xs shrink-0"></i>
                         <select
                             value={filtroPrioridad}
                             onChange={e => setFiltroPrioridad(e.target.value)}
-                            className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer"
+                            className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer w-full sm:w-auto"
                             style={{ color: 'var(--text-primary)' }}
                         >
                             <option value="">Todas las prioridades</option>
@@ -111,16 +113,33 @@ export default function GestionTareasFilters({
                         </select>
                     </div>
 
+                    <div
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border shadow-xs flex-1 sm:flex-initial min-w-[130px]"
+                        style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
+                    >
+                        <i className="bi bi-chat-check-fill text-emerald-500 text-xs shrink-0"></i>
+                        <select
+                            value={filtroAtencion}
+                            onChange={e => setFiltroAtencion(e.target.value)}
+                            className="bg-transparent border-0 text-xs font-medium focus:outline-none cursor-pointer w-full sm:w-auto"
+                            style={{ color: 'var(--text-primary)' }}
+                        >
+                            <option value="">Todas (Atención)</option>
+                            <option value="atendidos">Atendidos</option>
+                            <option value="por_atender">Por atender</option>
+                        </select>
+                    </div>
+
                     {hasActiveFilters && (
                         <button
                             type="button"
                             onClick={handleClearFilters}
-                            className="px-3 py-1.5 text-xs rounded-xl font-semibold border text-rose-500 hover:bg-rose-500/10 transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                            className="px-3 py-1.5 text-xs rounded-xl font-semibold border text-rose-500 hover:bg-rose-500/10 transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95 shrink-0"
                             style={{ borderColor: 'var(--border-color)' }}
                             title="Restablecer todos los filtros"
                         >
                             <i className="bi bi-arrow-counterclockwise"></i>
-                            <span className="hidden sm:inline">Limpiar</span>
+                            <span className="inline">Limpiar</span>
                         </button>
                     )}
                 </div>
@@ -151,6 +170,8 @@ GestionTareasFilters.propTypes = {
     setFiltroEstado: PropTypes.func.isRequired,
     filtroPrioridad: PropTypes.string.isRequired,
     setFiltroPrioridad: PropTypes.func.isRequired,
+    filtroAtencion: PropTypes.string,
+    setFiltroAtencion: PropTypes.func,
     estados: PropTypes.array.isRequired,
     prioridades: PropTypes.array.isRequired,
     hasActiveFilters: PropTypes.bool,

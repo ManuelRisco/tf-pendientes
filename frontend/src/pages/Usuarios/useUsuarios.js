@@ -33,6 +33,7 @@ export function useUsuarios() {
         apellido: '',
         email: '',
         password: '',
+        confirmPassword: '',
         rol_id: ''
     });
 
@@ -44,6 +45,7 @@ export function useUsuarios() {
             apellido: u.apellido || '',
             email: u.email || '',
             password: '',
+            confirmPassword: '',
             rol_id: u.rol_id || ''
         });
         setShowModal(true);
@@ -160,7 +162,7 @@ export function useUsuarios() {
 
     const resetForm = () => {
         setEditId(null);
-        setFormData({ nombre: '', apellido: '', email: '', password: '', rol_id: '' });
+        setFormData({ nombre: '', apellido: '', email: '', password: '', confirmPassword: '', rol_id: '' });
         setShowModal(false);
     };
 
@@ -172,6 +174,22 @@ export function useUsuarios() {
     const handleSaveUser = async (e) => {
         e.preventDefault();
         
+        if (!editId && !formData.password) {
+            Swal.fire('Atención', 'La contraseña es obligatoria para nuevos usuarios.', 'warning');
+            return;
+        }
+
+        if (formData.password) {
+            if (formData.password.length < 6) {
+                Swal.fire('Atención', 'La contraseña debe tener al menos 6 caracteres.', 'warning');
+                return;
+            }
+            if (formData.password !== formData.confirmPassword) {
+                Swal.fire('Atención', 'Las contraseñas no coinciden.', 'warning');
+                return;
+            }
+        }
+
         const actionTitle = editId ? '¿Guardar cambios?' : '¿Crear usuario?';
         const actionText = editId ? 'Se actualizarán los datos del usuario.' : 'Se añadirá un nuevo usuario al sistema.';
 
@@ -188,6 +206,7 @@ export function useUsuarios() {
             if (result.isConfirmed) {
                 try {
                     const payload = { ...formData };
+                    delete payload.confirmPassword;
                     if (editId && !payload.password) {
                         delete payload.password;
                     }

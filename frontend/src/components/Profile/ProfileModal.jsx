@@ -17,6 +17,8 @@ function ProfileModal({ show, onHide }) {
     });
 
     const [showPassword, setShowPassword] = useState(false);
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [saving, setSaving] = useState(false);
 
     const [prevShow, setPrevShow] = useState(show);
@@ -29,7 +31,9 @@ function ProfileModal({ show, onHide }) {
                 email: user.email || '',
                 password: ''
             });
+            setConfirmPassword('');
             setShowPassword(false);
+            setShowConfirmPassword(false);
         }
     }
 
@@ -42,17 +46,31 @@ function ProfileModal({ show, onHide }) {
         e.preventDefault();
         if (!user?.id) return;
 
-        if (formData.password && formData.password.length < 6) {
-            Swal.fire('Atención', 'La nueva contraseña debe tener al menos 6 caracteres.', 'warning');
-            return;
+        if (formData.password || confirmPassword) {
+            if (!formData.password) {
+                Swal.fire('Atención', 'Por favor ingresa la nueva contraseña.', 'warning');
+                return;
+            }
+            if (!confirmPassword) {
+                Swal.fire('Atención', 'Por favor confirma la nueva contraseña.', 'warning');
+                return;
+            }
+            if (formData.password.length < 6) {
+                Swal.fire('Atención', 'La nueva contraseña debe tener al menos 6 caracteres.', 'warning');
+                return;
+            }
+            if (formData.password !== confirmPassword) {
+                Swal.fire('Atención', 'Las contraseñas no coinciden. Por favor verifica ambos campos.', 'warning');
+                return;
+            }
         }
 
         const passwordChanged = Boolean(formData.password && formData.password.trim().length >= 6);
 
         const result = await Swal.fire({
             title: '¿Actualizar perfil?',
-            text: passwordChanged 
-                ? 'Al cambiar tu contraseña, deberás volver a iniciar sesión con tus nuevas credenciales.' 
+            text: passwordChanged
+                ? 'Al cambiar tu contraseña, deberás volver a iniciar sesión con tus nuevas credenciales.'
                 : 'Se guardarán las modificaciones realizadas en tu perfil.',
             icon: 'question',
             showCancelButton: true,
@@ -109,7 +127,7 @@ function ProfileModal({ show, onHide }) {
     };
 
     return (
-        <Modal show={show} onHide={onHide} centered backdrop="static" size="md">
+        <Modal show={show} onHide={onHide} centered backdrop="static" size="lg">
             <Modal.Header closeButton className="border-b" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
                 <Modal.Title className="font-bold text-base sm:text-lg flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                     <div className="w-8 h-8 rounded-full bg-blue-600/10 text-blue-600 flex items-center justify-center font-bold text-sm border border-blue-500/20">
@@ -121,7 +139,7 @@ function ProfileModal({ show, onHide }) {
 
             <Modal.Body className="p-4 sm:p-5" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
                 {/* Datos del usuario */}
-                <div 
+                <div
                     className="flex items-center gap-3 p-3 mb-4 rounded-xl border"
                     style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
                 >
@@ -156,9 +174,9 @@ function ProfileModal({ show, onHide }) {
                                     name="nombre"
                                     value={formData.nombre}
                                     onChange={handleInputChange}
-                                    placeholder="Tu nombre"
+                                    placeholder="Ej. Manuel"
                                     required
-                                    className="rounded-lg text-sm"
+                                    className="rounded-xl text-sm border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                                     style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
                                 />
                             </Form.Group>
@@ -173,9 +191,9 @@ function ProfileModal({ show, onHide }) {
                                     name="apellido"
                                     value={formData.apellido}
                                     onChange={handleInputChange}
-                                    placeholder="Tu apellido"
+                                    placeholder="Ej. Risco"
                                     required
-                                    className="rounded-lg text-sm"
+                                    className="rounded-xl text-sm border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                                     style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
                                 />
                             </Form.Group>
@@ -191,46 +209,86 @@ function ProfileModal({ show, onHide }) {
                             name="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            placeholder="correo@tecnofilm.com"
+                            placeholder="correo@tecnofilm.pe"
                             required
-                            className="rounded-lg text-sm"
+                            className="rounded-xl text-sm border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                             style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
                         />
                     </Form.Group>
 
-                    <Form.Group className="mb-4">
-                        <div className="flex items-center justify-between mb-1">
-                            <Form.Label className="text-xs sm:text-sm font-semibold m-0" style={{ color: 'var(--text-primary)' }}>
-                                Cambiar Contraseña
-                            </Form.Label>
-                            <span className="text-[11px] opacity-75 font-normal" style={{ color: 'var(--text-secondary)' }}>
-                                (Opcional - dejar vacío para conservar)
-                            </span>
-                        </div>
-                        <div className="relative flex items-center">
-                            <Form.Control
-                                type={showPassword ? "text" : "password"}
-                                name="password"
-                                value={formData.password}
-                                onChange={handleInputChange}
-                                placeholder="•••••••• (mínimo 6 caracteres)"
-                                minLength={6}
-                                autoComplete="new-password"
-                                className="rounded-lg text-sm pr-10"
-                                style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 text-sm opacity-60 hover:opacity-100 transition-opacity bg-transparent border-0"
-                                style={{ color: 'var(--text-primary)' }}
-                                title={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
-                                aria-label="Alternar visibilidad de contraseña"
-                            >
-                                <i className={`bi ${showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
-                            </button>
-                        </div>
-                    </Form.Group>
+                    <Row className="mb-4">
+                        <Col xs={12} sm={6}>
+                            <Form.Group className="mb-3 mb-sm-0">
+                                <div className="flex items-center justify-between mb-1">
+                                    <Form.Label className="text-xs sm:text-sm font-semibold m-0" style={{ color: 'var(--text-primary)' }}>
+                                        Cambiar Contraseña
+                                    </Form.Label>
+                                </div>
+                                <div className="relative flex items-center">
+                                    <Form.Control
+                                        type={showPassword ? "text" : "password"}
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleInputChange}
+                                        placeholder="•••••••• (opcional)"
+                                        minLength={6}
+                                        autoComplete="new-password"
+                                        className="rounded-xl text-sm pr-10 border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                        style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 text-sm opacity-60 hover:opacity-100 transition-opacity bg-transparent border-0 cursor-pointer p-0"
+                                        style={{ color: 'var(--text-primary)' }}
+                                        title={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                                        aria-label="Alternar visibilidad de contraseña"
+                                    >
+                                        <i className={`bi ${showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
+                                    </button>
+                                </div>
+                                <Form.Text className="text-[11px] opacity-75" style={{ color: 'var(--text-secondary)' }}>
+                                    Dejar vacío para conservar actual
+                                </Form.Text>
+                            </Form.Group>
+                        </Col>
+                        <Col xs={12} sm={6}>
+                            <Form.Group>
+                                <div className="flex items-center justify-between mb-1">
+                                    <Form.Label className="text-xs sm:text-sm font-semibold m-0" style={{ color: 'var(--text-primary)' }}>
+                                        Confirmar Contraseña {formData.password ? <span className="text-red-500">*</span> : null}
+                                    </Form.Label>
+                                </div>
+                                <div className="relative flex items-center">
+                                    <Form.Control
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        name="confirmPassword"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        placeholder="•••••••• (repite contraseña)"
+                                        required={Boolean(formData.password)}
+                                        minLength={formData.password ? 6 : undefined}
+                                        autoComplete="new-password"
+                                        className="rounded-xl text-sm pr-10 border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                        style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-3 text-sm opacity-60 hover:opacity-100 transition-opacity bg-transparent border-0 cursor-pointer p-0"
+                                        style={{ color: 'var(--text-primary)' }}
+                                        title={showConfirmPassword ? "Ocultar confirmación" : "Ver confirmación"}
+                                        aria-label="Alternar visibilidad de confirmación de contraseña"
+                                    >
+                                        <i className={`bi ${showConfirmPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'}`}></i>
+                                    </button>
+                                </div>
+                                <Form.Text className="text-[11px] opacity-75" style={{ color: 'var(--text-secondary)' }}>
+                                    {formData.password ? 'Requerido si cambias contraseña' : 'Solo si cambias contraseña'}
+                                </Form.Text>
+                            </Form.Group>
+                        </Col>
+                    </Row>
 
                     <div className="flex flex-col sm:flex-row justify-end gap-2 pt-3 border-t" style={{ borderColor: 'var(--border-color)' }}>
                         <button

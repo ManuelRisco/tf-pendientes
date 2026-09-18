@@ -30,7 +30,7 @@ export default function UsuariosFilters({
                             placeholder="Nombre, apellido o correo..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm rounded-lg border focus:outline-none transition-all"
+                            className="w-full pl-9 pr-8 py-2 text-xs sm:text-sm rounded-lg border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                             style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', borderColor: 'var(--border-color)' }}
                         />
                         {search && (
